@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心  理  弹  性  训  练</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- 主页面 -->
+    <div class="home-page" id="homePage">
+        <div class="dashboard">
+            <div class="header">
+                <h1>
+                    <img src="images/University_of_Hong_Kong-Logo.wine.png" alt="心理弹性" class="header-icon">
+                    <span class="header-title-text">心  理  弹  性  训  练</span>
+                </h1>
+                <p>点击每周对应方块，开启今日练习</p>
+            </div>
+            <div class="grid" id="weekGrid">
+                <div class="week-tile week-1" data-week="1"><span class="week-icon">🌱</span><span class="week-title">第一周</span></div>
+                <div class="week-tile week-2" data-week="2"><span class="week-icon">🌿</span><span class="week-title">第二周</span></div>
+                <div class="week-tile week-3" data-week="3"><span class="week-icon">🍃</span><span class="week-title">第三周</span></div>
+                <div class="week-tile week-4" data-week="4"><span class="week-icon">🌳</span><span class="week-title">第四周</span></div>
+                <div class="week-tile week-5" data-week="5"><span class="week-icon">💧</span><span class="week-title">第五周</span></div>
+                <div class="week-tile week-6" data-week="6"><span class="week-icon">🌟</span><span class="week-title">第六周</span></div>
+            </div>
+            <div class="footer-note">⏳ 请按顺序完成每日练习模块，后续模块依次解锁</div>
+        </div>
+    </div>
+
+    <!-- 每日模块列表页面（第一层） -->
+    <div class="daily-page" id="dailyPage">
+        <div class="daily-page-content">
+            <div class="page-header">
+                <button class="back-btn" id="backFromDaily">←</button>
+                <h2 id="weekTitleDisplay">第一周 · 每日练习</h2>
+            </div>
+            <div id="subModulesList" class="card-list"></div>
+            <div style="color:#4e6e8d; text-align:center; margin-top:1rem;">点击任一模块进入练习</div>
+        </div>
+    </div>
+
+    <!-- 练习页面（1-1专用） -->
+    <div class="practice-page" id="practicePage">
+        <div class="practice-content">
+            <div class="practice-header">
+                <div class="practice-header-left">
+                    <button class="back-btn" id="backFromPractice">←</button>
+                    <h2 id="practiceTitle">1-1 基本介绍 · 开启连接</h2>
+                </div>
+                <div class="timer" id="timerDisplay">00:00</div>
+            </div>
+            
+            <!-- 聊天区域 -->
+            <div class="chat-messages" id="chatMessages"></div>
+            
+            <!-- 固定输入框 -->
+            <div class="input-area disabled" id="inputArea">
+                <input type="text" id="userInput" placeholder="等待引导..." disabled>
+                <button id="sendBtn" disabled>➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "resilience-programme",
+  "version": "1.0.0",
+  "description": "心理弹性训练 - 基于正念和接纳承诺疗法的个人成长计划",
+  "main": "src/js/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "python -m http.server 8000 --directory src",
+    "dev": "python -m http.server 8000 --directory src",
+    "build": "echo 'No build step required for this project'"
+  },
+  "keywords": [
+    "心理弹性",
+    "正念练习",
+    "心理健康",
+    "个人成长"
+  ],
+  "author": "香港大学研究团队",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/resilience-programme.git"
+  }
+}
