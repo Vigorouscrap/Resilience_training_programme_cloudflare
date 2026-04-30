@@ -55,7 +55,11 @@ cd resilience-programme-app
 npm start
 # 或
 python -m http.server 8000 --directory src
+# 或
+http-server ./src -p 8000
+
 ```
+
 
 3. 打开浏览器访问
 ```
