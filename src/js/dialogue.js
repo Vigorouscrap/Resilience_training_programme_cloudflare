@@ -650,7 +650,9 @@ export class DialogueManager {
         } else if (this.step === 17) {
             appendAiMessage(this.chatMessages, '那么现在，请与之前做的练习相比，你现在是否能更清晰、快速地看到自己的感受？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], (answer) => {
-                this.clearInteractiveControls();
+                // this.clearInteractiveControls();
+                const currentBtnGroup = this.chatMessages.querySelector('.button-group');
+                if (currentBtnGroup) currentBtnGroup.remove();
                 const response = answer === '是'
                     ? '你能更清晰地识别当下的情绪，这意味着你对自己当下的状态有了更准确的认识。'
                     : '这一周的练习对你来说，更像是一次初步的“接触”和“熟悉”，这完全正常。';
@@ -659,7 +661,9 @@ export class DialogueManager {
                 appendAiMessage(this.chatMessages, '在过去的几天里，当你遇到一些出现压力或不自在的事情时，你的脑海中是否自动冒出过一些想法？', false);
                 appendSpecialCard(this.chatMessages, '<p>例如：</p><p>“别人会不会对我有看法”</p><p>“这件事让我很不安”</p>');
                 appendButtonGroup(this.chatMessages, ['是的，我注意到有这样的想法出现', '好像有，但没特别注意', '不太确定', '没有'], (choice) => {
-                    this.clearInteractiveControls();
+                    // this.clearInteractiveControls();
+                    const currentBtnGroup = this.chatMessages.querySelector('.button-group');
+                    if (currentBtnGroup) currentBtnGroup.remove();
                     this.module17State.thoughtOccurrence = choice;
                     this.step = 18;
                     this.handleModule17ThoughtOccurrence(choice);
@@ -669,7 +673,9 @@ export class DialogueManager {
         } else if (this.step === 19) {
             appendAiMessage(this.chatMessages, '当这些想法出现时，你是否曾尝试使用我们“牛奶体验练习”中的方法——“我注意到我有一个……的想法”？', false);
             appendButtonGroup(this.chatMessages, ['1 我多次尝试并感到有帮助', '2 尝试了一两次', '3 完全没有尝试', '4 不太确定'], (choice) => {
-                this.clearInteractiveControls();
+                // this.clearInteractiveControls();
+                const currentBtnGroup = this.chatMessages.querySelector('.button-group');
+                if (currentBtnGroup) currentBtnGroup.remove();
                 const response = choice.startsWith('1')
                     ? '你开始在生活中实践“观察想法”，这非常珍贵。'
                     : choice.startsWith('2')
