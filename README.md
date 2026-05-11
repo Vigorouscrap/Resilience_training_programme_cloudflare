@@ -5,6 +5,9 @@
 访问链接：
 https://resilience-training-programme-two.vercel.app
 
+本地测试：
+python -m http.server 8000 --directory src
+
 ## 🌱 项目介绍
 
 本项目提供了一个交互式的心理弹性训练平台，结合以下核心理念：
