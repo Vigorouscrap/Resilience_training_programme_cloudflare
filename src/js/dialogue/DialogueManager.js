@@ -1,6 +1,7 @@
-﻿import {
+import {
     appendAiMessage,
     appendUserMessage,
+    appendButtonGroup,
     removeContinueButton,
     disableInput
 } from '../ui.js';
@@ -10,6 +11,9 @@ import { module13Handlers } from './modules/module13.js';
 import { module14And16Handlers } from './modules/module14and16.js';
 import { module15Handlers } from './modules/module15.js';
 import { module17Handlers } from './modules/module17.js';
+import { module21Handlers } from './modules/module21.js';
+import { module22Handlers } from './modules/module22.js';
+import { module23Handlers, repeatedMeditationModuleIds } from './modules/module23.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -33,6 +37,16 @@ export class DialogueManager {
             clarityAnswer: '',
             thoughtOccurrence: '',
             techniqueAnswer: ''
+        };
+        this.module21State = {
+            initialAnswer: '',
+            drowsinessMethodIndex: 0,
+            agitationMethodIndex: 0
+        };
+        this.module22State = {
+            selectedCase: '',
+            emotionAnswer: '',
+            impactAnswer: ''
         };
     }
 
@@ -66,6 +80,26 @@ export class DialogueManager {
             };
             appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
             this.step = 0;
+        } else if (module === '2-1') {
+            this.module21State = {
+                initialAnswer: '',
+                drowsinessMethodIndex: 0,
+                agitationMethodIndex: 0
+            };
+            appendAiMessage(this.chatMessages, '过去的一周里，我们已经进行了多次冥想练习。在练习过程中你是否有感到过昏昏入睡或者内心浮躁静不下来？', false);
+            appendButtonGroup(this.chatMessages, ['有', '没有'], (answer) => this.handleModule21InitialAnswer(answer));
+            this.step = 0;
+        } else if (module === '2-2') {
+            this.module22State = {
+                selectedCase: '',
+                emotionAnswer: '',
+                impactAnswer: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (repeatedMeditationModuleIds.has(module)) {
+            appendAiMessage(this.chatMessages, '欢迎来到今天的冥想练习。', true);
+            this.step = 0;
         } else if (module === '1-5') {
             appendAiMessage(this.chatMessages, '你好，欢迎来到今天的练习。', true);
         } else if (module === '1-4' || module === '1-6') {
@@ -83,6 +117,12 @@ export class DialogueManager {
             this.onContinue_Module13Docx();
         } else if (this.currentModule === '1-7') {
             this.onContinue_Module17Docx();
+        } else if (this.currentModule === '2-1') {
+            this.onContinue_Module21();
+        } else if (this.currentModule === '2-2') {
+            this.onContinue_Module22();
+        } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
+            this.onContinue_Module23();
         } else if (this.currentModule === '1-5') {
             this.onContinue_Module15();
         } else if (this.currentModule === '1-4' || this.currentModule === '1-6') {
@@ -91,13 +131,13 @@ export class DialogueManager {
             this.onContinue_Module11();
         }
     }
+
     enableInputForModule(chatMessages) {
         this.inputArea.classList.remove('disabled');
         this.userInput.disabled = false;
         this.userInput.parentElement.querySelector('button').disabled = false;
         this.userInput.focus();
     }
-
 
     escapeHtml(text) {
         return String(text)
@@ -121,6 +161,10 @@ export class DialogueManager {
             this.handleModule17DocxUserMessage(text);
             return;
         }
+        if (this.currentModule === '2-2') {
+            this.handleModule22UserMessage(text);
+            return;
+        }
 
         if (this.currentModule === '1-3' && this.step === 1) {
             disableInput(this.inputArea, this.userInput);
@@ -131,7 +175,6 @@ export class DialogueManager {
             this.step = 3;
             this.onContinue();
         } else if (this.currentModule === '1-1' && this.step === 6) {
-            // 提取用户信息
             let name = '朋友', habit = '那个习惯', quality = '内在品质';
             if (text.includes('我叫') || text.includes('我是')) {
                 let match = text.match(/(?:我叫|我是|称呼我)[\s,，]*([^\s,，]{1,8})/);
@@ -165,5 +208,8 @@ Object.assign(
     module13Handlers,
     module14And16Handlers,
     module15Handlers,
-    module17Handlers
+    module17Handlers,
+    module21Handlers,
+    module22Handlers,
+    module23Handlers
 );
