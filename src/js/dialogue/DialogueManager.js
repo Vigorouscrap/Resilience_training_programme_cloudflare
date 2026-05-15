@@ -14,6 +14,9 @@ import { module17Handlers } from './modules/module17.js';
 import { module21Handlers } from './modules/module21.js';
 import { module22Handlers } from './modules/module22.js';
 import { module23Handlers, repeatedMeditationModuleIds } from './modules/module23.js';
+import { module24Handlers } from './modules/module24.js';
+import { module26Handlers } from './modules/module26.js';
+import { module27Handlers } from './modules/module27.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -22,6 +25,8 @@ export class DialogueManager {
         this.userInput = userInput;
         this.step = -1;
         this.currentModule = null;
+        this.dialogueSessionId = 0;
+        this.isContinuing = false;
         this.participant = { name: '朋友', habit: '那个习惯', quality: '内在品质' };
         this.module12State = {
             visitedButtons: new Set(),
@@ -48,9 +53,22 @@ export class DialogueManager {
             emotionAnswer: '',
             impactAnswer: ''
         };
+        this.module24State = {
+            selectedCase: '',
+            introCardIndex: 0,
+            observationAnswer: '',
+            expansionAnswer: ''
+        };
+        this.module27State = {
+            breathAnswers: [],
+            sharedStressText: '',
+            hasConcreteStress: false
+        };
+        this.invalidateAsyncCallbacks();
     }
 
     resetForModule(module) {
+        this.invalidateAsyncCallbacks();
         this.currentModule = module;
         this.chatMessages.innerHTML = '';
         this.step = -1;
@@ -97,6 +115,26 @@ export class DialogueManager {
             };
             appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
             this.step = 0;
+        } else if (module === '2-4') {
+            this.module24State = {
+                selectedCase: '',
+                introCardIndex: 0,
+                observationAnswer: '',
+                expansionAnswer: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '2-6') {
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '2-7') {
+            this.module27State = {
+                breathAnswers: [],
+                sharedStressText: '',
+                hasConcreteStress: false
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
+            this.step = 0;
         } else if (repeatedMeditationModuleIds.has(module)) {
             appendAiMessage(this.chatMessages, '欢迎来到今天的冥想练习。', true);
             this.step = 0;
@@ -108,27 +146,44 @@ export class DialogueManager {
         }
     }
 
+    invalidateAsyncCallbacks() {
+        this.dialogueSessionId += 1;
+        this.chatMessages.dataset.dialogueSessionId = String(this.dialogueSessionId);
+    }
+
     onContinue() {
+        if (this.isContinuing) return;
+        this.isContinuing = true;
         removeContinueButton();
 
-        if (this.currentModule === '1-2') {
-            this.onContinue_Module12();
-        } else if (this.currentModule === '1-3') {
-            this.onContinue_Module13Docx();
-        } else if (this.currentModule === '1-7') {
-            this.onContinue_Module17Docx();
-        } else if (this.currentModule === '2-1') {
-            this.onContinue_Module21();
-        } else if (this.currentModule === '2-2') {
-            this.onContinue_Module22();
-        } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
-            this.onContinue_Module23();
-        } else if (this.currentModule === '1-5') {
-            this.onContinue_Module15();
-        } else if (this.currentModule === '1-4' || this.currentModule === '1-6') {
-            this.onContinue_Module14Or16();
-        } else {
-            this.onContinue_Module11();
+        try {
+            if (this.currentModule === '1-2') {
+                this.onContinue_Module12();
+            } else if (this.currentModule === '1-3') {
+                this.onContinue_Module13Docx();
+            } else if (this.currentModule === '1-7') {
+                this.onContinue_Module17Docx();
+            } else if (this.currentModule === '2-1') {
+                this.onContinue_Module21();
+            } else if (this.currentModule === '2-2') {
+                this.onContinue_Module22();
+            } else if (this.currentModule === '2-4') {
+                this.onContinue_Module24();
+            } else if (this.currentModule === '2-6') {
+                this.onContinue_Module26();
+            } else if (this.currentModule === '2-7') {
+                this.onContinue_Module27();
+            } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
+                this.onContinue_Module23();
+            } else if (this.currentModule === '1-5') {
+                this.onContinue_Module15();
+            } else if (this.currentModule === '1-4' || this.currentModule === '1-6') {
+                this.onContinue_Module14Or16();
+            } else {
+                this.onContinue_Module11();
+            }
+        } finally {
+            this.isContinuing = false;
         }
     }
 
@@ -163,6 +218,14 @@ export class DialogueManager {
         }
         if (this.currentModule === '2-2') {
             this.handleModule22UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '2-4') {
+            this.handleModule24UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '2-7') {
+            this.handleModule27UserMessage(text);
             return;
         }
 
@@ -211,5 +274,8 @@ Object.assign(
     module17Handlers,
     module21Handlers,
     module22Handlers,
-    module23Handlers
+    module23Handlers,
+    module24Handlers,
+    module26Handlers,
+    module27Handlers
 );

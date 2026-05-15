@@ -103,6 +103,14 @@ export function scrollChat(chatMessages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+export function getChatSessionId(chatMessages) {
+    return chatMessages?.dataset?.dialogueSessionId || '';
+}
+
+export function isChatSessionActive(chatMessages, sessionId) {
+    return getChatSessionId(chatMessages) === sessionId;
+}
+
 /**
  * 启用输入区
  */
@@ -133,7 +141,14 @@ export function appendButtonGroup(chatMessages, buttons, onClickCallback) {
         btn.className = 'state-button';
         btn.innerText = btnText;
         btn.dataset.state = btnText;
-        btn.addEventListener('click', () => onClickCallback(btnText, btn));
+        btn.addEventListener('click', () => {
+            if (wrap.dataset.locked === 'true') return;
+            wrap.dataset.locked = 'true';
+            wrap.querySelectorAll('button').forEach(button => {
+                button.disabled = true;
+            });
+            onClickCallback(btnText, btn);
+        });
         wrap.appendChild(btn);
     });
     chatMessages.appendChild(wrap);
@@ -175,6 +190,9 @@ export function appendUnderstandButton(chatMessages, callback) {
     btn.className = 'understand-btn';
     btn.innerText = '已了解';
     btn.addEventListener('click', () => {
+        if (wrap.dataset.locked === 'true') return;
+        wrap.dataset.locked = 'true';
+        btn.disabled = true;
         wrap.remove();
         callback();
     });
@@ -191,6 +209,8 @@ export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTime
     card.className = 'special-card';
     card.innerHTML = content;
     chatMessages.appendChild(card);
+    const sessionId = getChatSessionId(chatMessages);
+    const deadline = Date.now() + (delaySeconds * 1000);
     
     // 添加计时器
     const timerDiv = document.createElement('div');
@@ -200,11 +220,16 @@ export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTime
     card.appendChild(timerDiv);
     
     const timer = setInterval(() => {
-        remaining -= 1;
+        if (!isChatSessionActive(chatMessages, sessionId)) {
+            clearInterval(timer);
+            return;
+        }
+        remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
         if (remaining > 0) {
             timerDiv.innerText = `⏳ ${remaining}秒后可继续`;
         } else {
             clearInterval(timer);
+            if (!isChatSessionActive(chatMessages, sessionId)) return;
             timerDiv.innerText = '✓ 可以继续';
             // 显示继续按钮
             appendContinueButton(chatMessages);
@@ -250,17 +275,26 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
 
     chatMessages.appendChild(row);
     scrollChat(chatMessages);
+    const sessionId = getChatSessionId(chatMessages);
+    const deadline = Date.now() + delayMs;
 
     // 计时递减
     let remainingMs = delayMs;
     const timerInterval = setInterval(() => {
-        remainingMs -= 100;
+        if (!isChatSessionActive(chatMessages, sessionId)) {
+            clearInterval(timerInterval);
+            return;
+        }
+        remainingMs = Math.max(0, deadline - Date.now());
         if (remainingMs > 0) {
             timer.innerText = '⏳ ' + (remainingMs / 1000).toFixed(1) + 's';
         } else {
             clearInterval(timerInterval);
             timer.innerText = '✓';
-            setTimeout(callback, 100);
+            setTimeout(() => {
+                if (!isChatSessionActive(chatMessages, sessionId)) return;
+                callback();
+            }, 100);
         }
     }, 100);
 }

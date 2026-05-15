@@ -48,6 +48,7 @@ function initApp() {
     });
 
     backFromPractice.addEventListener('click', () => {
+        dialogueManager.invalidateAsyncCallbacks();
         pageManager.goBackToDaily();
     });
 
