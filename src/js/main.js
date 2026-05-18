@@ -8,6 +8,121 @@ import { PracticeTimer } from './timer.js';
 import { DialogueManager } from './dialogue.js';
 import { weekTitles, subModuleNames } from './data.js';
 
+const TESTING_GLOBAL_KEY = '__RESILIENCE_TESTING__';
+const TESTING_API_KEY = '__resilienceTest';
+
+function parseBooleanFlag(value) {
+    if (value == null) return false;
+    return /^(1|true|yes|on)$/i.test(String(value).trim());
+}
+
+function normalizeModuleId(value) {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) return '';
+
+    const directMatch = rawValue.match(/^(\d)-(\d)$/);
+    if (directMatch) {
+        return `${directMatch[1]}-${directMatch[2]}`;
+    }
+
+    const compactMatch = rawValue.match(/^module(\d)(\d)$/i) || rawValue.match(/^(\d)(\d)$/);
+    if (compactMatch) {
+        return `${compactMatch[1]}-${compactMatch[2]}`;
+    }
+
+    return rawValue;
+}
+
+function getModuleMeta(moduleId) {
+    const match = String(moduleId || '').match(/^(\d)-(\d)$/);
+    if (!match) return null;
+
+    const weekIdx = Number(match[1]) - 1;
+    const dayIdx = Number(match[2]) - 1;
+    const moduleTitle = subModuleNames[weekIdx]?.[dayIdx];
+
+    if (!moduleTitle) return null;
+
+    return {
+        moduleId: `${weekIdx + 1}-${dayIdx + 1}`,
+        weekIdx,
+        dayIdx,
+        weekTitle: weekTitles[weekIdx],
+        moduleTitle
+    };
+}
+
+function ensureTestingConfig() {
+    const currentConfig = globalThis[TESTING_GLOBAL_KEY];
+    if (currentConfig && typeof currentConfig === 'object') {
+        return currentConfig;
+    }
+
+    const nextConfig = {};
+    globalThis[TESTING_GLOBAL_KEY] = nextConfig;
+    return nextConfig;
+}
+
+function updateTestingConfig(nextValues = {}) {
+    const config = ensureTestingConfig();
+    Object.assign(config, nextValues);
+    return config;
+}
+
+function getTestingConfigFromUrl() {
+    const searchParams = new URLSearchParams(globalThis.location?.search || '');
+    return {
+        moduleId: normalizeModuleId(searchParams.get('module')),
+        fastMode: parseBooleanFlag(searchParams.get('fast')) || parseBooleanFlag(searchParams.get('skipTimers'))
+    };
+}
+
+function enableFastRuntime() {
+    const config = ensureTestingConfig();
+    if (config.runtimePatched) return;
+
+    const nativeSetTimeout = config.nativeSetTimeout || globalThis.setTimeout.bind(globalThis);
+    const nativeSetInterval = config.nativeSetInterval || globalThis.setInterval.bind(globalThis);
+    const nativeDateNow = config.nativeDateNow || Date.now.bind(Date);
+    const realStart = nativeDateNow();
+    const acceleratedSpeed = 1000;
+
+    config.nativeSetTimeout = nativeSetTimeout;
+    config.nativeSetInterval = nativeSetInterval;
+    config.nativeDateNow = nativeDateNow;
+
+    globalThis.setTimeout = (handler, timeout = 0, ...args) => {
+        const nextTimeout = Math.max(0, Math.min(Number(timeout) || 0, 1));
+        return nativeSetTimeout(handler, nextTimeout, ...args);
+    };
+
+    globalThis.setInterval = (handler, timeout = 0, ...args) => {
+        const nextInterval = Math.max(0, Math.min(Number(timeout) || 0, 1));
+        return nativeSetInterval(handler, nextInterval, ...args);
+    };
+
+    Date.now = () => realStart + ((nativeDateNow() - realStart) * acceleratedSpeed);
+
+    config.runtimePatched = true;
+}
+
+function disableFastRuntime() {
+    const config = ensureTestingConfig();
+    if (!config.runtimePatched) return;
+
+    if (config.nativeSetTimeout) {
+        globalThis.setTimeout = config.nativeSetTimeout;
+    }
+    if (config.nativeSetInterval) {
+        globalThis.setInterval = config.nativeSetInterval;
+    }
+    if (config.nativeDateNow) {
+        Date.now = config.nativeDateNow;
+    }
+
+    config.runtimePatched = false;
+}
+
 // 初始化应用
 function initApp() {
     // 获取DOM元素
@@ -41,6 +156,57 @@ function initApp() {
     );
 
     const dialogueManager = new DialogueManager(chatMessages, inputArea, userInput);
+    const testingConfig = updateTestingConfig(getTestingConfigFromUrl());
+    if (testingConfig.fastMode) {
+        enableFastRuntime();
+    }
+
+    function openModule(requestedModuleId) {
+        const moduleMeta = getModuleMeta(normalizeModuleId(requestedModuleId));
+        if (!moduleMeta) {
+            console.warn('[resilience-test] Unknown module:', requestedModuleId);
+            return false;
+        }
+
+        practiceTitle.innerText = moduleMeta.moduleTitle;
+        pageManager.showDaily(moduleMeta.weekIdx);
+        dialogueManager.resetForModule(moduleMeta.moduleId);
+        pageManager.showPractice();
+        return true;
+    }
+
+    globalThis[TESTING_API_KEY] = {
+        openModule(requestedModuleId, options = {}) {
+            if (Object.prototype.hasOwnProperty.call(options, 'fastMode')) {
+                updateTestingConfig({ fastMode: Boolean(options.fastMode) });
+                if (options.fastMode) {
+                    enableFastRuntime();
+                } else {
+                    disableFastRuntime();
+                }
+            }
+
+            return openModule(requestedModuleId);
+        },
+        restartModule(requestedModuleId = dialogueManager.currentModule) {
+            return openModule(requestedModuleId);
+        },
+        setFastMode(enabled = true) {
+            updateTestingConfig({ fastMode: Boolean(enabled) });
+            if (enabled) {
+                enableFastRuntime();
+            } else {
+                disableFastRuntime();
+            }
+        },
+        getState() {
+            return {
+                currentModule: dialogueManager.currentModule,
+                step: dialogueManager.step,
+                fastMode: Boolean(ensureTestingConfig().fastMode)
+            };
+        }
+    };
 
     // 事件绑定：返回按钮
     backFromDaily.addEventListener('click', () => {
@@ -68,8 +234,7 @@ function initApp() {
         const day = card.dataset.day;
         const moduleId = `${week}-${day}`;
 
-        dialogueManager.resetForModule(moduleId);
-        pageManager.showPractice();
+        openModule(moduleId);
     });
 
     // 事件绑定：继续按钮
@@ -103,6 +268,10 @@ function initApp() {
     });
 
     // 初始化显示主页
+    if (testingConfig.moduleId && openModule(testingConfig.moduleId)) {
+        return;
+    }
+
     pageManager.showHome();
 }
 

@@ -8,6 +8,9 @@ https://resilience-training-programme-two.vercel.app
 本地测试：
 python -m http.server 8000 --directory src
 
+快捷测试入口示例：（请将`module`和`fast`参数替换为实际值）
+http://127.0.0.1:8000/?module=3-2&fast=1
+
 ## 🌱 项目介绍
 
 本项目提供了一个交互式的心理弹性训练平台，结合以下核心理念：

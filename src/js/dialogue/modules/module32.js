@@ -125,15 +125,6 @@ function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onCom
     }, 250);
 }
 
-function enableInputAfterDelay(manager, seconds, nextStep) {
-    const sessionId = getChatSessionId(manager.chatMessages);
-    setTimeout(() => {
-        if (!isChatSessionActive(manager.chatMessages, sessionId)) return;
-        manager.enableInputForModule(manager.chatMessages);
-        manager.step = nextStep;
-    }, seconds * 1000);
-}
-
 function getModule32ReflectionFeedback(text) {
     const normalized = text.replace(/\s+/g, '');
 
@@ -246,8 +237,8 @@ export const module32Handlers = {
             this.step = 20;
         } else if (this.step === 20) {
             appendAiMessage(this.chatMessages, '不着急，你可以慢慢回想，然后可以把自己想到的输入到对话框中。', false);
-            disableInput(this.inputArea, this.userInput);
-            enableInputAfterDelay(this, 120, 21);
+            this.enableInputForModule(this.chatMessages);
+            this.step = 21;
         } else if (this.step === 22) {
             appendAiMessage(this.chatMessages, '今天我们重点学习了过度积极反刍，即那些强迫“必须积极”反而压抑真实情绪的心理模式，并进一步将接纳技术扩展应用到这些场景。', true);
             this.step = 23;
