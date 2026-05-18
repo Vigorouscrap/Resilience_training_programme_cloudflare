@@ -16,7 +16,7 @@ export function appendAiMessage(chatMessages, text, withContinue = false) {
     chatMessages.appendChild(row);
     scrollChat(chatMessages);
 
-    if (withContinue) {
+    if (withContinue) {     /*是否自动添加继续按钮*/
         if (!document.querySelector('.continue-wrapper')) {
             appendContinueButton(chatMessages);
         }

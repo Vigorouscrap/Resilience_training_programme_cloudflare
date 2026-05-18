@@ -10,6 +10,7 @@
 export const module17Handlers = {
     onContinue_Module17Docx() {
         if (this.step === 0) {
+            appendAiMessage(this.chatMessages, '过去几天，我们一起完成了三种不同的内在探索：', false);
             appendSpecialCard(this.chatMessages, '<p>正念呼吸 —— 练习“回到当下”</p><p>情绪接收站 —— 学习“看见”感受</p><p>牛奶实验 —— 体验“思维 ≠ 事实”</p>');
             appendContinueButton(this.chatMessages);
             this.step = 1;
