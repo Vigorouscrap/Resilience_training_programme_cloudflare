@@ -17,6 +17,10 @@ import { module23Handlers, repeatedMeditationModuleIds } from './modules/module2
 import { module24Handlers } from './modules/module24.js';
 import { module26Handlers } from './modules/module26.js';
 import { module27Handlers } from './modules/module27.js';
+import { module32Handlers } from './modules/module32.js';
+import { module33Handlers } from './modules/module33.js';
+import { module35Handlers } from './modules/module35.js';
+import { module37Handlers } from './modules/module37.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -63,6 +67,13 @@ export class DialogueManager {
             breathAnswers: [],
             sharedStressText: '',
             hasConcreteStress: false
+        };
+        this.module32State = {
+            recallAnswer: '',
+            reflectionAnswer: ''
+        };
+        this.module37State = {
+            breathAnswers: []
         };
         this.invalidateAsyncCallbacks();
     }
@@ -135,6 +146,25 @@ export class DialogueManager {
             };
             appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
             this.step = 0;
+        } else if (module === '3-2') {
+            this.module32State = {
+                recallAnswer: '',
+                reflectionAnswer: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '3-3') {
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '3-5') {
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '3-7') {
+            this.module37State = {
+                breathAnswers: []
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
+            this.step = 0;
         } else if (repeatedMeditationModuleIds.has(module)) {
             appendAiMessage(this.chatMessages, '欢迎来到今天的冥想练习。', true);
             this.step = 0;
@@ -173,6 +203,14 @@ export class DialogueManager {
                 this.onContinue_Module26();
             } else if (this.currentModule === '2-7') {
                 this.onContinue_Module27();
+            } else if (this.currentModule === '3-2') {
+                this.onContinue_Module32();
+            } else if (this.currentModule === '3-3') {
+                this.onContinue_Module33();
+            } else if (this.currentModule === '3-5') {
+                this.onContinue_Module35();
+            } else if (this.currentModule === '3-7') {
+                this.onContinue_Module37();
             } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
                 this.onContinue_Module23();
             } else if (this.currentModule === '1-5') {
@@ -228,6 +266,10 @@ export class DialogueManager {
             this.handleModule27UserMessage(text);
             return;
         }
+        if (this.currentModule === '3-2') {
+            this.handleModule32UserMessage(text);
+            return;
+        }
 
         if (this.currentModule === '1-3' && this.step === 1) {
             disableInput(this.inputArea, this.userInput);
@@ -277,5 +319,9 @@ Object.assign(
     module23Handlers,
     module24Handlers,
     module26Handlers,
-    module27Handlers
+    module27Handlers,
+    module32Handlers,
+    module33Handlers,
+    module35Handlers,
+    module37Handlers
 );

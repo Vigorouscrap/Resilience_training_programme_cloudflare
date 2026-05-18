@@ -88,7 +88,7 @@ export const module23Handlers = {
     },
 
     getModule23MeditationSequence() {
-        return [
+        const sequence = [
             this.createTimedSequenceItem('首先，请采取一个舒适的固定姿势：无论盘腿、坐在椅子上、站立甚至躺卧，务求姿势能够舒服、持久，腰身能够轻松、自然。双手可以自然放在膝盖上，或者放在身体两侧。'),
             this.createTimedSequenceItem('如果你身边有其他电子设备或可能打扰自己的物品，可以暂时将它们放在一边。接下来几分钟，是全然属于你自己的时间。'),
             this.createTimedSequenceItem('现在，如果你愿意，可以慢慢闭上眼睛。如果不习惯闭眼，也可以轻轻看着前方的地面。让身体自然地呼吸，心只是跟随自己的呼吸、觉察自己的呼吸，感受‘呼吸正在发生’这件事。当呼气的时候知道自己是在呼气，当吸气的时候知道自己是在吸气；当气息长的时候知道是气息长，当气息短的时候知道是气息短；当呼吸的感觉明显的时候知道呼吸的感觉是明显的，当呼吸的感觉不明显的时候知道呼吸的感觉是不明显的。'),
@@ -102,5 +102,13 @@ export const module23Handlers = {
             this.createTimedSequenceItem('未来几周里，我们会多次进行这种冥想练习。每一次练习中，我们都要尝试只观察、不评判、不联想。'),
             this.createTimedSequenceItem('感谢你今天的时间。祝你拥有平静而觉察的一天。')
         ];
+
+        if (this.currentModule === '3-1' || this.currentModule === '3-4') {
+            sequence.push(
+                this.createTimedSequenceItem('一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：待后续补充）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。')
+            );
+        }
+
+        return sequence;
     }
 };
