@@ -21,6 +21,10 @@ import { module32Handlers } from './modules/module32.js';
 import { module33Handlers } from './modules/module33.js';
 import { module35Handlers } from './modules/module35.js';
 import { module37Handlers } from './modules/module37.js';
+import { module42Handlers } from './modules/module42.js';
+import { module44Handlers } from './modules/module44.js';
+import { module46Handlers } from './modules/module46.js';
+import { module47Handlers } from './modules/module47.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -73,6 +77,22 @@ export class DialogueManager {
             reflectionAnswer: ''
         };
         this.module37State = {
+            breathAnswers: []
+        };
+        this.module42State = {
+            observedThoughts: '',
+            impulseThoughts: ''
+        };
+        this.module44State = {
+            quizChecked: false,
+            benefitIndex: 0,
+            caseIndex: 0,
+            caseAnswers: []
+        };
+        this.module46State = {
+            supporterResponse: ''
+        };
+        this.module47State = {
             breathAnswers: []
         };
         this.invalidateAsyncCallbacks();
@@ -165,6 +185,34 @@ export class DialogueManager {
             };
             appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
             this.step = 0;
+        } else if (module === '4-2') {
+            this.module42State = {
+                observedThoughts: '',
+                impulseThoughts: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '4-4') {
+            this.module44State = {
+                quizChecked: false,
+                benefitIndex: 0,
+                caseIndex: 0,
+                caseAnswers: []
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '4-6') {
+            this.module46State = {
+                supporterResponse: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '4-7') {
+            this.module47State = {
+                breathAnswers: []
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
+            this.step = 0;
         } else if (repeatedMeditationModuleIds.has(module)) {
             appendAiMessage(this.chatMessages, '欢迎来到今天的冥想练习。', true);
             this.step = 0;
@@ -211,6 +259,14 @@ export class DialogueManager {
                 this.onContinue_Module35();
             } else if (this.currentModule === '3-7') {
                 this.onContinue_Module37();
+            } else if (this.currentModule === '4-2') {
+                this.onContinue_Module42();
+            } else if (this.currentModule === '4-4') {
+                this.onContinue_Module44();
+            } else if (this.currentModule === '4-6') {
+                this.onContinue_Module46();
+            } else if (this.currentModule === '4-7') {
+                this.onContinue_Module47();
             } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
                 this.onContinue_Module23();
             } else if (this.currentModule === '1-5') {
@@ -270,6 +326,18 @@ export class DialogueManager {
             this.handleModule32UserMessage(text);
             return;
         }
+        if (this.currentModule === '4-2') {
+            this.handleModule42UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '4-4') {
+            this.handleModule44UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '4-6') {
+            this.handleModule46UserMessage(text);
+            return;
+        }
 
         if (this.currentModule === '1-3' && this.step === 1) {
             disableInput(this.inputArea, this.userInput);
@@ -323,5 +391,9 @@ Object.assign(
     module32Handlers,
     module33Handlers,
     module35Handlers,
-    module37Handlers
+    module37Handlers,
+    module42Handlers,
+    module44Handlers,
+    module46Handlers,
+    module47Handlers
 );
