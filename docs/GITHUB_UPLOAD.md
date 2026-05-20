@@ -56,18 +56,7 @@ git push -u origin main
 ### 1. 验证上传
 访问 `https://github.com/YOUR_USERNAME/resilience-programme` 确认文件已上传
 
-### 2. 启用 GitHub Pages（可选）
-使项目可以在线访问：
-
-1. 进入仓库设置（Settings）
-2. 找到 "Pages" 选项
-3. 在 "Build and deployment" 下，选择 "Deploy from a branch"
-4. 选择 "main" 分支和 "/src" 文件夹
-5. 保存
-
-然后访问 `https://YOUR_USERNAME.github.io/resilience-programme/` 即可在线使用
-
-### 3. 添加项目徽章（可选）
+### 2. 添加项目徽章（可选）
 在 README.md 中添加：
 
 ```markdown

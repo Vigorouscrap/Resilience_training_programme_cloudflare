@@ -30,28 +30,6 @@ Notes:
 - This only makes the site reachable from networks that can reach your computer.
 - For internet-wide access from your own machine, you still need router port forwarding, a public IP/domain, or a tunnel service.
 
-## Internet public access with GitHub Pages
-
-The repository includes `.github/workflows/deploy-pages.yml`, which deploys the `src` folder to GitHub Pages.
-
-1. Push this repository to GitHub.
-2. In the GitHub repository, open `Settings -> Pages`.
-3. Set `Build and deployment -> Source` to `GitHub Actions`.
-4. Push to the `main` branch, or run the `Deploy static site to GitHub Pages` workflow manually.
-5. After the workflow finishes, GitHub will show the public URL in the deployment summary.
-
-The site uses relative paths such as `css/styles.css`, `js/main.js`, and `images/...`, so it works under a GitHub Pages project URL like:
-
-```text
-https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/
-```
-
-For this repository, the default GitHub Pages URL should be:
-
-```text
-https://xiaoqisong12-lgtm.github.io/Resilience_training_programme/
-```
-
 ## Internet public access with Vercel
 
 The repository includes `vercel.json`, which tells Vercel to publish the `src` folder directly. No build step is required.

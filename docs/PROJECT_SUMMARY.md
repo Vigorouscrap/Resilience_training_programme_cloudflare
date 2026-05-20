@@ -228,13 +228,6 @@ git push -u origin main
 
 ## 部署建议
 
-### GitHub Pages（免费）
-```bash
-# 启用 GitHub Pages
-Settings → Pages → Deploy from main /src
-# 访问：https://username.github.io/resilience-programme/
-```
-
 ### Netlify（推荐）
 1. 连接 GitHub 账户
 2. 选择仓库
@@ -271,7 +264,7 @@ A：在 `dialogue.js` 中添加对应的方法，在 `data.js` 中添加数据
 1. ✅ 项目已本地初始化为 Git 仓库
 2. ⏳ 需要：在 GitHub 创建新仓库
 3. ⏳ 需要：上传到 GitHub（按照 GITHUB_UPLOAD.md 操作）
-4. ⏳ 可选：启用 GitHub Pages 进行在线访问
+4. ⏳ 可选：使用静态托管服务进行在线访问（如 Netlify、Vercel）
 
 ---
 
