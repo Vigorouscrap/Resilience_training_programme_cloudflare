@@ -25,6 +25,10 @@ import { module42Handlers } from './modules/module42.js';
 import { module44Handlers } from './modules/module44.js';
 import { module46Handlers } from './modules/module46.js';
 import { module47Handlers } from './modules/module47.js';
+import { module52Handlers } from './modules/module52.js';
+import { module54Handlers } from './modules/module54.js';
+import { module56Handlers } from './modules/module56.js';
+import { module57Handlers } from './modules/module57.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -93,6 +97,23 @@ export class DialogueManager {
             supporterResponse: ''
         };
         this.module47State = {
+            breathAnswers: []
+        };
+        this.module52State = {
+            selectedThought: ''
+        };
+        this.module54State = {
+            positiveChoice: '',
+            positiveBefore: null,
+            positiveAfter: null,
+            negativeChoice: '',
+            negativeBefore: null,
+            negativeAfter: null
+        };
+        this.module56State = {
+            visitedFaqs: new Set()
+        };
+        this.module57State = {
             breathAnswers: []
         };
         this.invalidateAsyncCallbacks();
@@ -213,6 +234,35 @@ export class DialogueManager {
             };
             appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
             this.step = 0;
+        } else if (module === '5-2') {
+            this.module52State = {
+                selectedThought: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '5-4') {
+            this.module54State = {
+                positiveChoice: '',
+                positiveBefore: null,
+                positiveAfter: null,
+                negativeChoice: '',
+                negativeBefore: null,
+                negativeAfter: null
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '5-6') {
+            this.module56State = {
+                visitedFaqs: new Set()
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '5-7') {
+            this.module57State = {
+                breathAnswers: []
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
+            this.step = 0;
         } else if (repeatedMeditationModuleIds.has(module)) {
             appendAiMessage(this.chatMessages, '欢迎来到今天的冥想练习。', true);
             this.step = 0;
@@ -267,6 +317,14 @@ export class DialogueManager {
                 this.onContinue_Module46();
             } else if (this.currentModule === '4-7') {
                 this.onContinue_Module47();
+            } else if (this.currentModule === '5-2') {
+                this.onContinue_Module52();
+            } else if (this.currentModule === '5-4') {
+                this.onContinue_Module54();
+            } else if (this.currentModule === '5-6') {
+                this.onContinue_Module56();
+            } else if (this.currentModule === '5-7') {
+                this.onContinue_Module57();
             } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
                 this.onContinue_Module23();
             } else if (this.currentModule === '1-5') {
@@ -338,6 +396,10 @@ export class DialogueManager {
             this.handleModule46UserMessage(text);
             return;
         }
+        if (this.currentModule === '5-4') {
+            this.handleModule54UserMessage(text);
+            return;
+        }
 
         if (this.currentModule === '1-3' && this.step === 1) {
             disableInput(this.inputArea, this.userInput);
@@ -395,5 +457,9 @@ Object.assign(
     module42Handlers,
     module44Handlers,
     module46Handlers,
-    module47Handlers
+    module47Handlers,
+    module52Handlers,
+    module54Handlers,
+    module56Handlers,
+    module57Handlers
 );
