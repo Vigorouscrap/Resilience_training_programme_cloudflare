@@ -29,6 +29,10 @@ import { module52Handlers } from './modules/module52.js';
 import { module54Handlers } from './modules/module54.js';
 import { module56Handlers } from './modules/module56.js';
 import { module57Handlers } from './modules/module57.js';
+import { module62Handlers } from './modules/module62.js';
+import { module64Handlers } from './modules/module64.js';
+import { module66Handlers } from './modules/module66.js';
+import { module67Handlers } from './modules/module67.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -115,6 +119,31 @@ export class DialogueManager {
         };
         this.module57State = {
             breathAnswers: []
+        };
+        this.module62State = {
+            eventText: '',
+            bodyText: '',
+            thoughtText: '',
+            emotionIntensity: '',
+            observerEventText: '',
+            observerBodyText: '',
+            observerThoughtText: '',
+            observerIntensity: '',
+            desireText: ''
+        };
+        this.module64State = {
+            scenarioOneAnswer: '',
+            scenarioTwoAnswer: ''
+        };
+        this.module66State = {
+            visitedReviewSections: new Set(),
+            disidentificationAnswer: '',
+            acceptanceAnswer: '',
+            observerAnswer: ''
+        };
+        this.module67State = {
+            breathAnswers: [],
+            growthAnswer: ''
         };
         this.invalidateAsyncCallbacks();
     }
@@ -263,6 +292,43 @@ export class DialogueManager {
             };
             appendAiMessage(this.chatMessages, '欢迎来到这一周的回顾总结。', true);
             this.step = 0;
+        } else if (module === '6-2') {
+            this.module62State = {
+                eventText: '',
+                bodyText: '',
+                thoughtText: '',
+                emotionIntensity: '',
+                observerEventText: '',
+                observerBodyText: '',
+                observerThoughtText: '',
+                observerIntensity: '',
+                desireText: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '6-4') {
+            this.module64State = {
+                scenarioOneAnswer: '',
+                scenarioTwoAnswer: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '6-6') {
+            this.module66State = {
+                visitedReviewSections: new Set(),
+                disidentificationAnswer: '',
+                acceptanceAnswer: '',
+                observerAnswer: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
+        } else if (module === '6-7') {
+            this.module67State = {
+                breathAnswers: [],
+                growthAnswer: ''
+            };
+            appendAiMessage(this.chatMessages, '欢迎来到今天的练习。', true);
+            this.step = 0;
         } else if (repeatedMeditationModuleIds.has(module)) {
             appendAiMessage(this.chatMessages, '欢迎来到今天的冥想练习。', true);
             this.step = 0;
@@ -325,6 +391,14 @@ export class DialogueManager {
                 this.onContinue_Module56();
             } else if (this.currentModule === '5-7') {
                 this.onContinue_Module57();
+            } else if (this.currentModule === '6-2') {
+                this.onContinue_Module62();
+            } else if (this.currentModule === '6-4') {
+                this.onContinue_Module64();
+            } else if (this.currentModule === '6-6') {
+                this.onContinue_Module66();
+            } else if (this.currentModule === '6-7') {
+                this.onContinue_Module67();
             } else if (repeatedMeditationModuleIds.has(this.currentModule)) {
                 this.onContinue_Module23();
             } else if (this.currentModule === '1-5') {
@@ -400,6 +474,22 @@ export class DialogueManager {
             this.handleModule54UserMessage(text);
             return;
         }
+        if (this.currentModule === '6-2') {
+            this.handleModule62UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '6-4') {
+            this.handleModule64UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '6-6') {
+            this.handleModule66UserMessage(text);
+            return;
+        }
+        if (this.currentModule === '6-7') {
+            this.handleModule67UserMessage(text);
+            return;
+        }
 
         if (this.currentModule === '1-3' && this.step === 1) {
             disableInput(this.inputArea, this.userInput);
@@ -461,5 +551,9 @@ Object.assign(
     module52Handlers,
     module54Handlers,
     module56Handlers,
-    module57Handlers
+    module57Handlers,
+    module62Handlers,
+    module64Handlers,
+    module66Handlers,
+    module67Handlers
 );

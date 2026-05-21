@@ -9,10 +9,25 @@
  * @param {string} text - 消息文本
  * @param {boolean} withContinue - 是否显示继续按钮
  */
+function prepareMessageHtml(text) {
+    const container = document.createElement('div');
+    container.innerHTML = String(text);
+
+    container.querySelectorAll('a[href]').forEach(link => {
+        const href = link.getAttribute('href') || '';
+        if (/^https?:\/\//i.test(href)) {
+            link.setAttribute('target', '_blank');
+            link.setAttribute('rel', 'noopener noreferrer');
+        }
+    });
+
+    return container.innerHTML;
+}
+
 export function appendAiMessage(chatMessages, text, withContinue = false) {
     const row = document.createElement('div');
     row.className = 'message-row-left';
-    row.innerHTML = `<div class="avatar">🧑‍🏫</div><div class="bubble-left">${text}</div>`;
+    row.innerHTML = `<div class="avatar">🧑‍🏫</div><div class="bubble-left">${prepareMessageHtml(text)}</div>`;
     chatMessages.appendChild(row);
     scrollChat(chatMessages);
 
@@ -260,7 +275,7 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble-left';
-    bubble.innerHTML = text;
+    bubble.innerHTML = prepareMessageHtml(text);
 
     const timer = document.createElement('div');
     timer.className = 'card-timer';
