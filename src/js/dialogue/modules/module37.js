@@ -190,7 +190,7 @@ export const module37Handlers = {
             appendAiMessage(this.chatMessages, '我们前两天还进行了自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（链接待补充）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', true);
             this.step = 19;
         } else if (this.step === 19) {
-            appendAiMessage(this.chatMessages, '本次回顾到此结束。这段时间你完成了几种新的探索，无论体验深浅，你为自己付出的时间和关注，本身就是一种自我关怀。我们明天将开启第四阶段的练习，期待与你再次相见。”', false);
+            appendAiMessage(this.chatMessages, '本次回顾到此结束。这段时间你完成了几种新的探索，无论体验深浅，你为自己付出的时间和关注，本身就是一种自我关怀。我们明天将开启第四阶段的练习，期待与你再次相见。', false);
             this.step = 20;
         }
     },

@@ -236,7 +236,7 @@ export const module33Handlers = {
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '下面展示了具体的回应方式以及目的，请慢慢阅读。', false);
             appendSpecialCard(this.chatMessages, module33ResponseGuideCardHtml);
-            startCardCountdown(this.chatMessages, 45, '可继续', '继续', () => {
+            startCardCountdown(this.chatMessages, 60, '可继续', '继续', () => {
                 this.step = 8;
                 this.onContinue_Module33();
             });
