@@ -149,7 +149,7 @@ export const module24Handlers = {
         removeCurrentButtonGroup(this.chatMessages);
         this.module24State.selectedCase = choice;
         appendSpecialCard(this.chatMessages, `<p>${this.escapeHtml(module24Cases[choice])}</p>`);
-        appendAiMessage(this.chatMessages, '现在请仔细体会卡片上呈现的案例，想象这是自己正在经历的事。', false);
+        appendAiMessage(this.chatMessages, '现在请仔细体会卡片上呈现的案例，想象这是自己正在经历的事。', true);
         appendContinueButton(this.chatMessages, 10);
         this.step = 8;
     },
