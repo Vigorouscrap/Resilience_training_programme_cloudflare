@@ -46,7 +46,7 @@ export const module42Handlers = {
                 this.onContinue_Module42();
             });
         } else if (this.step === 2) {
-            appendAiMessage(this.chatMessages, '接下来我们会播放一段5min的音频，请保持舒适坐姿，双手自然放置，全程闭眼专注聆听，跟着音频引导进行想象，过程中不用刻意控制想法，顺其自然即可。当你准备好时，请点击屏幕中出现的下一步按钮，然后闭上眼睛等待音频开始。', false);
+            appendAiMessage(this.chatMessages, '接下来我们会播放一段5分钟的音频，请保持舒适坐姿，双手自然放置，全程闭眼专注聆听，跟着音频引导进行想象，过程中不用刻意控制想法，顺其自然即可。当你准备好时，请点击继续按钮，然后闭上眼睛等待音频开始。', false);
             appendContinueButton(this.chatMessages);
             this.step = 3;
         } else if (this.step === 3) {
@@ -97,7 +97,7 @@ export const module42Handlers = {
             appendAiMessage(this.chatMessages, '今天的学习就到这里，未来我们会进一步结合练习深入理解认知解离。', true);
             this.step = 16;
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（链接待补充）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（https://v.wjx.cn/vm/YDIVxE6.aspx#）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
             this.step = 17;
         }
     },
