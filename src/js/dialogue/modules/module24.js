@@ -69,7 +69,7 @@ function startCardCountdown(chatMessages, seconds, readyText, onComplete) {
 export const module24Handlers = {
     onContinue_Module24() {
         if (this.step === 0) {
-            appendAiMessage(this.chatMessages, '今天，我们将学习“接纳技术”。它不是一个‘消除情绪’的工具，而像是给情绪“搭台阶”，不强迫自己“立刻不难受”，一步步和情绪温和相处。', true);
+            appendAiMessage(this.chatMessages, '今天，我们将学习“接纳技术”。它不是一个消除情绪的工具，而像是给情绪搭台阶，不强迫自己立刻不难受，一步步和情绪温和相处。', true);
             this.step = 1;
         } else if (this.step === 1) {
             appendAiMessage(this.chatMessages, '接下来，我们将了解四个具体的步骤。每个步骤都会告知我们具体说什么和做什么，请一起跟随尝试。', true);
