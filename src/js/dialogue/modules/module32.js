@@ -201,7 +201,7 @@ export const module32Handlers = {
         } else if (this.step === 12) {
             appendAiMessage(this.chatMessages, '然后，根据你的感受来代替案例中的小李一步步做出下面的陈述。没有对错之分，请尝试大声说出来。', false);
             appendSpecialCard(this.chatMessages, module32ObservationCardHtml);
-            startCardCountdown(this.chatMessages, 20, '可完成', '已完成', () => {
+            startCardCountdown(this.chatMessages, 30, '可完成', '已完成', () => {
                 this.step = 13;
                 this.onContinue_Module32();
             });
@@ -210,13 +210,13 @@ export const module32Handlers = {
             this.step = 14;
         } else if (this.step === 14) {
             appendSpecialCard(this.chatMessages, module32AllowanceCardHtml);
-            startCardCountdown(this.chatMessages, 20, '可完成', '已完成', () => {
+            startCardCountdown(this.chatMessages, 30, '可完成', '已完成', () => {
                 this.step = 15;
                 this.onContinue_Module32();
             });
         } else if (this.step === 15) {
             appendSpecialCard(this.chatMessages, module32ExpansionCardHtml);
-            startCardCountdown(this.chatMessages, 20, '可完成', '已完成', () => {
+            startCardCountdown(this.chatMessages, 30, '可完成', '已完成', () => {
                 this.step = 16;
                 this.onContinue_Module32();
             });
@@ -225,7 +225,7 @@ export const module32Handlers = {
             this.step = 17;
         } else if (this.step === 17) {
             appendSpecialCard(this.chatMessages, module32ActionCardHtml);
-            startCardCountdown(this.chatMessages, 20, '可完成', '已完成', () => {
+            startCardCountdown(this.chatMessages, 30, '可完成', '已完成', () => {
                 this.step = 18;
                 this.onContinue_Module32();
             });
