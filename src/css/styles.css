@@ -366,6 +366,11 @@
     margin: 0.2rem 0;
     width: fit-content;
     max-width: 95%;
+    line-height: 1.8;  /* 行距 */
+}
+
+.special-card .scene-title {
+    text-align: center;
 }
 
 .continue-wrapper {
