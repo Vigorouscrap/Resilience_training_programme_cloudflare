@@ -3,6 +3,7 @@ import {
     appendSpecialCard,
     appendButtonGroup,
     appendContinueButton,
+    queueUiMutation,
     disableInput,
     getChatSessionId,
     isChatSessionActive
@@ -39,42 +40,44 @@ function removeCurrentButtonGroup(chatMessages) {
 }
 
 function startCardCountdown(chatMessages, seconds, readyText, onComplete) {
-    const cards = chatMessages.querySelectorAll('.special-card');
-    const currentCard = cards[cards.length - 1];
-    const sessionId = getChatSessionId(chatMessages);
-    const deadline = Date.now() + (seconds * 1000);
+    queueUiMutation(chatMessages, () => {
+        const cards = chatMessages.querySelectorAll('.special-card');
+        const currentCard = cards[cards.length - 1];
+        const sessionId = getChatSessionId(chatMessages);
+        const deadline = Date.now() + (seconds * 1000);
 
-    if (!currentCard) {
-        setTimeout(() => {
-            if (!isChatSessionActive(chatMessages, sessionId)) return;
-            onComplete();
-        }, seconds * 1000);
-        return;
-    }
+        if (!currentCard) {
+            setTimeout(() => {
+                if (!isChatSessionActive(chatMessages, sessionId)) return;
+                onComplete();
+            }, seconds * 1000);
+            return;
+        }
 
-    const timerDiv = document.createElement('div');
-    timerDiv.className = 'card-timer';
-    let remaining = seconds;
-    timerDiv.innerText = `${remaining}秒后${readyText}`;
-    currentCard.appendChild(timerDiv);
+        const timerDiv = document.createElement('div');
+        timerDiv.className = 'card-timer';
+        let remaining = seconds;
+        timerDiv.innerText = `${remaining}秒后${readyText}`;
+        currentCard.appendChild(timerDiv);
 
-    const timer = setInterval(() => {
-        if (!isChatSessionActive(chatMessages, sessionId)) {
+        const timer = setInterval(() => {
+            if (!isChatSessionActive(chatMessages, sessionId)) {
+                clearInterval(timer);
+                return;
+            }
+
+            remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+            if (remaining > 0) {
+                timerDiv.innerText = `${remaining}秒后${readyText}`;
+                return;
+            }
+
             clearInterval(timer);
-            return;
-        }
-
-        remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-        if (remaining > 0) {
-            timerDiv.innerText = `${remaining}秒后${readyText}`;
-            return;
-        }
-
-        clearInterval(timer);
-        if (!isChatSessionActive(chatMessages, sessionId)) return;
-        timerDiv.innerText = readyText;
-        onComplete();
-    }, 250);
+            if (!isChatSessionActive(chatMessages, sessionId)) return;
+            timerDiv.innerText = readyText;
+            onComplete();
+        }, 250);
+    });
 }
 
 function createModule44QuizHtml() {

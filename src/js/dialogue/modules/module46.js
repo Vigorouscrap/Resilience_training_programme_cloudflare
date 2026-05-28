@@ -162,7 +162,7 @@ function appendModule46SpeakerMessageWithTimer(chatMessages, avatarText, text, d
 
         const remainingMs = Math.max(0, deadline - Date.now());
         if (remainingMs > 0) {
-            timer.innerText = `⏳${(remainingMs / 1000).toFixed(1)}s`;
+            timer.innerText = `⏳${Math.ceil(remainingMs / 1000)}s`;
             return true;
         }
 

@@ -2,6 +2,7 @@ import {
     appendAiMessage,
     appendSpecialCard,
     appendButtonGroup,
+    queueUiMutation,
     disableInput,
     getChatSessionId,
     isChatSessionActive
@@ -13,7 +14,7 @@ const module32DefinitionCardHtml = `
     <p>“过度积极反刍”是一种表面上看似积极，实际上却是在回避、压抑真实情绪的心理过程。它表现为：</p>
     <p>强迫自己只关注“积极”想法，如：“我必须乐观”“不能有负面情绪”。</p>
     <p>压抑或否认真实的担忧、失落、焦虑等情绪，如：“我不该这么想”。</p>
-    <p>用“积极口号”覆盖真实感受，而不是真正处理情绪</p>
+    <p>用“积极口号”覆盖真实感受，而不是真正处理情绪。</p>
 `;
 
 const module32QuestionCards = [
@@ -81,48 +82,50 @@ function removeCurrentButtonGroup(chatMessages) {
 }
 
 function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onComplete) {
-    const cards = chatMessages.querySelectorAll('.special-card');
-    const currentCard = cards[cards.length - 1];
-    const sessionId = getChatSessionId(chatMessages);
-    const deadline = Date.now() + (seconds * 1000);
+    queueUiMutation(chatMessages, () => {
+        const cards = chatMessages.querySelectorAll('.special-card');
+        const currentCard = cards[cards.length - 1];
+        const sessionId = getChatSessionId(chatMessages);
+        const deadline = Date.now() + (seconds * 1000);
 
-    if (!currentCard) {
-        setTimeout(() => {
+        if (!currentCard) {
+            setTimeout(() => {
+                if (!isChatSessionActive(chatMessages, sessionId)) return;
+                appendButtonGroup(chatMessages, [buttonLabel], () => {
+                    removeCurrentButtonGroup(chatMessages);
+                    onComplete();
+                });
+            }, seconds * 1000);
+            return;
+        }
+
+        const timerDiv = document.createElement('div');
+        timerDiv.className = 'card-timer';
+        let remaining = seconds;
+        timerDiv.innerText = `${remaining}秒后${readyText}`;
+        currentCard.appendChild(timerDiv);
+
+        const timer = setInterval(() => {
+            if (!isChatSessionActive(chatMessages, sessionId)) {
+                clearInterval(timer);
+                return;
+            }
+
+            remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+            if (remaining > 0) {
+                timerDiv.innerText = `${remaining}秒后${readyText}`;
+                return;
+            }
+
+            clearInterval(timer);
             if (!isChatSessionActive(chatMessages, sessionId)) return;
+            timerDiv.innerText = readyText;
             appendButtonGroup(chatMessages, [buttonLabel], () => {
                 removeCurrentButtonGroup(chatMessages);
                 onComplete();
             });
-        }, seconds * 1000);
-        return;
-    }
-
-    const timerDiv = document.createElement('div');
-    timerDiv.className = 'card-timer';
-    let remaining = seconds;
-    timerDiv.innerText = `${remaining}秒后${readyText}`;
-    currentCard.appendChild(timerDiv);
-
-    const timer = setInterval(() => {
-        if (!isChatSessionActive(chatMessages, sessionId)) {
-            clearInterval(timer);
-            return;
-        }
-
-        remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-        if (remaining > 0) {
-            timerDiv.innerText = `${remaining}秒后${readyText}`;
-            return;
-        }
-
-        clearInterval(timer);
-        if (!isChatSessionActive(chatMessages, sessionId)) return;
-        timerDiv.innerText = readyText;
-        appendButtonGroup(chatMessages, [buttonLabel], () => {
-            removeCurrentButtonGroup(chatMessages);
-            onComplete();
-        });
-    }, 250);
+        }, 250);
+    });
 }
 
 function getModule32ReflectionFeedback(text) {
@@ -164,6 +167,7 @@ export const module32Handlers = {
                 this.step = 7;
                 this.onContinue_Module32();
             });
+            
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '现在，为了进一步了解这种模式，我们一起来看一个案例。', false);
             appendSpecialCard(this.chatMessages, `<p>${this.escapeHtml(module32CaseText)}</p>`);

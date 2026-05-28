@@ -4,6 +4,7 @@ import {
     appendButtonGroup,
     appendContinueButton,
     appendUnderstandButton,
+    queueUiMutation,
     disableInput,
     getChatSessionId,
     isChatSessionActive
@@ -15,48 +16,50 @@ function removeCurrentButtonGroup(chatMessages) {
 }
 
 function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onComplete) {
-    const cards = chatMessages.querySelectorAll('.special-card');
-    const currentCard = cards[cards.length - 1];
-    const sessionId = getChatSessionId(chatMessages);
-    const deadline = Date.now() + (seconds * 1000);
+    queueUiMutation(chatMessages, () => {
+        const cards = chatMessages.querySelectorAll('.special-card');
+        const currentCard = cards[cards.length - 1];
+        const sessionId = getChatSessionId(chatMessages);
+        const deadline = Date.now() + (seconds * 1000);
 
-    if (!currentCard) {
-        setTimeout(() => {
+        if (!currentCard) {
+            setTimeout(() => {
+                if (!isChatSessionActive(chatMessages, sessionId)) return;
+                appendButtonGroup(chatMessages, [buttonLabel], () => {
+                    removeCurrentButtonGroup(chatMessages);
+                    onComplete();
+                });
+            }, seconds * 1000);
+            return;
+        }
+
+        const timerDiv = document.createElement('div');
+        timerDiv.className = 'card-timer';
+        let remaining = seconds;
+        timerDiv.innerText = `${remaining}秒后${readyText}`;
+        currentCard.appendChild(timerDiv);
+
+        const timer = setInterval(() => {
+            if (!isChatSessionActive(chatMessages, sessionId)) {
+                clearInterval(timer);
+                return;
+            }
+
+            remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+            if (remaining > 0) {
+                timerDiv.innerText = `${remaining}秒后${readyText}`;
+                return;
+            }
+
+            clearInterval(timer);
             if (!isChatSessionActive(chatMessages, sessionId)) return;
+            timerDiv.innerText = readyText;
             appendButtonGroup(chatMessages, [buttonLabel], () => {
                 removeCurrentButtonGroup(chatMessages);
                 onComplete();
             });
-        }, seconds * 1000);
-        return;
-    }
-
-    const timerDiv = document.createElement('div');
-    timerDiv.className = 'card-timer';
-    let remaining = seconds;
-    timerDiv.innerText = `${remaining}秒后${readyText}`;
-    currentCard.appendChild(timerDiv);
-
-    const timer = setInterval(() => {
-        if (!isChatSessionActive(chatMessages, sessionId)) {
-            clearInterval(timer);
-            return;
-        }
-
-        remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-        if (remaining > 0) {
-            timerDiv.innerText = `${remaining}秒后${readyText}`;
-            return;
-        }
-
-        clearInterval(timer);
-        if (!isChatSessionActive(chatMessages, sessionId)) return;
-        timerDiv.innerText = readyText;
-        appendButtonGroup(chatMessages, [buttonLabel], () => {
-            removeCurrentButtonGroup(chatMessages);
-            onComplete();
-        });
-    }, 250);
+        }, 250);
+    });
 }
 
 function buildPerspectiveTable(leftEvent, leftBody, leftThought, leftIntensity, rightEvent, rightBody, rightThought, rightIntensity) {

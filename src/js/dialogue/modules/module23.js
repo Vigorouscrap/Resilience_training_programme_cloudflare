@@ -2,7 +2,8 @@ import {
     appendAiMessage,
     appendButtonGroup,
     appendSpecialCard,
-    appendAiMessageWithTimer
+    appendAiMessageWithTimer,
+    appendContinueButton
 } from '../../ui.js';
 
 export const repeatedMeditationModuleIds = new Set([
@@ -75,6 +76,9 @@ export const module23Handlers = {
                 appendAiMessageWithTimer(this.chatMessages, item.text, item.delayMs, () => {
                     if (count > 1) {
                         runRepeat(count - 1);
+                    } else if (item.waitForContinueAfter) {
+                        this.pendingContinueAction = () => runItem(index + 1);
+                        appendContinueButton(this.chatMessages);
                     } else {
                         runItem(index + 1);
                     }
@@ -98,8 +102,14 @@ export const module23Handlers = {
             { text: '呼吸来来去去，感觉来来去去，我们只是观察……注意力飘走了，就温柔地把它带回来……不用评判，只是觉察……', delayMs: 40000, repeat: 5 },
             this.createTimedSequenceItem('现在我们慢慢做3次深呼吸。第一次吸气，感受空气充满胸腔，呼气，让身体再放松一点；第二次吸气，感受腹部的起伏，呼气，让肩膀再下沉一点；第三次吸气，感受全身的轻松，再慢慢呼气。'),
             this.createTimedSequenceItem('先慢慢活动一下手指和脚趾，感受血液在指尖、脚尖流动的感觉；再轻轻转动一下脖子，避免突然用力；最后慢慢睁开眼睛，先看看自己的双手，再看看身边的环境，让注意力一点点回到现实中。'),
-            this.createTimedSequenceItem('今天的练习就到这里。你做得很好。冥想呼吸有它独到的特色，它有效地利用呼吸反复循环的特点来培育心灵。当我们在持续知道自己的呼气和吸气时，我们实际上是在训练内心：持续安住当下的能力、减少被情绪冲动带走的惯性、创造选择和回应的自由空间。'),
-            this.createTimedSequenceItem('未来几周里，我们会多次进行这种冥想练习。每一次练习中，我们都要尝试只观察、不评判、不联想。'),
+            {
+                ...this.createTimedSequenceItem('今天的练习就到这里。你做得很好。冥想呼吸有它独到的特色，它有效地利用呼吸反复循环的特点来培育心灵。当我们在持续知道自己的呼气和吸气时，我们实际上是在训练内心：持续安住当下的能力、减少被情绪冲动带走的惯性、创造选择和回应的自由空间。'),
+                waitForContinueAfter: true
+            },
+            {
+                ...this.createTimedSequenceItem('未来几周里，我们会多次进行这种冥想练习。每一次练习中，我们都要尝试只观察、不评判、不联想。'),
+                waitForContinueAfter: true
+            },
             this.createTimedSequenceItem('感谢你今天的时间。祝你拥有平静而觉察的一天。')
         ];
 

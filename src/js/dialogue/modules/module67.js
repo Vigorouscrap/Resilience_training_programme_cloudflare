@@ -2,7 +2,8 @@ import {
     appendAiMessage,
     appendSpecialCard,
     appendButtonGroup,
-    disableInput
+    disableInput,
+    appendContinueButton
 } from '../../ui.js';
 
 function removeCurrentButtonGroup(chatMessages) {
@@ -101,7 +102,7 @@ export const module67Handlers = {
         } else if (this.step === 10) {
             appendAiMessage(this.chatMessages, '现在请闭上眼睛，回想自己的分享，感受这份成长带来的平静和力量，把这份感受记在心里。', false);
             appendSpecialCard(this.chatMessages, '<p>请闭上眼睛，回想自己的分享，感受这份成长带来的平静和力量。</p>');
-            this.appendContinueButton(this.chatMessages, 30);
+            appendContinueButton(this.chatMessages, 30);
             this.step = 11;
         } else if (this.step === 11) {
             appendAiMessage(this.chatMessages, '为了能够将训练课程学到的内容和技术更持久灵活地应用和延续下去，我们提供了一个简单自我练习计划。', false);
@@ -196,30 +197,6 @@ export const module67Handlers = {
             this.step = 9;
             this.onContinue_Module67();
         }
-    },
-
-    appendContinueButton(chatMessages, delaySeconds) {
-        const wrap = document.createElement('div');
-        wrap.className = 'continue-wrapper';
-        const btn = document.createElement('div');
-        btn.className = 'continue-btn';
-        btn.id = 'continueBtn';
-        btn.classList.add('disabled');
-        btn.innerText = `⏳ ${delaySeconds} 秒后继续`;
-        wrap.appendChild(btn);
-        chatMessages.appendChild(wrap);
-
-        let remaining = delaySeconds;
-        const timer = setInterval(() => {
-            remaining -= 1;
-            if (remaining > 0) {
-                btn.innerText = `⏳ ${remaining} 秒后继续`;
-            } else {
-                clearInterval(timer);
-                btn.classList.remove('disabled');
-                btn.innerText = '⏵ 点击继续';
-            }
-        }, 1000);
     },
 
     startModule67MeditationSequence() {
