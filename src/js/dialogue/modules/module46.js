@@ -67,11 +67,11 @@ const module46DemoDialogueSequence = [
 ];
 
 const module46SummaryCardHtml = `
-    <p>共情与识别：首先接纳对方的情绪，并准确复述出困扰他的核心想法。</p>
-    <p>贴标签：引导对方给想法一个描述性、非评判的标签，将想法对象化。</p>
-    <p>区分想法与事实：清晰地引导将脑海中的想法与现实中已发生的事件分开。</p>
-    <p>巩固与正常化：指出这是常见的思维模式，让当事人感到不被评判。</p>
-    <p>行动转向：自然引导至建设性的行动思考。</p>
+    <p><strong>共情与识别：</strong>首先接纳对方的情绪，并准确复述出困扰他的核心想法。</p>
+    <p><strong>贴标签：</strong>引导对方给想法一个描述性、非评判的标签，将想法对象化。</p>
+    <p><strong>区分想法与事实：</strong>清晰地引导将脑海中的想法与现实中已发生的事件分开。</p>
+    <p><strong>巩固与正常化：</strong>指出这是常见的思维模式，让当事人感到不被评判。</p>
+    <p><strong>行动转向：</strong>自然引导至建设性的行动思考。</p>
 `;
 
 function removeCurrentButtonGroup(chatMessages) {
