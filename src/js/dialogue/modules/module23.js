@@ -40,7 +40,7 @@ export const module23Handlers = {
                 this.chatMessages,
                 '<p><strong>应对昏沉：</strong>睁开眼/调整身体/观察昏沉感/换个姿势/换个时间/练习前微动</p><p><strong>应对掉举：</strong>换个关注点/不设限地练习/放松姿势和心态/放下所有期待/允许走神的发生并回归/睁开眼练习/数数呼吸</p>'
             );
-            appendAiMessage(this.chatMessages, '现在，我们就开始冥想练习。请跟随指令一步步进行。', false);
+            appendAiMessage(this.chatMessages, '现在，我们就开始冥想练习。<b>请打开当前用于练习的设备的声音，以便播放语音引导</b>，然后跟随指令一步步进行。', false);
             appendButtonGroup(this.chatMessages, ['开始'], () => {
                 const currentBtnGroup = this.chatMessages.querySelector('.button-group');
                 if (currentBtnGroup) currentBtnGroup.remove();

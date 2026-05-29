@@ -373,6 +373,11 @@
     text-align: center;
 }
 
+.special-card .annotation {
+    font-style: italic;
+    color: red;
+}
+
 .continue-wrapper {
     display: flex;
     justify-content: flex-start;
