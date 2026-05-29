@@ -10,6 +10,7 @@ python -m http.server 8000 --directory src
 
 快捷测试入口示例：（请将`module`和`fast`参数替换为实际值）
 http://127.0.0.1:8000/?module=3-2&fast=1
+ps：如果没有更改，可以ctrl+shift+R刷新网页缓存，重新测试
 
 ## 🌱 项目介绍
 

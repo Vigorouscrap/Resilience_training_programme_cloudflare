@@ -250,7 +250,7 @@ export const module32Handlers = {
             appendAiMessage(this.chatMessages, '接纳技术作为心理弹性训练的核心之一，能够鼓励我们接纳真实的感受，进而能更从容地度过每一次压力和挑战。未来，在应对多样压力、情绪时相信你也可以灵活应用接纳技术来应对。', true);
             this.step = 24;
         } else if (this.step === 24) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：https://v.wjx.cn/vm/tUtCiF5.aspx#）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', false);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：<a href="https://v.wjx.cn/vm/tUtCiF5.aspx#">https://v.wjx.cn/vm/tUtCiF5.aspx#</a>）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', false);
             this.step = 25;
         }
     },

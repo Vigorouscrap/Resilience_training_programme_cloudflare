@@ -288,7 +288,7 @@ export const module44Handlers = {
             appendAiMessage(this.chatMessages, '这就是今天的所有内容啦，期待你将我们学到的内容应用到自己的生活中。', true);
             this.step = 21;
         } else if (this.step === 21) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们今天还需要继续进行自我承诺行动，当你执行了你的接纳行动后，可以随时打开链接记录（https://v.wjx.cn/vm/YDIVxE6.aspx）。相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们今天还需要继续进行自我承诺行动，当你执行了你的接纳行动后，可以随时打开链接记录（<a href="https://v.wjx.cn/vm/YDIVxE6.aspx">https://v.wjx.cn/vm/YDIVxE6.aspx</a>）。相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
             this.step = 22;
         }
     },

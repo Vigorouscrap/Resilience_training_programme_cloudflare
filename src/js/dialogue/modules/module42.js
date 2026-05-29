@@ -97,7 +97,7 @@ export const module42Handlers = {
             appendAiMessage(this.chatMessages, '今天的学习就到这里，未来我们会进一步结合练习深入理解认知解离。', true);
             this.step = 16;
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（https://v.wjx.cn/vm/YDIVxE6.aspx#）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（<a href="https://v.wjx.cn/vm/YDIVxE6.aspx#">https://v.wjx.cn/vm/YDIVxE6.aspx#</a>）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
             this.step = 17;
         }
     },
