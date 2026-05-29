@@ -6,9 +6,9 @@ import {
 } from '../../ui.js';
 
 const module47AllianceCardHtml = `
-    <p>想象一下，当遇到压力或遭遇挫折后，强烈的情绪和想法袭来：</p>
-    <p>认知解离，就像是 “拉开距离，看清它是什么”。它回答的是：“这个在我脑海里大声嚷嚷的东西，究竟是什么？是一个事实，还是一个被情绪放大了的想法故事？”</p>
-    <p>接纳技术，则是在看清之后 “允许它的存在，不与它对抗” 。它回答的是：“好吧，我看到了这个令人不舒服的想法/情绪，我允许你在这里，但我不需要被你控制，我可以带着你继续生活。”</p>
+    <p><strong>想象一下，当遇到压力或遭遇挫折后，强烈的情绪和想法袭来：</strong></p>
+    <p><strong>认知解离，</strong>就像是拉开距离，看清想法是什么。回答的是：“这个在我脑海里大声嚷嚷的东西，究竟是什么？是一个事实，还是一个被情绪放大了的想法故事？”</p>
+    <p><strong>接纳技术，</strong>则是在看清之后允许它的存在，不与它对抗。回答的是：“好吧，我看到了这个令人不舒服的想法/情绪，我允许你在这里，但我不需要被你控制，我可以带着你继续生活。”</p>
 `;
 
 function removeCurrentButtonGroup(chatMessages) {
@@ -72,7 +72,7 @@ export const module47Handlers = {
             appendAiMessage(this.chatMessages, '现在，让我们带着更深刻的理解，再一次跟随音频体验一次站台冥想。', true);
             this.step = 11;
         } else if (this.step === 11) {
-            appendAiMessage(this.chatMessages, '请保持舒适坐姿，双手自然放置，全程闭眼专注聆听，跟着音频引导进行想象，过程中不用刻意控制想法，顺其自然即可。当你准备好时，请点击屏幕中出现的下一步按钮，然后闭上眼睛等待音频开始。', false);
+            appendAiMessage(this.chatMessages, '请保持舒适坐姿，双手自然放置，全程闭眼专注聆听，跟着音频引导进行想象，过程中不用刻意控制想法，顺其自然即可。当你准备好时，请点击继续按钮，然后闭上眼睛等待音频开始。', false);
             appendContinueButton(this.chatMessages);
             this.step = 12;
         } else if (this.step === 12) {
