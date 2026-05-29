@@ -179,7 +179,7 @@ function createModule44QuizHtml() {
                 }
             </style>
             <div class="module44-quiz-title">想法标签类型判断</div>
-            <div class="module44-quiz-hint">（以下呈现了七个不同的标签，请分别判断他们的性质，并选择右侧相应的选项，全部完成后，请点击“检查对错”按钮查看正确答案。）</div>
+            <div class="module44-quiz-hint">（以下呈现了七个不同的标签，请分别判断他们的性质，并选择相应的选项，全部完成后，请点击“检查对错”按钮查看正确答案。）</div>
             ${itemsHtml}
             <div class="module44-quiz-actions">
                 <button type="button" class="module44-quiz-check" disabled>检查对错</button>
@@ -229,7 +229,9 @@ export const module44Handlers = {
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '请试着判断以下想法标签是描述性的还是评判性的吧！', false);
             appendSpecialCard(this.chatMessages, createModule44QuizHtml());
-            this.initializeModule44Quiz();
+            queueUiMutation(this.chatMessages, () => {
+                this.initializeModule44Quiz();
+            });
             this.step = 8;
         } else if (this.step === 13) {
             this.showModule44BenefitCard(this.module44State.benefitIndex);
