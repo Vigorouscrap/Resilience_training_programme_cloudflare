@@ -296,7 +296,7 @@ export const module33Handlers = {
             appendAiMessage(this.chatMessages, '相信你已经有了更深的理解。当你或他人再次陷入反刍时，可以回想这个框架：先看见，后允许，再扩展，最后轻推一把。我们明天见。', true);
             this.step = 23;
         } else if (this.step === 23) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：待后续补充）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', false);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：https://v.wjx.cn/vm/tUtCiF5.aspx#）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', false);
             this.step = 24;
         }
     },

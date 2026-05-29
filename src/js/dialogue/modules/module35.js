@@ -94,7 +94,7 @@ export const module35Handlers = {
             appendContinueButton(this.chatMessages, 120);
             this.step = 13;
         } else if (this.step === 13) {
-            appendAiMessage(this.chatMessages, '想好了以后，请点击以下问卷星链接（待补充）填入触发场景和接纳行动。请在提交前截图保存自己填写的内容。（请注意，我们将以匿名形式记录，不会用于其他途径。）', false);
+            appendAiMessage(this.chatMessages, '想好了以后，请点击以下问卷星链接（https://v.wjx.cn/vm/eY3u9fv.aspx#）填入触发场景和接纳行动。请在提交前截图保存自己填写的内容。（请注意，我们将以匿名形式记录，不会用于其他途径。）', false);
             appendButtonGroup(this.chatMessages, ['已完成'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
                 this.step = 14;
@@ -107,7 +107,7 @@ export const module35Handlers = {
             appendAiMessage(this.chatMessages, '为了让这份承诺更好地服务你，我们还设置了一个简单的“自我观察”任务。目的不是考核，而是探索：探索哪种接纳方式对你最有效，探索你在行动前后细微的变化。', true);
             this.step = 16;
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '具体来讲，在未来几天，每当你执行了你的接纳行动后，可以随时打开链接记录（链接待补充）（这一负责记录的问卷星链接将每日发送给你，只有在你当天有进行接纳行动后才填写）。将要记录的内容有：', false);
+            appendAiMessage(this.chatMessages, '具体来讲，在未来几天，每当你执行了你的接纳行动后，可以随时打开链接记录（https://v.wjx.cn/vm/YDIVxE6.aspx#）（这一负责记录的问卷星链接将每日发送给你，只有在你当天有进行接纳行动后才填写）。将要记录的内容有：', false);
             appendSpecialCard(this.chatMessages, module35ObservationCardHtml);
             appendContinueButton(this.chatMessages);
             this.step = 17;

@@ -115,7 +115,7 @@ export const module23Handlers = {
 
         if (this.currentModule === '3-1' || this.currentModule === '3-4') {
             sequence.push(
-                this.createTimedSequenceItem('一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：待后续补充）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。')
+                this.createTimedSequenceItem('一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：https://v.wjx.cn/vm/tUtCiF5.aspx#）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。')
             );
         }
 
