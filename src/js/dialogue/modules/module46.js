@@ -9,7 +9,7 @@ import {
 } from '../../ui.js';
 
 const module46ScenarioCardHtml = `
-    <p><strong>【情景呈现】</strong></p>
+    <p class="scene-title"><strong>【情景呈现】</strong></p>
     <p>在季度汇报中，小张出现一个口误。结束后，他脑海中反复出现 “我搞砸了那么重要的时刻，领导和同事肯定会觉得我能力不行，我的职业形象完了” 的想法。</p>
 `;
 
@@ -226,7 +226,7 @@ export const module46Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 6;
         } else if (this.step === 6) {
-            appendAiMessage(this.chatMessages, '当我们或他人因为日常发生的小事或者经历挫折后产生了这种想法时，我们很容易把它们当作即将发生的“事实”，从而被焦虑和绝望裹挟。', true);
+            appendAiMessage(this.chatMessages, '当我们或他人因为日常发生的小事或者经历挫折后产生了这种想法时，我们很容易把它们当作即将发生的事实，从而被焦虑和绝望裹挟。', true);
             this.step = 7;
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '认知解离的核心，就是帮助我们看清“想法只是想法”，而不是事实本身。 这样，我们才能冷静下来，采取有效的行动。', true);
