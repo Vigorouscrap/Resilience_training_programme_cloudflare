@@ -136,7 +136,7 @@ export const module26Handlers = {
             appendAiMessage(this.chatMessages, '今天的的情绪日记介绍就到这里。情绪日记能够帮助我们更敏锐的觉察日常生活中发生的事、引起的情绪并及时尝试接纳。', true);
             this.step = 20;
         } else if (this.step === 20) {
-            appendAiMessage(this.chatMessages, '以下是一个问卷星链接：（待后续补充），里面呈现的就是我们刚刚介绍的情绪日记。你可以选择在今晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', true);
+            appendAiMessage(this.chatMessages, '以下是一个问卷星链接：<a href="https://v.wjx.cn/vm/tUtCiF5.aspx#">https://v.wjx.cn/vm/tUtCiF5.aspx#</a>，里面呈现的就是我们刚刚介绍的情绪日记。你可以选择在今晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', true);
             this.step = 21;
         } else if (this.step === 21) {
             appendAiMessage(this.chatMessages, '如果填写时想不起来当天发生了什么事，就写当天参加练习时的感受（比如“刚刚练习时有点紧张，手心出汗，后来做了深呼吸”），不用纠结，真实就好。', true);

@@ -170,7 +170,7 @@ export const module27Handlers = {
             appendAiMessage(this.chatMessages, '接纳技术不是纸上谈兵，只要多尝试，就能在情绪里找到更从容的应对方式。”', true);
             this.step = 20;
         } else if (this.step === 20) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：待后续补充）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', true);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：<a href="https://v.wjx.cn/vm/tUtCiF5.aspx#">https://v.wjx.cn/vm/tUtCiF5.aspx#</a>）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', true);
             this.step = 21;
         } else if (this.step === 21) {
             appendAiMessage(this.chatMessages, '相信通过一次一次的记录，我们能够提高对情绪的觉察，从而让我们更好地结合学到的技术去应对情绪、应对压力。', true);
