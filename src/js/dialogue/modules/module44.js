@@ -20,7 +20,7 @@ const module44QuizItems = [
 ];
 
 const module44BenefitCards = [
-    '<p><strong>第一，帮我们减少焦虑</strong></p><p>当想到“这个月的钱会不会不够花”，贴上“这是一个担忧未来的想法”后，就不会立刻陷入“钱不够花”的恐慌，而是知道这只是自己的一个念头，接下来可以采取行动如做预算。</p>',
+    '<p><strong>第一，帮我们减少焦虑</strong></p><p>当想到“这个月的钱会不会不够花”，贴上“这是一个担忧未来的想法”后，就不会立刻陷入钱不够花的恐慌，而是知道这只是自己的一个念头，接下来可以采取一些行动，例如做预算。</p>',
     '<p><strong>第二，避免被“必须积极”的规则绑架</strong></p><p>比如出现“我必须每天开心”的想法，贴上“这是一个追求完美的想法”后，就能接纳自己偶尔的失落，不用强迫自己假装积极。</p>',
     '<p><strong>第三，清晰识别思维模式</strong></p><p>通过贴标签，能够慢慢发现自己经常出现的想法类型，比如总出现“担心类”想法，后续就能针对性调整。</p>'
 ];
@@ -242,7 +242,7 @@ export const module44Handlers = {
             this.showModule44CasePrompt();
         } else if (this.step === 10) {
             appendAiMessage(this.chatMessages, '想法标签化举例：', false);
-            appendSpecialCard(this.chatMessages, '<p>想法：“我担心自己做不好”</p><p>想法标签化：这是一种预期焦虑/这是一种前瞻性的恐惧</p>');
+            appendSpecialCard(this.chatMessages, '<p><strong>想法：</strong>“我担心自己做不好”</p><p><strong>想法标签化：</strong>这是一种预期焦虑/这是一种前瞻性的恐惧</p>');
             appendContinueButton(this.chatMessages);
             this.step = 11;
         } else if (this.step === 11) {
@@ -251,11 +251,11 @@ export const module44Handlers = {
                 removeCurrentButtonGroup(this.chatMessages);
 
                 if (choice === 'A.悲观想法') {
-                    appendAiMessage(this.chatMessages, '“悲观”已经带有一定的价值判断色彩，这个标签其实并没有完全客观描述想法的特征。应当选择B更合适。', true);
+                    appendAiMessage(this.chatMessages, '你选择了A【悲观想法】。“悲观”已经带有一定的价值判断色彩，这个标签其实并没有完全客观描述想法的特征。应当选择B【绝对化预测】更合适。', true);
                 } else if (choice === 'B.绝对化预测') {
-                    appendAiMessage(this.chatMessages, '正确，这个标签确实是在客观描述思维特征，而不评价想法的好坏。', true);
+                    appendAiMessage(this.chatMessages, '正确，绝对化预测这个标签确实是在客观描述思维特征，而不评价想法的好坏。', true);
                 } else {
-                    appendAiMessage(this.chatMessages, '“消极”这一标签相当于直接给出了价值判断，即认为这个想法是负面的、不好的，而几乎没有描述具体认知形式。应当选择B更合适。', true);
+                    appendAiMessage(this.chatMessages, '你选择了C【消极念头】。“消极”这一标签相当于直接给出了价值判断，即认为这个想法是负面的、不好的，而几乎没有描述具体认知形式。应当选择B【绝对化预测】更合适。', true);
                 }
 
                 this.step = 12;
@@ -266,7 +266,7 @@ export const module44Handlers = {
             this.showModule44BenefitCard(0);
             this.step = 13;
         } else if (this.step === 14) {
-            appendAiMessage(this.chatMessages, '接下来，为了更进一步识别更广泛场景的想法并学习贴合适的标签，我们准备了一些案例。请尝试给每个案例贴标签，并输入到对话框中发送。', false);
+            appendAiMessage(this.chatMessages, '接下来，为了进一步识别更广泛场景的想法并学习贴合适的标签，我们准备了一些案例。请尝试给每个案例贴标签，并输入到对话框中发送。', false);
             this.module44State.caseIndex = 0;
             this.module44State.caseAnswers = [];
             this.showModule44CasePrompt();
@@ -288,7 +288,7 @@ export const module44Handlers = {
             appendAiMessage(this.chatMessages, '这就是今天的所有内容啦，期待你将我们学到的内容应用到自己的生活中。', true);
             this.step = 21;
         } else if (this.step === 21) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们今天还需要继续进行自我承诺行动，当你执行了你的接纳行动后，可以随时打开链接记录（链接待补充）。相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
+            appendAiMessage(this.chatMessages, '一个小提醒，我们今天还需要继续进行自我承诺行动，当你执行了你的接纳行动后，可以随时打开链接记录（https://v.wjx.cn/vm/YDIVxE6.aspx）。相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
             this.step = 22;
         }
     },
