@@ -17,12 +17,12 @@ const module56Metaphors = [
     {
         image: 'images/week5-metaphor-1.jpg',
         title: '隐喻一：舞台与观众',
-        speechText: '请想象，你的整个内心世界，是一个永恒的舞台。此刻，舞台上正在上演什么？也许有一个叫“担忧”的演员在独白，也许有一个叫“开心”的演员在跳舞，还有一个叫“我做得不够好”的演员在背景里徘徊。这些思绪和情绪，都是舞台上的“演员”。它们会上场、表演、退场，剧目也会不断变换，但舞台始终在那里，不会因为演员的表演而改变。而你，有一个部分，始终是坐在台下观众席的“观察者”。 这个“观察性自我”不会跳上舞台和演员一起表演，它只是看着、知晓着舞台上发生的一切，不评判谁演得好、谁演得差。',
+        speechText: '请想象，你的整个内心世界，是一个永恒的舞台。此刻，舞台上正在上演什么？也许有一个叫“担忧”的演员在独白，也许有一个叫“开心”的演员在跳舞，还有一个叫“我做得不够好”的演员在背景里徘徊。这些思绪和情绪，都是舞台上的演员。它们会上场、表演、退场，剧目也会不断变换，但舞台始终在那里，不会因为演员的表演而改变。而你，有一个部分，始终是坐在台下观众席的“观察者”。 这个“观察性自我”不会跳上舞台和演员一起表演，它只是看着、知晓着舞台上发生的一切，不评判谁演得好、谁演得差。',
         html: `
             <p class="module5-media-title">隐喻一：舞台与观众</p>
             <div class="module5-media-body">
                 <img src="images/week5-metaphor-1.jpg" alt="隐喻一：舞台与观众" class="module5-image">
-                <p><strong>【隐喻内容】</strong>请想象，你的整个内心世界，是一个永恒的舞台。此刻，舞台上正在上演什么？也许有一个叫“担忧”的演员在独白，也许有一个叫“开心”的演员在跳舞，还有一个叫“我做得不够好”的演员在背景里徘徊。这些思绪和情绪，都是舞台上的“演员”。它们会上场、表演、退场，剧目也会不断变换，但舞台始终在那里，不会因为演员的表演而改变。</p>
+                <p><strong>【隐喻内容】</strong>请想象，你的整个内心世界，是一个永恒的舞台。此刻，舞台上正在上演什么？也许有一个叫“担忧”的演员在独白，也许有一个叫“开心”的演员在跳舞，还有一个叫“我做得不够好”的演员在背景里徘徊。这些思绪和情绪，都是舞台上的演员。它们会上场、表演、退场，剧目也会不断变换，但舞台始终在那里，不会因为演员的表演而改变。</p>
                 <p>而你，有一个部分，始终是坐在台下观众席的“观察者”。 这个“观察性自我”不会跳上舞台和演员一起表演，它只是看着、知晓着舞台上发生的一切，不评判谁演得好、谁演得差。</p>
             </div>
         `
@@ -71,9 +71,9 @@ const module56FaqAnswers = {
 
 const module56GroundingStepsCardHtml = `
     <div class="module5-options-list">
-        <p>第一步：暂停。</p>
-        <p>第二步：在心中快速调取一个隐喻，问自己：此刻，我的“舞台”上的主角是谁？我的“天空”中的主要天气是什么？我的“棋盘”上最显眼的棋子是哪一颗？</p>
-        <p>第三步：然后，轻轻地后退一步，认同自己作为“观众”、“天空”或“棋手”的那个部分。</p>
+        <p><strong>第一步：</strong>暂停。</p>
+        <p><strong>第二步：</strong>在心中快速调取一个隐喻，问自己：此刻，我的“舞台”上的主角是谁？我的“天空”中的主要天气是什么？我的“棋盘”上最显眼的棋子是哪一颗？</p>
+        <p><strong>第三步：</strong>然后，轻轻地后退一步，认同自己作为“观众”、“天空”或“棋手”的那个部分。</p>
     </div>
 `;
 
@@ -84,21 +84,21 @@ function clearModule56ButtonGroups(chatMessages) {
 export const module56Handlers = {
     onContinue_Module56() {
         if (this.step === 0) {
-            appendAiMessage(this.chatMessages, '在之前的旅程中，我们学习了认知解离技术，即后退一步，对我们脑海中的想法说：“我注意到我有一个…的想法。”。这让我们开始与自己的思绪建立一种新的、更具弹性的关系。', true);
+            appendAiMessage(this.chatMessages, '在之前的旅程中，我们学习了认知解离技术，即后退一步，对我们脑海中的想法说：“我注意到我有一个…的想法。”这让我们开始与自己的思绪建立一种新的、更具弹性的关系。', true);
             this.step = 1;
         } else if (this.step === 1) {
             appendAiMessage(this.chatMessages, '今天，我们将把这个“后退一步”进行深化和稳固。', true);
             this.step = 2;
         } else if (this.step === 2) {
             appendAiMessage(this.chatMessages, '首先，引入一个核心概念“以己为景”。', false);
-            appendSpecialCard(this.chatMessages, '<p><strong>以己为景</strong> 指的是跳出沉浸式的“当局者迷”，把自己当做觉察的场景或背景来体验，从而我们内在那个稳定、宁静的“观察性自我”。</p>');
+            appendSpecialCard(this.chatMessages, '<p><strong>以己为景</strong> 指的是跳出沉浸式的“当局者迷”，把自己当做觉察的场景或背景来体验，从而联结我们内在那个稳定、宁静的“观察性自我”。</p>');
             appendContinueButton(this.chatMessages);
             this.step = 3;
         } else if (this.step === 3) {
-            appendAiMessage(this.chatMessages, '如果说“认知解离”是学会了“后退”，那么“以己为景”就是去熟悉和信任我们所退向的那个广阔、稳固的观察空间。这能让我们的心理弹性地基更加坚实。', true);
+            appendAiMessage(this.chatMessages, '如果说“认知解离”是学会了后退，那么“以己为景”就是去熟悉和信任我们所退向的那个广阔、稳固的观察空间。这能让我们的心理弹性地基更加坚实。', true);
             this.step = 4;
         } else if (this.step === 4) {
-            appendAiMessage(this.chatMessages, '至此，你可能对这个新的概念没有完全理解或者仍然感到疑惑。没有关系，我们接下来将通过三个层层递进的隐喻，来感受什么是“以己为景”和“观察性自我”，从而体验思维与自我的分离。', true);
+            appendAiMessage(this.chatMessages, '至此，你可能对这个新的概念仍然感到有些疑惑。没关系，我们接下来将通过三个层层递进的隐喻，来感受什么是“以己为景”和“观察性自我”，从而体验思维与自我的分离。', true);
             this.step = 5;
         } else if (this.step === 5) {
             appendAiMessage(this.chatMessages, '现在，请选择一个最让你感到舒适的姿势，放松地观看和聆听。', false);
@@ -114,12 +114,12 @@ export const module56Handlers = {
         } else if (this.step === 8) {
             this.showModule56Metaphor(2, '感受一下，从“我是棋子”的视角，转换到“我是棋手”的视角。这种空间的转换，带来了什么样的感觉？', 9, 30);
         } else if (this.step === 9) {
-            appendAiMessage(this.chatMessages, '回想最近几天，你的“心理棋盘”上，落下了哪些“黑子”和“白子”？而你，作为棋手，看到了吗？', false);
-            speakText(this.chatMessages, '回想最近几天，你的“心理棋盘”上，落下了哪些“黑子”和“白子”？而你，作为棋手，看到了吗？', { rate: 0.9, fallbackMs: 15000 });
+            appendAiMessage(this.chatMessages, '回想最近几天，你的心理棋盘上，落下了哪些“黑子”和“白子”？而你，作为棋手，看到了吗？', false);
+            speakText(this.chatMessages, '回想最近几天，你的心理棋盘上，落下了哪些“黑子”和“白子”？而你，作为棋手，看到了吗？', { rate: 0.9, fallbackMs: 15000 });
             appendContinueButton(this.chatMessages, 15);
             this.step = 10;
         } else if (this.step === 10) {
-            appendAiMessage(this.chatMessages, '让我们以棋盘隐喻为例，代入一个生活场景：夏天清晨，你准备出门发现下雨了。 你的“棋盘”上，同时落下了白子（“凉爽真好”的想法）和黑子（“可能会迟到失去全勤奖”的想法）。', true);
+            appendAiMessage(this.chatMessages, '让我们以棋盘隐喻为例，代入一个生活场景：夏天清晨，你准备出门发现下雨了。 你的棋盘上，同时落下了白子（“凉爽真好”的想法）和黑子（“可能会迟到失去全勤奖”的想法）。', true);
             this.step = 11;
         } else if (this.step === 11) {
             appendAiMessage(this.chatMessages, '而你，作为那位棋手，只是意识到这一切正在发生。既不选择站队，也不评判哪个想法对，它只是保持觉察：“啊，我此刻既有开心的感受，也有担心的念头。”', true);
@@ -141,7 +141,7 @@ export const module56Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 17;
         } else if (this.step === 17) {
-            appendAiMessage(this.chatMessages, '每一次这样的瞬间，都是在加固心理弹性的基石。', true);
+            appendAiMessage(this.chatMessages, '每一次这样的瞬间，都是在加固心理弹性。', true);
             this.step = 18;
         } else if (this.step === 18) {
             appendAiMessage(this.chatMessages, '今天的练习就到这里了，带着这份新的视角，回到生活中。我们下次再见。', false);
