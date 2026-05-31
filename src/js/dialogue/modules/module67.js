@@ -3,7 +3,8 @@ import {
     appendSpecialCard,
     appendButtonGroup,
     disableInput,
-    appendContinueButton
+    appendContinueButton,
+    startCardCountdown
 } from '../../ui.js';
 
 function removeCurrentButtonGroup(chatMessages) {
@@ -21,7 +22,7 @@ function getModule67BreathSummary(answers) {
 }
 
 function getSurveyMessage(url) {
-    return `最后，请点击以下问卷星链接，匿名填写反馈表，真实表达想法就好，这能帮助我们更好地总结干预经验，优化干预项目设计，完成预计需要三分钟。<br><a href="${url}">${url}</a>`;
+    return `最后，请点击以下问卷星链接，填写反馈表，真实表达想法就好，这能帮助我们更好地总结干预经验，优化干预项目设计，完成预计需要三分钟。<br><a href="${url}">${url}</a>`;
 }
 
 export const module67Handlers = {
@@ -69,18 +70,18 @@ export const module67Handlers = {
             appendSpecialCard(
                 this.chatMessages,
                 `
-                    <p><strong>基础版：完整短句+具象动作</strong></p>
-                    <p>核心逻辑：用一句完整话描述改变，搭配与改变直接相关的动作，让表达更清晰，又无需复杂组织。</p>
-                    <p>句式模板：以前我会______，现在我会______，我想用这个动作告诉自己______（动作）</p>
-                    <p>示例参考：</p>
+                    <p><strong>【基础版：完整短句+具象动作】</strong></p>
+                    <p><strong>核心逻辑：</strong>用一句完整话描述改变，搭配与改变直接相关的动作，让表达更清晰，又无需复杂组织。</p>
+                    <p><strong>句式模板：</strong>以前我会______，现在我会______，我想用这个动作告诉自己______（动作）</p>
+                    <p><strong>示例参考：</strong></p>
                     <p>以前我会想太多白天发生的事，现在我会轻拍自己双肩，我想用这个动作告诉自己“当下就很好”（动作：双手在身前轻轻推开）</p>
                     <p>（对应改变：通过“以己为景”回到当下，缓解过度畅想的焦虑）</p>
                     <p>以前我总担心计划做不到，现在我会深呼吸，我想用这个动作告诉自己“慢慢来也可以”（动作：双手叉腰，缓慢深呼吸1次）</p>
                     <p>（对应改变：通过解离技术脱离自我怀疑，接纳不完美）</p>
-                    <p><strong>进阶版：细节描述+情感动作</strong></p>
-                    <p>核心逻辑：加入一个具体干预场景的细节，让改变更有画面感，动作可融入情感表达（如微笑、轻抱自己），强化分享的感染力。</p>
-                    <p>句式模板：记得上次______（具体场景），我用了______（技术），现在我______（改变），这个动作就是我当下的心情______（动作）。</p>
-                    <p>示例参考：</p>
+                    <p><strong>【进阶版：细节描述+情感动作】</strong></p>
+                    <p><strong>核心逻辑：</strong>加入一个具体干预场景的细节，让改变更有画面感，动作可融入情感表达（如微笑、轻抱自己），强化分享的感染力。</p>
+                    <p><strong>句式模板：</strong>记得上次______（具体场景），我用了______（技术），现在我______（改变），这个动作就是我当下的心情______（动作）。</p>
+                    <p><strong>示例参考：</strong></p>
                     <p>记得上次在项目评审会前焦虑到手心出汗，我用了解离对自己说“我注意到我有一个‘我会搞砸’的想法”，现在我在挑战面前会先稳住呼吸，这个动作就是我当下的安心。（动作：将一只手平静地放在胸口，进行一次深长而平稳的呼吸）</p>
                     <p>（对应改变：从过度担忧到享受挑战，从被灾难化想法控制，到能够观察并安驻当下，以己为景能力提升）</p>
                     <p>记得上次因为同龄人比较而觉得自己一事无成，我用了观察性自我看到那个“陷入评判的自己”，现在我能更客观地看待自己的轨迹，这个动作就是我坚定的方向感。（动作：双手在身前虚握一个“方向盘”，目光坚定地平视前方）</p>
@@ -93,7 +94,7 @@ export const module67Handlers = {
                 this.onContinue_Module67();
             });
         } else if (this.step === 7) {
-            appendAiMessage(this.chatMessages, '现在，请你从以上模版选择一个，然后总结你这六周的改变吧！可以慢慢想然后输入到对话框中发送，请注意没有对错之分。', false);
+            appendAiMessage(this.chatMessages, '现在，请你从以上模版选择一个，然后仿照着来总结你这六周的改变吧！可以慢慢想然后输入到对话框中发送，请注意没有对错之分。', false);
             this.enableInputForModule(this.chatMessages);
             this.step = 8;
         } else if (this.step === 9) {
@@ -102,7 +103,7 @@ export const module67Handlers = {
         } else if (this.step === 10) {
             appendAiMessage(this.chatMessages, '现在请闭上眼睛，回想自己的分享，感受这份成长带来的平静和力量，把这份感受记在心里。', false);
             appendSpecialCard(this.chatMessages, '<p>请闭上眼睛，回想自己的分享，感受这份成长带来的平静和力量。</p>');
-            appendContinueButton(this.chatMessages, 30);
+            appendContinueButton(this.chatMessages, 45);
             this.step = 11;
         } else if (this.step === 11) {
             appendAiMessage(this.chatMessages, '为了能够将训练课程学到的内容和技术更持久灵活地应用和延续下去，我们提供了一个简单自我练习计划。', false);
@@ -169,16 +170,15 @@ export const module67Handlers = {
                     </table>
                 `
             );
-            appendButtonGroup(this.chatMessages, ['继续'], () => {
-                removeCurrentButtonGroup(this.chatMessages);
-                this.step = 12;
-                this.onContinue_Module67();
+            startCardCountdown(this.chatMessages, 120, '可继续', () => {
+                appendContinueButton(this.chatMessages);
             });
+            this.step = 12;
         } else if (this.step === 12) {
             appendAiMessage(this.chatMessages, '你也可以从计划表中确认哪些是自己能坚持的，后续如果需要调整，也可以随时修改，重点是让练习融入生活。相信你能坚持下去，也期待看到你后续的成长。', true);
             this.step = 13;
         } else if (this.step === 13) {
-            appendAiMessage(this.chatMessages, getSurveyMessage('https://v.wjx.cn/vm/rNUoFF6.aspx#'), false);
+            appendAiMessage(this.chatMessages, getSurveyMessage('https://v.wjx.cn/vm/Qq1uPTd.aspx#'), false);
             appendButtonGroup(this.chatMessages, ['继续'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
                 this.step = 14;
