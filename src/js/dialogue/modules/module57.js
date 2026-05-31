@@ -102,13 +102,13 @@ export const module57Handlers = {
         } else if (this.step === 6) {
             appendAiMessage(this.chatMessages, getModule57BreathSummary(this.module57State.breathAnswers), false);
             appendSpecialCard(this.chatMessages, '<p><strong>第二步：解离与以己为景回顾</strong></p>');
-            appendAiMessage(this.chatMessages, '此外，这一周我们深度了解了多维解离技术（气球放飞法、角色转换法、时间线法）和以己为景（三个隐喻：舞台与观众、天空与天气、棋盘与棋手）。', true);
+            appendAiMessage(this.chatMessages, '这一周我们深度了解了多维解离技术（气球放飞法、角色转换法、时间线法）和以己为景（三个隐喻：舞台与观众、天空与天气、棋盘与棋手）。', true);
             this.step = 7;
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '现在，让我们进入两个常见的情景，看看如何将这些工具组合运用，形成一套有效的应对策略。', false);
             appendSpecialCard(
                 this.chatMessages,
-                '<p><strong>【情景一】</strong></p><p>深夜独自一人，反复回想白天与同事的争执，思绪停不下来，越想越生气、委屈。</p>'
+                '<p class="scene-title"><strong>【情景一】</strong></p><p>深夜独自一人，反复回想白天与同事的争执，思绪停不下来，越想越生气、委屈。</p>'
             );
             appendAiMessage(this.chatMessages, '想象自己是这个场景的主人公，如何运用这周所学内容来处理这件事带来的心理影响和情绪呢？', false);
             appendContinueButton(this.chatMessages, 60);
@@ -139,7 +139,7 @@ export const module57Handlers = {
             appendAiMessage(this.chatMessages, '做得很好。接下来进入下一个情景，依旧想象自己是这个场景的主人公，你可以尝试自由地选择本周学习过的方法和隐喻来处理这个情景。', false);
             appendSpecialCard(
                 this.chatMessages,
-                '<p><strong>【情景二】</strong></p><p>睡前在社交媒体软件上看到了关于疾病的帖子，开始过度联想自己，怀疑自己身体是否也有问题，担忧到失眠。</p>'
+                '<p class="scene-title"><strong>【情景二】</strong></p><p>睡前在社交媒体软件上看到了关于疾病的帖子，开始过度联想自己，怀疑自己身体是否也有问题，担忧到失眠。</p>'
             );
             appendContinueButton(this.chatMessages, 90);
             this.step = 12;
