@@ -75,7 +75,7 @@ export const module64Handlers = {
             appendAiMessage(this.chatMessages, '接下来将先呈现一个单压力场景，请先阅读场景卡片，然后跟随引导一步步尝试。', false);
             appendSpecialCard(
                 this.chatMessages,
-                '<p><strong>基础单压力场景：意外支出压力</strong></p><p>【具体情境】你刚制定好本月的储蓄计划，结果手机突然被偷，找寻无果，需要一笔不小的意外开支用来买新手机和处理一系列因为手机和手机卡丢失带来的花销。你感到又气又急，心里计算着“这笔钱一花，这个月又存不下钱了，财务计划全乱了。”</p><p>【核心触发点】单一压力（意外支出）+ 即时触发（突然发生、计划被打乱）。</p>'
+                '<p><strong>基础单压力场景：意外支出压力</strong></p><p><strong>【具体情境】</strong>你刚制定好本月的储蓄计划，结果手机突然被偷，找寻无果，需要一笔不小的意外开支用来买新手机和处理一系列因为手机和手机卡丢失带来的花销。你感到又气又急，心里计算着“这笔钱一花，这个月又存不下钱了，财务计划全乱了。”</p><p><strong>【核心触发点】</strong>单一压力（意外支出）+ 即时触发（突然发生、计划被打乱）。</p>'
             );
             appendButtonGroup(this.chatMessages, ['继续'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
@@ -135,7 +135,7 @@ export const module64Handlers = {
             appendAiMessage(this.chatMessages, '你做得很好！接下来我们再一起看看多压力场景下应该如何做。', false);
             appendSpecialCard(
                 this.chatMessages,
-                '<p><strong>多压力场景：个人职业发展+家庭期望</strong></p><p>【具体情境】你辞去了一份稳定但枯燥的工作，想尝试自己喜欢的自由职业。当你把决定告诉家人时，他们表示了强烈的不理解，认为你莽撞和冲动。你一方面因为他们的否定感到伤心和愤怒，另一方面也开始自我怀疑：我的选择真的是错的吗？我是不是太冲动了？</p><p>【核心触发点】双重压力（追求自我实现的渴望与满足家人期望的需求之间的冲突）+ 叠加触发（家人的否定+自我价值和决策能力的怀疑）。</p>'
+                '<p><strong>多压力场景：个人职业发展+家庭期望</strong></p><p><strong>【具体情境】</strong>你辞去了一份稳定但枯燥的工作，想尝试自己喜欢的自由职业。当你把决定告诉家人时，他们表示了强烈的不理解，认为你莽撞和冲动。你一方面因为他们的否定感到伤心和愤怒，另一方面也开始自我怀疑：我的选择真的是错的吗？我是不是太冲动了？</p><p><strong>【核心触发点】</strong>双重压力（追求自我实现的渴望与满足家人期望的需求之间的冲突）+ 叠加触发（家人的否定+自我价值和决策能力的怀疑）。</p>'
             );
             appendButtonGroup(this.chatMessages, ['继续'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
