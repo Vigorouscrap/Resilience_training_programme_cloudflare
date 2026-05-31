@@ -100,7 +100,7 @@ function getDesireFeedback(text) {
         return '你发现“他/她”渴望平静与安全。这指向了人类最根本的价值需求之一——稳定与安宁。当外界事件威胁到我们内心的安全港时，强烈的情绪就会涌现。识别出这一点，本身就是一种强大的自我安抚。你知道自己在为什么而战——为了内心那片宁静的土壤。';
     }
 
-    return '你已经开始透过情绪，看到更深层的渴望了。无论你写下的是被理解、连接、归属、成长、健康，还是别的关键词，它们都在提醒你：压力和焦虑并不只是“难受”，它们也在提示你，什么对你而言真的很重要。';
+    return '你已经开始透过情绪，看到更深层的渴望了。无论你写下的是被理解、连接、归属、成长、健康，还是别的关键词，它们都在提醒你：压力和焦虑并不只是难受，它们也在提示你，什么对你而言真的很重要。';
 }
 
 export const module62Handlers = {
@@ -112,7 +112,7 @@ export const module62Handlers = {
             appendAiMessage(this.chatMessages, '双视角日记技术指的是当遇到压力事件时，我们可以用“第一人称体验者”和“第三人称观察者”两种视角来记录。', false);
             appendSpecialCard(
                 this.chatMessages,
-                '<p><strong>第一人称体验者：</strong>就是你当下的真实感受，比如“我快被这个任务压垮了，我好担心自己做不完。”</p><p><strong>第三人称观察者：</strong>就是用观察性自我的视角，像看朋友一样描述自己，比如“她现在在担心做不完任务，手有点紧”。</p><p>通过两种视角对比，我们能更清楚情绪背后的需求。</p>'
+                '<p><strong>第一人称体验者：</strong>就是你当下的真实感受，比如“我快被这个任务压垮了，我好担心自己做不完。”</p><p><strong>第三人称观察者：</strong>就是用观察性自我的视角，像看朋友一样描述自己，比如“她现在在担心做不完任务，手有点紧”。</p><p><strong>通过两种视角对比，我们能更清楚情绪背后的需求。</strong></p>'
             );
             appendContinueButton(this.chatMessages);
             this.step = 2;
@@ -157,14 +157,14 @@ export const module62Handlers = {
         } else if (this.step === 5) {
             appendSpecialCard(
                 this.chatMessages,
-                '<p>【第一人称体验者】刚才的项目讨论会上，我的提议被领导当场否决了，还说“考虑不周”。我感觉脸上火辣辣的，恨不得找个地缝钻进去。现在会议结束半小时了，我还是完全没法集中精神工作，脑子里全是那个尴尬的画面。我一直在想：同事肯定都在笑话我，领导会不会觉得我能力不行？胃里感觉堵得慌，心跳还是很快。</p><p>（关键点：陈述时需要包含真实感受压力事件发生后的持续反应，不掩饰）</p>'
+                '<p><strong>【第一人称体验者】</strong>刚才的项目讨论会上，我的提议被领导当场否决了，还说我“考虑不周”。我感觉脸上火辣辣的，恨不得找个地缝钻进去。现在会议结束半小时了，我还是完全没法集中精神工作，脑子里全是那个尴尬的画面。我一直在想：同事肯定都在笑话我，领导会不会觉得我能力不行？胃里感觉堵得慌，心跳还是很快。</p><p><strong>（关键点：陈述时需要包含真实感受压力事件发生后的持续反应，不掩饰）</strong></p>'
             );
             appendContinueButton(this.chatMessages);
             this.step = 6;
         } else if (this.step === 6) {
             appendSpecialCard(
                 this.chatMessages,
-                '<p>【第三人称观察者】他在会议中被否决了提议，现在正独自坐在工位前，眼神有些放空，时不时会无意识地叹气。他脑子里可能还在回放会议的场景，担心同事的看法和领导的评价。他的身体看起来还有些紧绷，没有完全从刚才的紧张感中恢复过来。</p><p>（关键点：客观地描述行为和想法，不代入情绪）</p>'
+                '<p><strong>【第三人称观察者】</strong>他在会议中被否决了提议，现在正独自坐在工位前，眼神有些放空，时不时会无意识地叹气。他脑子里可能还在回放会议的场景，担心同事的看法和领导的评价。他的身体看起来还有些紧绷，没有完全从刚才的紧张感中恢复过来。</p><p><strong>（关键点：客观地描述行为和想法，不代入情绪）</strong></p>'
             );
             appendContinueButton(this.chatMessages);
             this.step = 7;
@@ -289,10 +289,10 @@ export const module62Handlers = {
             appendAiMessage(this.chatMessages, getDesireFeedback(this.module62State.desireText), true);
             this.step = 34;
         } else if (this.step === 34) {
-            appendAiMessage(this.chatMessages, '通过“双视角日记“，我们完成了一次完整的解码，并最终找到我们在压力事件和情绪背后真正的需求：', false);
+            appendAiMessage(this.chatMessages, '通过双视角日记，我们完成了一次完整的解码，并最终找到我们在压力事件和情绪背后真正的需求：', false);
             appendSpecialCard(
                 this.chatMessages,
-                '<p>1. 承认感受（体验者视角）→ 2. 创造空间（观察者视角）→ 3. 发现价值（渴望澄清）</p>'
+                '<p><strong>1. 承认感受</strong>（体验者视角）→ <strong>2. 创造空间</strong>（观察者视角）→ <strong>3. 发现价值</strong>（渴望澄清）</p>'
             );
             appendContinueButton(this.chatMessages);
             this.step = 35;
