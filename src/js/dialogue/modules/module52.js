@@ -167,7 +167,7 @@ export const module52Handlers = {
             this.step = 9;
         } else if (this.step === 9) {
             const practiceThought = this.escapeHtml(getModule52PracticeSpeechText(this.module52State.selectedThought));
-            const text = `首先是气球法。好，请闭上眼睛。想象“${practiceThought}”这句话写在一个气球上…感受一下握着它的感觉…现在，慢慢地、有意识地松开你的手指…看着它飘走…`;
+            const text = `首先是气球法。请闭上眼睛。想象“${practiceThought}”这句话写在一个气球上…感受一下握着它的感觉…现在，慢慢地、有意识地松开你的手指…看着它飘走…`;
             appendAiMessage(this.chatMessages, text, false);
             speakText(this.chatMessages, text, { rate: 0.9, fallbackMs: 30000 });
             appendContinueButton(this.chatMessages, 45);
