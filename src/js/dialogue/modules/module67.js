@@ -3,8 +3,7 @@ import {
     appendSpecialCard,
     appendButtonGroup,
     disableInput,
-    appendContinueButton,
-    startCardCountdown
+    appendContinueButton
 } from '../../ui.js';
 
 function removeCurrentButtonGroup(chatMessages) {
@@ -170,10 +169,11 @@ export const module67Handlers = {
                     </table>
                 `
             );
-            startCardCountdown(this.chatMessages, 120, '可继续', () => {
-                appendContinueButton(this.chatMessages);
+            appendButtonGroup(this.chatMessages, ['继续'], () => {
+                removeCurrentButtonGroup(this.chatMessages);
+                this.step = 12;
+                this.onContinue_Module67();
             });
-            this.step = 12;
         } else if (this.step === 12) {
             appendAiMessage(this.chatMessages, '你也可以从计划表中确认哪些是自己能坚持的，后续如果需要调整，也可以随时修改，重点是让练习融入生活。相信你能坚持下去，也期待看到你后续的成长。', true);
             this.step = 13;
