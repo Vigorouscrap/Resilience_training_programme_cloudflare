@@ -4,6 +4,7 @@ import {
     appendButtonGroup,
     appendContinueButton,
     disableInput,
+    startBottomCountdown,
     getChatSessionId,
     isChatSessionActive
 } from '../../ui.js';
@@ -95,6 +96,16 @@ function getModule46ResponseFeedback(text) {
 }
 
 function unlockModule46InputAfterDelay(context, seconds) {
+    startBottomCountdown(
+        context.chatMessages,
+        seconds,
+        '可输入',
+        () => {
+            context.enableInputForModule(context.chatMessages);
+        },
+        { align: 'card' }
+    );
+    return;
     const sessionId = getChatSessionId(context.chatMessages);
     const deadline = Date.now() + (seconds * 1000);
 
@@ -131,6 +142,61 @@ function unlockModule46InputAfterDelay(context, seconds) {
 }
 
 function appendModule46SpeakerMessageWithTimer(chatMessages, avatarText, text, delayMs, callback) {
+    {
+        const sessionId = getChatSessionId(chatMessages);
+        const deadline = Date.now() + delayMs;
+
+        const timedRow = document.createElement('div');
+        timedRow.className = 'message-row-left';
+
+        const timedAvatar = document.createElement('div');
+        timedAvatar.className = 'avatar';
+        timedAvatar.innerText = avatarText;
+
+        const timedBubble = document.createElement('div');
+        timedBubble.className = 'bubble-left';
+        timedBubble.innerHTML = text;
+
+        timedRow.appendChild(timedAvatar);
+        timedRow.appendChild(timedBubble);
+        chatMessages.appendChild(timedRow);
+
+        const timerWrap = document.createElement('div');
+        timerWrap.className = 'countdown-wrapper after-message';
+        const timer = document.createElement('div');
+        timer.className = 'card-timer';
+        timerWrap.appendChild(timer);
+        chatMessages.appendChild(timerWrap);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const tick = () => {
+            if (!isChatSessionActive(chatMessages, sessionId)) {
+                return false;
+            }
+
+            const remainingMs = Math.max(0, deadline - Date.now());
+            if (remainingMs > 0) {
+                timer.innerText = `⏳ ${Math.ceil(remainingMs / 1000)}s`;
+                return true;
+            }
+
+            timer.innerText = '✓';
+            setTimeout(() => {
+                if (!isChatSessionActive(chatMessages, sessionId)) return;
+                callback();
+            }, 100);
+            return false;
+        };
+
+        if (!tick()) return;
+
+        const timedInterval = setInterval(() => {
+            if (!tick()) {
+                clearInterval(timedInterval);
+            }
+        }, 100);
+        return;
+    }
     const row = document.createElement('div');
     row.className = 'message-row-left';
 

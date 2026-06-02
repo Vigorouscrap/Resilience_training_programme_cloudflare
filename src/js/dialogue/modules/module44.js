@@ -3,6 +3,7 @@ import {
     appendSpecialCard,
     appendButtonGroup,
     appendContinueButton,
+    startBottomCountdown,
     queueUiMutation,
     disableInput,
     getChatSessionId,
@@ -40,6 +41,8 @@ function removeCurrentButtonGroup(chatMessages) {
 }
 
 function startCardCountdown(chatMessages, seconds, readyText, onComplete) {
+    startBottomCountdown(chatMessages, seconds, readyText, onComplete, { align: 'card' });
+    return;
     queueUiMutation(chatMessages, () => {
         const cards = chatMessages.querySelectorAll('.special-card');
         const currentCard = cards[cards.length - 1];

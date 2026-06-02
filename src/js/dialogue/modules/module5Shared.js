@@ -1,6 +1,7 @@
 import {
     appendAiMessage,
     appendSpecialCard,
+    startBottomCountdown,
     queueUiMutation,
     getChatSessionId,
     isChatSessionActive
@@ -118,6 +119,8 @@ export function removeLastAiMessage(chatMessages) {
 }
 
 export function startCardCountdown(chatMessages, seconds, readyText, onComplete) {
+    startBottomCountdown(chatMessages, seconds, readyText, onComplete, { align: 'card' });
+    return;
     queueUiMutation(chatMessages, () => {
         const cards = chatMessages.querySelectorAll('.special-card');
         const currentCard = cards[cards.length - 1];

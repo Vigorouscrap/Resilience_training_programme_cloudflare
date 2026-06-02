@@ -48,6 +48,60 @@ function appendContinueButtonNow(chatMessages, delaySeconds = 0) {
     scrollChat(chatMessages);
 }
 
+function appendCountdownTimerRow(chatMessages, align = 'auto') {
+    const wrap = document.createElement('div');
+    wrap.className = 'countdown-wrapper';
+
+    const lastElement = chatMessages.lastElementChild;
+    const resolvedAlign = align === 'auto'
+        ? (lastElement?.classList?.contains('message-row-left') ? 'message' : 'card')
+        : align;
+
+    wrap.classList.add(resolvedAlign === 'message' ? 'after-message' : 'after-card');
+
+    const timer = document.createElement('div');
+    timer.className = 'card-timer';
+    wrap.appendChild(timer);
+    chatMessages.appendChild(wrap);
+    scrollChat(chatMessages);
+    return timer;
+}
+
+function startBottomCountdownNow(chatMessages, seconds, readyText, onComplete, options = {}) {
+    const sessionId = getChatSessionId(chatMessages);
+    const tickMs = options.tickMs ?? 250;
+    const formatCountdownText = options.formatCountdownText || (remaining => `⏳ ${remaining}秒后${readyText}`);
+    const formatReadyText = options.formatReadyText || (() => readyText);
+
+    if (seconds <= 0) {
+        if (onComplete) onComplete();
+        return;
+    }
+
+    const deadline = Date.now() + (seconds * 1000);
+    const timerDiv = appendCountdownTimerRow(chatMessages, options.align);
+    let remaining = seconds;
+    timerDiv.innerText = formatCountdownText(remaining);
+
+    const timer = setInterval(() => {
+        if (!isChatSessionActive(chatMessages, sessionId)) {
+            clearInterval(timer);
+            return;
+        }
+
+        remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        if (remaining > 0) {
+            timerDiv.innerText = formatCountdownText(remaining);
+            return;
+        }
+
+        clearInterval(timer);
+        if (!isChatSessionActive(chatMessages, sessionId)) return;
+        timerDiv.innerText = formatReadyText();
+        if (onComplete) onComplete();
+    }, tickMs);
+}
+
 function appendContentOrQueue(chatMessages, contentType, action) {
     const state = getRevealState(chatMessages);
 
@@ -167,6 +221,12 @@ export function queueUiMutation(chatMessages, action, splitAfterCard = false) {
     appendControlOrQueue(chatMessages, action, splitAfterCard);
 }
 
+export function startBottomCountdown(chatMessages, seconds, readyText, onComplete, options = {}) {
+    queueUiMutation(chatMessages, () => {
+        startBottomCountdownNow(chatMessages, seconds, readyText, onComplete, options);
+    });
+}
+
 export function resetSequentialRender(chatMessages) {
     const state = getRevealState(chatMessages);
     state.batchDepth = 0;
@@ -197,11 +257,25 @@ function prepareMessageHtml(text) {
     return container.innerHTML;
 }
 
+function createAiAvatar() {
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar ai-avatar';
+    avatar.setAttribute('role', 'img');
+    avatar.setAttribute('aria-label', 'AI 疗愈助手');
+    return avatar;
+}
+
 export function appendAiMessage(chatMessages, text, withContinue = false) {
     appendContentOrQueue(chatMessages, 'message', () => {
         const row = document.createElement('div');
         row.className = 'message-row-left';
-        row.innerHTML = `<div class="avatar">🧑‍🏫</div><div class="bubble-left">${prepareMessageHtml(text)}</div>`;
+        row.appendChild(createAiAvatar());
+
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble-left';
+        bubble.innerHTML = prepareMessageHtml(text);
+        row.appendChild(bubble);
+
         chatMessages.appendChild(row);
         scrollChat(chatMessages);
 
@@ -405,6 +479,37 @@ export function appendUnderstandButton(chatMessages, callback) {
  */
 export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTimerComplete = null) {
     appendContentOrQueue(chatMessages, 'card', () => {
+        {
+            const timedCard = document.createElement('div');
+            timedCard.className = 'special-card';
+            timedCard.innerHTML = content;
+            chatMessages.appendChild(timedCard);
+            scrollChat(chatMessages);
+
+            startBottomCountdownNow(
+                chatMessages,
+                delaySeconds,
+                '可继续',
+                () => {
+                    appendContinueButton(chatMessages);
+                    if (onTimerComplete) {
+                        beginSequentialRender(chatMessages);
+                        try {
+                            onTimerComplete();
+                        } finally {
+                            endSequentialRender(chatMessages);
+                        }
+                    }
+                },
+                {
+                    align: 'card',
+                    tickMs: 1000,
+                    formatCountdownText: remaining => `⏳ ${remaining}秒后可继续`,
+                    formatReadyText: () => '✓ 可以继续'
+                }
+            );
+            return;
+        }
         const card = document.createElement('div');
         card.className = 'special-card';
         card.innerHTML = content;
@@ -453,6 +558,49 @@ export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTime
  */
 export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) {
     appendContentOrQueue(chatMessages, 'message', () => {
+        {
+            const timedRow = document.createElement('div');
+            timedRow.className = 'message-row-left';
+
+            const timedBubble = document.createElement('div');
+            timedBubble.className = 'bubble-left';
+            timedBubble.innerHTML = prepareMessageHtml(text);
+
+            timedRow.appendChild(createAiAvatar());
+            timedRow.appendChild(timedBubble);
+            chatMessages.appendChild(timedRow);
+            scrollChat(chatMessages);
+
+            const timedSessionId = getChatSessionId(chatMessages);
+            const timedDeadline = Date.now() + delayMs;
+            const timedIndicator = appendCountdownTimerRow(chatMessages, 'message');
+            timedIndicator.innerText = '⏳ ' + Math.ceil(delayMs / 1000) + 's';
+
+            let remainingMs = delayMs;
+            const timerInterval = setInterval(() => {
+                if (!isChatSessionActive(chatMessages, timedSessionId)) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                remainingMs = Math.max(0, timedDeadline - Date.now());
+                if (remainingMs > 0) {
+                    timedIndicator.innerText = '⏳ ' + Math.ceil(remainingMs / 1000) + 's';
+                } else {
+                    clearInterval(timerInterval);
+                    timedIndicator.innerText = '✓';
+                    setTimeout(() => {
+                        if (!isChatSessionActive(chatMessages, timedSessionId)) return;
+                        beginSequentialRender(chatMessages);
+                        try {
+                            callback();
+                        } finally {
+                            endSequentialRender(chatMessages);
+                        }
+                    }, 100);
+                }
+            }, 100);
+            return;
+        }
         const row = document.createElement('div');
         row.className = 'message-row-left';
         
@@ -462,10 +610,6 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
         messageContainer.style.alignItems = 'flex-end';
         messageContainer.style.gap = '0.7rem';
         messageContainer.style.maxWidth = '90%';
-
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        avatar.innerText = '🧑‍🏫';
 
         const bubble = document.createElement('div');
         bubble.className = 'bubble-left';
@@ -477,7 +621,7 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
         timer.style.marginLeft = 'auto';
         timer.style.whiteSpace = 'nowrap';
 
-        messageContainer.appendChild(avatar);
+        messageContainer.appendChild(createAiAvatar());
         messageContainer.appendChild(bubble);
         messageContainer.appendChild(timer);
         row.appendChild(messageContainer);

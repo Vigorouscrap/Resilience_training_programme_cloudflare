@@ -327,6 +327,12 @@
     color: #2b4c6e;
 }
 
+.ai-avatar {
+    background: #dceaf7 url("../images/ai-therapeutic-avatar.svg") center/cover no-repeat;
+    color: transparent;
+    overflow: hidden;
+}
+
 .bubble-left {
     background: white;
     padding: 1rem 1.5rem;
@@ -568,4 +574,24 @@
     font-weight: bold;
     margin: 0.5rem 0;
     font-size: 0.9rem;
+}
+
+.card-timer {
+    min-width: 9.5rem;
+    text-align: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.countdown-wrapper {
+    display: flex;
+    margin: -0.2rem 0 0.5rem 0;
+}
+
+.countdown-wrapper.after-card {
+    margin-left: 3rem;
+}
+
+.countdown-wrapper.after-message {
+    margin-left: 3.7rem;
 }

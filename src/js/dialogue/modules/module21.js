@@ -68,7 +68,7 @@ export const module21Handlers = {
                 `<p>${this.escapeHtml(drowsinessMethods[this.module21State.drowsinessMethodIndex])}</p>`
             );
             this.module21State.drowsinessMethodIndex += 1;
-            appendContinueButton(this.chatMessages, 5);
+            appendContinueButton(this.chatMessages, 10);
             return;
         }
 
@@ -89,7 +89,7 @@ export const module21Handlers = {
                 `<p>${this.escapeHtml(agitationMethods[this.module21State.agitationMethodIndex])}</p>`
             );
             this.module21State.agitationMethodIndex += 1;
-            appendContinueButton(this.chatMessages, 5);
+            appendContinueButton(this.chatMessages, 10);
             return;
         }
 
