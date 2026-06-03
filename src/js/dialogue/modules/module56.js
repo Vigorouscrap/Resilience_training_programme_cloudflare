@@ -1,4 +1,4 @@
-import {
+﻿import {
     appendAiMessage,
     appendSpecialCard,
     appendButtonGroup,
@@ -10,6 +10,7 @@ import {
     removeCurrentButtonGroup,
     removeCurrentCardActionButtons,
     removeLastAiMessage,
+    estimateSpeechDurationMs,
     speakText
 } from './module5Shared.js';
 
@@ -151,18 +152,30 @@ export const module56Handlers = {
 
     showModule56Metaphor(index, reflectionText, nextStep, delaySeconds) {
         const metaphor = module56Metaphors[index];
+        const speechOptions = { rate: 0.88 };
+        const cardSpeechFallbackMs = estimateSpeechDurationMs(metaphor.speechText, 280, 5000, 180000);
         appendSpeechReplayCard(
             this.chatMessages,
             metaphor.html,
             metaphor.speechText,
             {
                 replayLabel: '再次播放',
-                speechOptions: { rate: 0.88 }
+                speechOptions,
+                autoPlay: false
             }
         );
-        appendAiMessage(this.chatMessages, `（同时朗读）：${reflectionText}`, false);
-        speakText(this.chatMessages, reflectionText, { rate: 0.88, fallbackMs: delaySeconds * 1000 });
-        appendContinueButton(this.chatMessages, delaySeconds);
+        speakText(this.chatMessages, metaphor.speechText, {
+            ...speechOptions,
+            fallbackMs: cardSpeechFallbackMs,
+            onEnd: () => {
+                appendAiMessage(this.chatMessages, reflectionText, false);
+                speakText(this.chatMessages, reflectionText, {
+                    ...speechOptions,
+                    fallbackMs: delaySeconds * 1000
+                });
+                appendContinueButton(this.chatMessages, delaySeconds);
+            }
+        });
         this.step = nextStep;
     },
 

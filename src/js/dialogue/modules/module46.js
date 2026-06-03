@@ -310,41 +310,43 @@ export const module46Handlers = {
                 this.onContinue_Module46();
             });
         } else if (this.step === 11) {
-            appendAiMessage(this.chatMessages, '刚才的示范对话结束了。我们可以总结出支持者是如何一步步运用认知解离技术的：', false);
-            appendSpecialCard(this.chatMessages, module46SummaryCardHtml);
-            appendContinueButton(this.chatMessages);
+            appendAiMessage(this.chatMessages, '刚才的示范对话结束了。我们可以总结出支持者是如何一步步运用认知解离技术的：', true);
             this.step = 12;
         } else if (this.step === 12) {
-            appendAiMessage(this.chatMessages, '在这一过程中，我们可以发现认知解离和接纳技术其实是相辅相成、融合在一起的。', true);
+            appendSpecialCard(this.chatMessages, module46SummaryCardHtml);
+            appendContinueButton(this.chatMessages);
             this.step = 13;
         } else if (this.step === 13) {
-            appendAiMessage(this.chatMessages, '请记住，支持者的目的不是反驳或安慰说“别多想” “你很好”，而是帮助对方建立起对想法的“观察距离”。 ', true);
+            appendAiMessage(this.chatMessages, '在这一过程中，我们可以发现认知解离和接纳技术其实是相辅相成、融合在一起的。', true);
             this.step = 14;
         } else if (this.step === 14) {
+            appendAiMessage(this.chatMessages, '请记住，支持者的目的不是反驳或安慰说“别多想” “你很好”，而是帮助对方建立起对想法的“观察距离”。 ', true);
+            this.step = 15;
+        } else if (this.step === 15) {
             appendAiMessage(this.chatMessages, '接下来，针对一个新的情景，我来扮演当事人，你来尝试扮演支持者。不用怕说错，只是一个尝试性的探索。你准备好开始了吗？', false);
             appendButtonGroup(this.chatMessages, ['已准备好'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
-                this.step = 15;
+                this.step = 16;
                 this.onContinue_Module46();
             });
-        } else if (this.step === 15) {
-            appendAiMessage(this.chatMessages, '（当事人）：前段时间看到网上说投资项目好，我就把自己攒了好几年的积蓄，加上借来的一些钱，全都投进去了……现在全亏光了，一分不剩。我睡不着，吃不下，我真是完蛋了，这辈子都翻不了身，没法活了。我真的觉得走到绝路了。', true);
-            this.step = 16;
         } else if (this.step === 16) {
+            appendAiMessage(this.chatMessages, '（当事人）：前段时间看到网上说投资项目好，我就把自己攒了好几年的积蓄，加上借来的一些钱，全都投进去了……现在全亏光了，一分不剩。我睡不着，吃不下，我真是完蛋了，这辈子都翻不了身，没法活了。我真的觉得走到绝路了。', true);
+            this.step = 17;
+        } else if (this.step === 17) {
             appendAiMessage(this.chatMessages, '作为支持者，你将如何回应呢？请将要对当事人说的话输入在对话框中，你有充足的时间先进行思考和然后再回应，没有固定答案和对错。', false);
             unlockModule46InputAfterDelay(this, 120);
-            this.step = 17;
-        } else if (this.step === 18) {
-            appendAiMessage(this.chatMessages, '今天的强化练习中，我们通过转换视角进一步理解了认知解离，核心是识别想法与区分事实，而不说“别瞎想，没事的”。 后续遇到类似情况，不管是自己还是帮身边的人，都可以用这种方式缓解焦虑。', true);
-            this.step = 19;
+            this.step = 18;
         } else if (this.step === 19) {
-            appendAiMessage(this.chatMessages, '感谢你今天的时间，我们明天再见。', false);
+            appendAiMessage(this.chatMessages, '今天的强化练习中，我们通过转换视角进一步理解了认知解离，核心是识别想法与区分事实，而不说“别瞎想，没事的”。 后续遇到类似情况，不管是自己还是帮身边的人，都可以用这种方式缓解焦虑。', true);
             this.step = 20;
+        } else if (this.step === 20) {
+            appendAiMessage(this.chatMessages, '感谢你今天的时间，我们明天再见。', false);
+            this.step = 21;
         }
     },
 
     handleModule46UserMessage(text) {
-        if (this.step !== 17) return;
+        if (this.step !== 18) return;
 
         this.module46State.supporterResponse = text;
         disableInput(this.inputArea, this.userInput);
@@ -357,6 +359,6 @@ export const module46Handlers = {
             return;
         }
 
-        this.step = 18;
+        this.step = 19;
     }
 };

@@ -123,6 +123,13 @@ function disableFastRuntime() {
     config.runtimePatched = false;
 }
 
+function stopSpeech() {
+    const synth = globalThis.speechSynthesis;
+    if (synth && typeof synth.cancel === 'function') {
+        synth.cancel();
+    }
+}
+
 // 初始化应用
 function initApp() {
     // 获取DOM元素
@@ -168,6 +175,7 @@ function initApp() {
             return false;
         }
 
+        stopSpeech();
         practiceTitle.innerText = moduleMeta.moduleTitle;
         pageManager.showDaily(moduleMeta.weekIdx);
         dialogueManager.resetForModule(moduleMeta.moduleId);
@@ -210,10 +218,13 @@ function initApp() {
 
     // 事件绑定：返回按钮
     backFromDaily.addEventListener('click', () => {
+        stopSpeech();
+        dialogueManager.invalidateAsyncCallbacks();
         pageManager.showHome();
     });
 
     backFromPractice.addEventListener('click', () => {
+        stopSpeech();
         dialogueManager.invalidateAsyncCallbacks();
         pageManager.goBackToDaily();
     });
@@ -265,6 +276,22 @@ function initApp() {
                 userInput.value = '';
             }
         }
+    });
+
+    window.addEventListener('pagehide', () => {
+        stopSpeech();
+        dialogueManager.invalidateAsyncCallbacks();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            stopSpeech();
+            dialogueManager.invalidateAsyncCallbacks();
+        }
+    });
+
+    window.addEventListener('beforeunload', () => {
+        stopSpeech();
     });
 
     // 初始化显示主页

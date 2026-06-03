@@ -74,31 +74,34 @@ export const module42Handlers = {
             this.step = 7;
         } else if (this.step === 8) {
             appendAiMessage(this.chatMessages, '在观察过程中，你有没有发现自己经常出现的思维模式，比如总担心不好的事情发生？', true);
+            const continueWrapper = this.chatMessages.querySelector('.continue-wrapper');
+            if (continueWrapper) continueWrapper.remove();
+            this.enableInputForModule(this.chatMessages);
             this.step = 9;
-        } else if (this.step === 9) {
-            appendAiMessage(this.chatMessages, '其实很多人会看到关于生活工作学习压力或一些挫折引发的“想法火车”，也会有跟着走的冲动，而当我们试着留在站台上，会发现这些想法只是“路过”，不会一直影响我们。同时，也有人发现自己总容易想“不好的情况”，这就是我们常见的消极思维模式。', true);
-            this.step = 10;
         } else if (this.step === 10) {
-            appendAiMessage(this.chatMessages, '刚刚的冥想，其实就是认知解离的一种体验。', true);
+            appendAiMessage(this.chatMessages, '其实很多人会看到关于生活工作学习压力或一些挫折引发的“想法火车”，也会有跟着走的冲动，而当我们试着留在站台上，会发现这些想法只是“路过”，不会一直影响我们。同时，也有人发现自己总容易想“不好的情况”，这就是我们常见的消极思维模式。', true);
             this.step = 11;
         } else if (this.step === 11) {
-            appendAiMessage(this.chatMessages, '认知解离就是将我们自己与想法分离开。简单来说，就像我们在站台上对待“想法火车”一样：不把想法当成事实，不被想法控制，只是观察它的存在。', true);
+            appendAiMessage(this.chatMessages, '刚刚的冥想，其实就是认知解离的一种体验。', true);
             this.step = 12;
         } else if (this.step === 12) {
-            appendAiMessage(this.chatMessages, '比如有的人会看到“工作能力差”的想法，不会立刻觉得“我的工作能力很差，不能胜任工作”，而是知道“这只是我目前产生的一个担心的想法，不是真的发生了”，这就是认知解离。', true);
+            appendAiMessage(this.chatMessages, '认知解离就是将我们自己与想法分离开。简单来说，就像我们在站台上对待“想法火车”一样：不把想法当成事实，不被想法控制，只是观察它的存在。', true);
             this.step = 13;
         } else if (this.step === 13) {
-            appendAiMessage(this.chatMessages, '再比如当你遇到了一些压力事件如“没赶上飞机”从而产生了类似“后面的事情全都会受影响，什么也做不好了”的想法时，认知解离不是让我们强迫自己不去想这个想法，而是站在想法之外，告诉自己“这是一个追求完美的想法，我可以不被它困扰，按自己的节奏做就好”。', true);
+            appendAiMessage(this.chatMessages, '比如有的人会看到“工作能力差”的想法，不会立刻觉得“我的工作能力很差，不能胜任工作”，而是知道“这只是我目前产生的一个担心的想法，不是真的发生了”，这就是认知解离。', true);
             this.step = 14;
         } else if (this.step === 14) {
-            appendAiMessage(this.chatMessages, '对我们来说，认知解离能帮我们减少压力引发的焦虑想法、减少过度积极规则的控制，不用因为“必须开心”而压抑失落，不用因为“担心”而整夜失眠，而是以更平和的心态看待自己的想法，让自己的情绪更稳定，这对我们的健康也都很有帮助。', true);
+            appendAiMessage(this.chatMessages, '再比如当你遇到了一些压力事件如“没赶上飞机”从而产生了类似“后面的事情全都会受影响，什么也做不好了”的想法时，认知解离不是让我们强迫自己不去想这个想法，而是站在想法之外，告诉自己“这是一个追求完美的想法，我可以不被它困扰，按自己的节奏做就好”。', true);
             this.step = 15;
         } else if (this.step === 15) {
-            appendAiMessage(this.chatMessages, '今天的学习就到这里，未来我们会进一步结合练习深入理解认知解离。', true);
+            appendAiMessage(this.chatMessages, '对我们来说，认知解离能帮我们减少压力引发的焦虑想法、减少过度积极规则的控制，不用因为“必须开心”而压抑失落，不用因为“担心”而整夜失眠，而是以更平和的心态看待自己的想法，让自己的情绪更稳定，这对我们的健康也都很有帮助。', true);
             this.step = 16;
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（<a href="https://v.wjx.cn/vm/YDIVxE6.aspx#">https://v.wjx.cn/vm/YDIVxE6.aspx#</a>）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
+            appendAiMessage(this.chatMessages, '今天的学习就到这里，未来我们会进一步结合练习深入理解认知解离。', true);
             this.step = 17;
+        } else if (this.step === 17) {
+            appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（<a href="https://v.wjx.cn/vm/YDIVxE6.aspx#">https://v.wjx.cn/vm/YDIVxE6.aspx#</a>）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', false);
+            this.step = 18;
         }
     },
 
@@ -116,6 +119,13 @@ export const module42Handlers = {
             disableInput(this.inputArea, this.userInput);
             appendAiMessage(this.chatMessages, getModule42ImpulseResponse(text), true);
             this.step = 8;
+            return;
+        }
+
+        if (this.step === 9) {
+            disableInput(this.inputArea, this.userInput);
+            this.step = 10;
+            this.onContinue_Module42();
         }
     }
 };
