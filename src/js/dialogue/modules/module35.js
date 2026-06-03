@@ -34,10 +34,10 @@ const module35InspirationCardHtml = `
 
 const module35ObservationCardHtml = `
     <p><strong>【本次行动观察记录】</strong></p>
-    <p>次数：___（请填写此次为第几次实施行动）</p>
-    <p>行动前焦虑值：__ 分（范围0-10，0=完全不焦虑，心理很平静，10=极度焦虑，比如坐立难安、无法集中注意力；5分就是中等焦虑，能感受到担心，但还能正常做事。）</p>
-    <p>行动后焦虑值：__ 分（范围及要求同上）</p>
-    <p>一个意外的小发现（如有）：_________________________</p>
+    <p><strong>次数：</strong>___（请填写此次为第几次实施行动）</p>
+    <p><strong>行动前焦虑值：</strong>__ 分（范围0-10，0=完全不焦虑，心理很平静，10=极度焦虑，比如坐立难安、无法集中注意力；5分就是中等焦虑，能感受到担心，但还能正常做事。）</p>
+    <p><strong>行动后焦虑值：</strong>__ 分（范围及要求同上）</p>
+    <p><strong>一个意外的小发现（如有）：</strong>_________________________</p>
     <p>（例如：我发现，只要说出“我允许自己焦虑”，紧绷的肩膀就松了一点。或者，做完某个行动后，我居然更快地投入到下一件事了。）</p>
 `;
 
@@ -76,7 +76,7 @@ export const module35Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 8;
         } else if (this.step === 8) {
-            appendAiMessage(this.chatMessages, '你看，每个示例里的“触发场景”都很具体，能明确知道“什么时候要行动”，“接纳行动”也有“具体动作”（如深呼吸、列需求），这样执行时才不会模糊。', true);
+            appendAiMessage(this.chatMessages, '你看，每个示例里的触发场景都很具体，能明确知道“什么时候要行动”，接纳行动也有“具体动作”（如深呼吸、列需求），这样执行时才不会模糊。', true);
             this.step = 9;
         } else if (this.step === 9) {
             appendAiMessage(this.chatMessages, '一会儿我们写的时候，也可以按照“如果遇到XX情况，我就做XX”的句式来写。', true);
@@ -112,10 +112,10 @@ export const module35Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 17;
         } else if (this.step === 17) {
-            appendAiMessage(this.chatMessages, '关于“意外发现”：请留意那些计划之外的、细微的积极变化。它可能关于你的身体（手不抖了）、你的自身需求（在进行“和家人聊自己的未来规划”的行动时，发现“原来我不是怕家人不理解，而是怕自己说不清楚”）、或你的人际关系（“朋友的一句回应让我好受很多”）。', true);
+            appendAiMessage(this.chatMessages, '<strong>关于“意外发现”</strong>：请留意那些计划之外的、细微的积极变化。它可能关于你的身体（手不抖了）、你的自身需求（在进行“和家人聊自己的未来规划”的行动时，发现“原来我不是怕家人不理解，而是怕自己说不清楚”）、或你的人际关系（“朋友的一句回应让我好受很多”）。', true);
             this.step = 18;
         } else if (this.step === 18) {
-            appendAiMessage(this.chatMessages, '不用刻意找“大发现”，哪怕是很小的感受都可以。', true);
+            appendAiMessage(this.chatMessages, '不用刻意找大发现，哪怕是很小的感受都可以。', true);
             this.step = 19;
         } else if (this.step === 19) {
             appendAiMessage(this.chatMessages, '今天的内容就是这些啦，不用担心忘记，未来几天我们会每日发送提醒。请带着你的自我承诺和观察之心，回到生活中去吧。期待你的发现。', false);

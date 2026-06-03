@@ -189,10 +189,10 @@ export const module37Handlers = {
                 this.onContinue_Module37();
             });
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '你做得很好，接纳不是要“消灭”消极情绪，也不是强迫自己“必须开心”，而是当焦虑、烦躁来的时候，我们能不逃避、不批判，试着和它们好好相处，甚至用一个小行动帮自己调整状态。', true);
+            appendAiMessage(this.chatMessages, '你做得很好，接纳不是要消灭消极情绪，也不是强迫自己必须开心，而是当焦虑、烦躁来的时候，我们能不逃避、不批判，试着和它们好好相处，甚至用一个小行动帮自己调整状态。', true);
             this.step = 17;
         } else if (this.step === 17) {
-            appendAiMessage(this.chatMessages, '接纳技术不是纸上谈兵，只要多尝试，就能在情绪里找到更从容的应对方式。”', true);
+            appendAiMessage(this.chatMessages, '接纳技术不是纸上谈兵，只要多尝试，就能在情绪里找到更从容的应对方式。', true);
             this.step = 18;
         } else if (this.step === 18) {
             appendAiMessage(this.chatMessages, '我们前两天还进行了自我承诺行动，每当你执行了你的接纳行动后，可以随时打开链接记录（<a href="https://v.wjx.cn/vm/YDIVxE6.aspx#">https://v.wjx.cn/vm/YDIVxE6.aspx#</a>）。这种记录方式还会再持续几天，相信通过一次一次的记录，我们能够更自如地应对情绪与压力。', true);
