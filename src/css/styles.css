@@ -5,7 +5,7 @@
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-/* 主页面样式 */
+/* 涓婚〉闈㈡牱寮?*/
 .home-page {
     background: linear-gradient(145deg, #e9f0f9 0%, #dee8f2 100%);
     min-height: 100vh;
@@ -75,7 +75,7 @@
     padding: 0 0 0.35rem;
 }
 
-/* 网格布局：六个周模块（方形） */
+/* 缃戞牸甯冨眬锛氬叚涓懆妯″潡锛堟柟褰級 */
 .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -154,7 +154,7 @@
     backdrop-filter: blur(4px);
 }
 
-/* 每日模块列表弹窗（第一层） - 改为页面形式 */
+/* 姣忔棩妯″潡鍒楄〃寮圭獥锛堢涓€灞傦級 - 鏀逛负椤甸潰褰㈠紡 */
 .daily-page {
     position: fixed;
     top: 0;
@@ -236,16 +236,18 @@
     box-shadow: 0 8px 20px #a5bedb;
 }
 
-/* 练习页面（1-1） */
+/* 缁冧範椤甸潰锛?-1锛?*/
 .practice-page {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(145deg, #e9f0f9 0%, #dee8f2 100%);
+    background:
+        radial-gradient(circle at top, rgba(255,255,255,0.55), transparent 34%),
+        linear-gradient(180deg, #f7fbff 0%, #edf4fb 52%, #e9f1f8 100%);
     z-index: 1100;
-    overflow-y: auto;
+    overflow: hidden;
     display: none;
 }
 
@@ -254,125 +256,150 @@
 }
 
 .practice-content {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
+    max-width: 860px;
+    height: 100dvh;
+    margin: 0 auto;
+    padding: max(env(safe-area-inset-top), 1rem) 1.25rem max(env(safe-area-inset-bottom), 1rem);
+    display: flex;
+    flex-direction: column;
 }
 
 .practice-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 2rem;
-    padding: 1rem 0;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    padding: 0.4rem 0 0.7rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(180deg, rgba(247,251,255,0.96) 0%, rgba(247,251,255,0.82) 78%, rgba(247,251,255,0) 100%);
+    backdrop-filter: blur(10px);
 }
 
 .practice-header-left {
     display: flex;
     align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.practice-header-left .back-btn {
+    margin-right: 0;
 }
 
 .practice-header h2 {
-    font-size: 1.8rem;
-    background: linear-gradient(145deg, #1B4A6B, #25658b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f3a52;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    background: none;
+    -webkit-text-fill-color: initial;
+    min-width: 0;
+    max-width: 26ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .timer {
-    background: #1f405e;
+    background: rgba(33, 72, 101, 0.96);
     color: white;
-    padding: 0.5rem 1.5rem;
-    border-radius: 40px;
+    padding: 0.5rem 0.95rem;
+    border-radius: 999px;
     font-family: monospace;
-    font-size: 1.4rem;
-    letter-spacing: 2px;
-    box-shadow: 0 4px 8px #0000001a;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    box-shadow: 0 8px 18px rgba(24, 54, 77, 0.14);
+    flex-shrink: 0;
 }
 
-/* 聊天主体 */
+/* 鑱婂ぉ涓讳綋 */
 .chat-messages {
-    background: #f2f8ff;
-    border-radius: 2rem;
-    padding: 2rem;
-    min-height: 500px;
-    max-height: 60vh;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    margin: 1rem 0 2rem;
-    box-shadow: inset 0 2px 8px #b5c9e0;
+    margin: 0;
+    padding: 0.5rem 0 1.1rem;
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 0.95rem;
+    scrollbar-gutter: stable;
 }
 
-/* 左侧AI */
+/* 宸︿晶AI */
 .message-row-left {
     display: flex;
     align-items: flex-end;
-    gap: 0.7rem;
-    max-width: 90%;
+    gap: 0.75rem;
+    max-width: min(82%, 38rem);
 }
 
 .avatar {
-    width: 48px;
-    height: 48px;
-    background: #d4e0f0;
+    width: 52px;
+    height: 52px;
+    background: #dfe9f3;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.35rem;
     flex-shrink: 0;
-    box-shadow: 0 4px 8px #a5bad2;
+    box-shadow: 0 10px 22px rgba(77, 112, 143, 0.18);
     color: #2b4c6e;
-}
-
-.ai-avatar {
-    background: #dceaf7 url("../images/ai-therapeutic-avatar.svg") center/cover no-repeat;
-    color: transparent;
     overflow: hidden;
 }
 
+.ai-avatar {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0)),
+        #dceaf7 url("../images/ai-therapeutic-avatar-v2.png") center/cover no-repeat;
+    color: transparent;
+}
+
 .bubble-left {
-    background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 1.8rem 1.8rem 1.8rem 0.3rem;
-    box-shadow: 0 4px 10px #c1d3e8;
-    color: #1d334a;
+    background: rgba(255,255,255,0.94);
+    padding: 0.95rem 1.2rem;
+    border-radius: 1.35rem 1.35rem 1.35rem 0.45rem;
+    box-shadow: 0 10px 24px rgba(119, 146, 171, 0.16);
+    color: #1f3347;
     font-size: 1rem;
-    line-height: 1.5;
-    max-width: calc(100% - 60px);
+    line-height: 1.65;
+    max-width: 100%;
     word-break: break-word;
 }
 
-/* 右侧用户 */
+/* 鍙充晶鐢ㄦ埛 */
 .message-row-right {
     display: flex;
     justify-content: flex-end;
-    max-width: 85%;
+    max-width: min(76%, 34rem);
     margin-left: auto;
 }
 
 .bubble-right {
-    background: #2b5f87;
+    background: linear-gradient(180deg, #5e89ad 0%, #466f92 100%);
     color: white;
-    padding: 0.9rem 1.4rem;
-    border-radius: 1.8rem 1.8rem 0.3rem 1.8rem;
-    box-shadow: 0 4px 12px #2b5f8760;
+    padding: 0.9rem 1.15rem;
+    border-radius: 1.35rem 1.35rem 0.45rem 1.35rem;
+    box-shadow: 0 12px 22px rgba(70, 111, 146, 0.2);
+    line-height: 1.6;
 }
 
-/* 特殊卡片 */
+/* 鐗规畩鍗＄墖 */
 .special-card {
-    background: #ecf3fd;
-    border-left: 6px solid #598dbb;
-    border-radius: 1.5rem;
-    padding: 1.3rem 1.6rem;
-    box-shadow: 0 6px 14px #bacde2;
+    background: linear-gradient(180deg, rgba(241,247,253,0.96) 0%, rgba(232,242,251,0.96) 100%);
+    border: 1px solid rgba(135, 169, 198, 0.34);
+    border-radius: 1.2rem;
+    padding: 1rem 1.15rem;
+    box-shadow: 0 10px 22px rgba(120, 150, 176, 0.14);
     color: #1c3853;
     margin: 0.2rem 0;
     width: fit-content;
-    max-width: 95%;
-    line-height: 1.8;  /* 行距 */
+    max-width: min(100%, 38rem);
+    line-height: 1.8;
 }
 
 .special-card .scene-title {
@@ -387,19 +414,19 @@
 .continue-wrapper {
     display: flex;
     justify-content: flex-start;
-    margin: 0.2rem 0 0.5rem 3rem;
+    margin: 0.1rem 0 0.35rem 3.5rem;
 }
 
 .continue-btn {
-    background: #dbeafe;
-    border: 2px solid #7ba5cf;
+    background: rgba(225, 237, 248, 0.95);
+    border: 1px solid rgba(123, 165, 207, 0.5);
     color: #1e4a72;
-    border-radius: 30px;
-    padding: 0.5rem 2rem;
-    font-size: 1rem;
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 2px 6px #acc2db;
+    box-shadow: 0 8px 18px rgba(146, 174, 199, 0.2);
     transition: all 0.2s;
 }
 
@@ -414,17 +441,19 @@
     cursor: default;
 }
 
-/* 输入区 */
+/* 杈撳叆鍖?*/
 .input-area {
     display: flex;
     gap: 0.6rem;
-    background: white;
-    border-radius: 4rem;
-    padding: 0.2rem 0.2rem 0.2rem 1.8rem;
-    border: 2px solid #b9d1ec;
+    background: rgba(255,255,255,0.92);
+    border-radius: 1.35rem;
+    padding: 0.35rem 0.35rem 0.35rem 1rem;
+    border: 1px solid rgba(160, 190, 217, 0.55);
     align-items: center;
-    margin-top: 1rem;
-    transition: opacity 0.2s;
+    margin-top: 0.4rem;
+    transition: opacity 0.2s, box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 12px 26px rgba(120, 148, 174, 0.16);
+    backdrop-filter: blur(12px);
 }
 
 .input-area.disabled {
@@ -436,26 +465,29 @@
 .input-area input {
     flex: 1;
     border: none;
-    padding: 1rem 0;
+    padding: 0.8rem 0;
     background: transparent;
     outline: none;
     font-size: 1rem;
     color: #1c3c5c;
 }
 
-.input-area input::placeholder { color: #8aa9cc; }
+.input-area input::placeholder {
+    color: #6d8aa8;
+}
 
 .input-area button {
-    background: #3377aa;
+    background: linear-gradient(180deg, #4f7ca1 0%, #3c6688 100%);
     border: none;
     color: white;
-    width: 3.2rem;
-    height: 3.2rem;
+    width: 2.9rem;
+    height: 2.9rem;
     border-radius: 50%;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     cursor: pointer;
     flex-shrink: 0;
     transition: all 0.2s;
+    box-shadow: 0 8px 18px rgba(67, 104, 135, 0.22);
 }
 
 .input-area button:hover {
@@ -464,31 +496,31 @@
 }
 
 .hint-text {
-    color: #4a6f94;
-    font-size: 0.95rem;
-    margin: 0.5rem 0 0.2rem 3.5rem;
+    color: #516f8d;
+    font-size: 0.92rem;
+    margin: 0.35rem 0 0.1rem 4rem;
     font-style: italic;
 }
 
-/* 按钮组样式 */
+/* 鎸夐挳缁勬牱寮?*/
 .button-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin: 1rem 0;
+    gap: 0.75rem;
+    margin: 0.85rem 0 0.2rem 4rem;
     justify-content: flex-start;
 }
 
 .state-button {
-    background: white;
-    border: 2px solid #7ba5cf;
+    background: rgba(255,255,255,0.94);
+    border: 1px solid rgba(123, 165, 207, 0.65);
     color: #1e4a72;
-    border-radius: 30px;
-    padding: 0.8rem 2rem;
-    font-size: 1rem;
+    border-radius: 999px;
+    padding: 0.7rem 1.15rem;
+    font-size: 0.96rem;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 2px 6px #acc2db;
+    box-shadow: 0 8px 16px rgba(160, 186, 211, 0.16);
     transition: all 0.2s;
 }
 
@@ -508,24 +540,25 @@
     border-color: #5a8bc9;
 }
 
-/* 卡片返回按钮 */
+/* 鍗＄墖杩斿洖鎸夐挳 */
 .card-action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.8rem;
-    margin-top: 1rem;
+    margin: 0.85rem 0 0.1rem 4rem;
     justify-content: flex-start;
 }
 
 .card-btn {
-    background: #dbeafe;
-    border: 2px solid #7ba5cf;
+    background: rgba(225, 237, 248, 0.95);
+    border: 1px solid rgba(123, 165, 207, 0.65);
     color: #1e4a72;
-    border-radius: 30px;
-    padding: 0.5rem 2rem;
+    border-radius: 999px;
+    padding: 0.65rem 1.1rem;
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 2px 6px #acc2db;
+    box-shadow: 0 8px 16px rgba(160, 186, 211, 0.16);
     transition: all 0.2s;
 }
 
@@ -544,17 +577,17 @@
     background: #3d6b92;
 }
 
-/* 理解按钮（已了解） */
+/* 鐞嗚В鎸夐挳锛堝凡浜嗚В锛?*/
 .understand-btn {
-    background: #4f8bb9;
+    background: linear-gradient(180deg, #5a88ac 0%, #477496 100%);
     color: white;
-    border: 2px solid #3d6b92;
-    border-radius: 30px;
-    padding: 0.8rem 2rem;
-    font-size: 1rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.78rem 1.3rem;
+    font-size: 0.98rem;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 2px 6px #7a9fc4;
+    box-shadow: 0 10px 18px rgba(95, 132, 165, 0.22);
     transition: all 0.2s;
 }
 
@@ -563,17 +596,16 @@
     transform: scale(1.05);
 }
 
-/* 计时器样式 */
+/* 璁℃椂鍣ㄦ牱寮?*/
 .card-timer {
     display: inline-block;
-    background: #508ab7;
-    opacity: 0.8;       /* 透明度 */
+    background: rgba(72, 118, 154, 0.88);
     color: white;
     padding: 0.3rem 1rem;
-    border-radius: 20px;
+    border-radius: 999px;
     font-weight: bold;
     margin: 0.5rem 0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .card-timer {
@@ -589,9 +621,122 @@
 }
 
 .countdown-wrapper.after-card {
-    margin-left: 3rem;
+    margin-left: 4rem;
 }
 
 .countdown-wrapper.after-message {
-    margin-left: 3.7rem;
+    margin-left: 4rem;
+}
+
+@media (max-width: 900px) {
+    .practice-content {
+        max-width: 100%;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .practice-header h2 {
+        max-width: 20ch;
+    }
+
+    .message-row-left,
+    .message-row-right,
+    .special-card {
+        max-width: 88%;
+    }
+}
+
+@media (max-width: 640px) {
+    .practice-content {
+        padding: max(env(safe-area-inset-top), 0.75rem) 0.75rem max(env(safe-area-inset-bottom), 0.75rem);
+    }
+
+    .practice-header {
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.55rem;
+    }
+
+    .practice-header-left {
+        flex: 1;
+        gap: 0.7rem;
+    }
+
+    .practice-header-left .back-btn {
+        width: 2.65rem;
+        height: 2.65rem;
+        font-size: 1.45rem;
+    }
+
+    .practice-header h2 {
+        font-size: 1rem;
+        max-width: 100%;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .timer {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.92rem;
+    }
+
+    .chat-messages {
+        padding-top: 0.25rem;
+        gap: 0.8rem;
+    }
+
+    .message-row-left,
+    .message-row-right,
+    .special-card {
+        max-width: 100%;
+    }
+
+    .avatar {
+        width: 42px;
+        height: 42px;
+    }
+
+    .bubble-left,
+    .bubble-right {
+        padding: 0.85rem 1rem;
+        font-size: 0.96rem;
+    }
+
+    .continue-wrapper,
+    .hint-text,
+    .button-group,
+    .card-action-buttons,
+    .countdown-wrapper.after-card,
+    .countdown-wrapper.after-message {
+        margin-left: 3rem;
+    }
+
+    .input-area {
+        gap: 0.45rem;
+        padding-left: 0.85rem;
+    }
+
+    .input-area input {
+        padding: 0.72rem 0;
+        font-size: 0.96rem;
+    }
+
+    .input-area button {
+        width: 2.7rem;
+        height: 2.7rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .back-btn,
+    .continue-btn,
+    .input-area,
+    .input-area button,
+    .state-button,
+    .card-btn,
+    .understand-btn {
+        transition: none;
+    }
 }

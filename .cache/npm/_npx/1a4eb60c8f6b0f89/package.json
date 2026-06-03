@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "impeccable": "^2.3.2"
+  },
+  "_npx": {
+    "packages": [
+      "impeccable"
+    ]
+  }
+}
