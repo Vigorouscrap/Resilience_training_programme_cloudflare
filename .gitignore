@@ -39,3 +39,4 @@ logs/
 .AppleDouble
 .LSOverride
 ".cache/" 
+.cache/ 

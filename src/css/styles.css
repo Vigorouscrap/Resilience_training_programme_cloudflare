@@ -78,7 +78,7 @@
 /* 缃戞牸甯冨眬锛氬叚涓懆妯″潡锛堟柟褰級 */
 .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 2rem;
     justify-content: center;
     margin: 0 auto;
@@ -86,6 +86,7 @@
 
 .week-tile {
     aspect-ratio: 1 / 1;
+    min-width: 0;
     background: white;
     border-radius: 2.2rem;
     box-shadow: 0 12px 28px -8px rgba(26, 58, 90, 0.25);
@@ -124,6 +125,7 @@
     background: linear-gradient(140deg, #1d3f5e, #2b5780);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    word-break: break-word;
 }
 
 .week-sub {
@@ -629,6 +631,25 @@
 }
 
 @media (max-width: 900px) {
+    .dashboard {
+        padding: 2rem 1.5rem;
+        border-radius: 2.5rem;
+    }
+
+    .header-icon {
+        width: 15rem;
+        height: 15rem;
+        margin-bottom: -8.5rem;
+    }
+
+    .header-title-text {
+        margin-top: -2.5rem;
+    }
+
+    .header p {
+        margin-top: -8.5rem;
+    }
+
     .practice-content {
         max-width: 100%;
         padding-left: 1rem;
@@ -647,6 +668,71 @@
 }
 
 @media (max-width: 640px) {
+    .home-page {
+        padding: max(1rem, env(safe-area-inset-top)) 0.75rem max(1rem, env(safe-area-inset-bottom));
+        justify-content: flex-start;
+    }
+
+    .dashboard {
+        border-radius: 2rem;
+        padding: 1.5rem 1rem 1.25rem;
+    }
+
+    .header {
+        margin-bottom: 1.25rem;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .header-icon {
+        width: 11.5rem;
+        height: 11.5rem;
+        margin-bottom: -6.6rem;
+    }
+
+    .header-title-text {
+        margin: -1.7rem 0 0.45rem 0;
+        line-height: 1.08;
+    }
+
+    .header p {
+        margin: -5.9rem 0 0 0;
+        font-size: 1rem;
+        padding-bottom: 0.3rem;
+    }
+
+    .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .week-tile {
+        border-radius: 1.5rem;
+        padding: 1rem 0.75rem;
+    }
+
+    .week-icon {
+        font-size: 2.25rem;
+    }
+
+    .week-title {
+        font-size: 1.3rem;
+    }
+
+    .week-sub {
+        font-size: 0.92rem;
+    }
+
+    .footer-note {
+        width: 100%;
+        margin-top: 1.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.92rem;
+        border-radius: 1.2rem;
+    }
+
     .practice-content {
         padding: max(env(safe-area-inset-top), 0.75rem) 0.75rem max(env(safe-area-inset-bottom), 0.75rem);
     }
@@ -726,6 +812,29 @@
     .input-area button {
         width: 2.7rem;
         height: 2.7rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .dashboard {
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+    }
+
+    .grid {
+        gap: 0.85rem;
+    }
+
+    .week-tile {
+        padding: 0.9rem 0.65rem;
+    }
+
+    .week-icon {
+        font-size: 2rem;
+    }
+
+    .week-title {
+        font-size: 1.15rem;
     }
 }
 
