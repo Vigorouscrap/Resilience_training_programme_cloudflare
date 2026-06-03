@@ -50,17 +50,17 @@ export const module22Handlers = {
             this.step = 1;
         } else if (this.step === 1) {
             appendAiMessage(this.chatMessages, '如果你也曾用逃避来应对压力，请轻点屏幕，静静感受这份共鸣。', false);
-            appendContinueButton(this.chatMessages, 10);
+            appendContinueButton(this.chatMessages, 20);
             this.step = 2;
         } else if (this.step === 2) {
             appendSpecialCard(this.chatMessages, module22Cases.b.storyHtml);
             appendAiMessage(this.chatMessages, '如果你也曾用沉默来避免冲突，请轻点屏幕，静静感受。', false);
-            appendContinueButton(this.chatMessages, 10);
+            appendContinueButton(this.chatMessages, 20);
             this.step = 3;
         } else if (this.step === 3) {
             appendSpecialCard(this.chatMessages, module22Cases.c.storyHtml);
-            appendAiMessage(this.chatMessages, '如果你也曾用‘强撑’来掩饰脆弱，请轻点屏幕，感受此刻。', false);
-            appendContinueButton(this.chatMessages, 10);
+            appendAiMessage(this.chatMessages, '如果你也曾用强撑来掩饰脆弱，请轻点屏幕，感受此刻。', false);
+            appendContinueButton(this.chatMessages, 20);
             this.step = 4;
         } else if (this.step === 4) {
             appendAiMessage(this.chatMessages, '现在，让我们像侦探一样，聚焦在其中一个故事上。请选择你最想探索的主人公：', false);
@@ -92,10 +92,10 @@ export const module22Handlers = {
             appendAiMessage(this.chatMessages, '通过刚才的探索，我们发现了不同的主人公为了回避压力而麻痹、勉强自己，最终会带来一连串问题。', true);
             this.step = 10;
         } else if (this.step === 10) {
-            appendAiMessage(this.chatMessages, '其实这三个故事，都在讲述同一种心理模式：当我们感到焦虑、受伤或压力时，有时会选择‘推开感受’、‘转移注意’或‘假装没事’，这在心理学上有一个名字，叫做 <strong>‘经验性回避’</strong>。', true);
+            appendAiMessage(this.chatMessages, '其实这三个故事，都在讲述同一种心理模式：当我们感到焦虑、受伤或压力时，有时会选择‘推开感受’、‘转移注意’或‘假装没事’，这在心理学上有一个名字，叫做 <strong>经验性回避</strong>。', true);
             this.step = 11;
         } else if (this.step === 11) {
-            appendAiMessage(this.chatMessages, '这不是“错误”，而是我们很多人习惯的自我保护方式。', false);
+            appendAiMessage(this.chatMessages, '这不是错误，而是我们很多人习惯的自我保护方式。', false);
             appendSpecialCard(this.chatMessages, '<p><strong>原理剖析</strong></p>');
             appendContinueButton(this.chatMessages);
             this.step = 12;
@@ -111,7 +111,7 @@ export const module22Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 15;
         } else if (this.step === 15) {
-            appendAiMessage(this.chatMessages, '回顾三个故事，现在你能否识别出‘经验性回避’的表现？', false);
+            appendAiMessage(this.chatMessages, '请向上滑动屏幕，重读三个案例，现在你能否识别出经验性回避的表现？', false);
             appendSpecialCard(
                 this.chatMessages,
                 '<p>张天：用游戏回避______</p><p>晓琳：用沉默回避______</p><p>嘉怡：用强撑回避______</p>'
@@ -130,14 +130,17 @@ export const module22Handlers = {
             appendAiMessage(this.chatMessages, '今天，我们一起完成了一次觉察：我们看见了“经验性回避”——这种很普遍的心理模式。', true);
             this.step = 17;
         } else if (this.step === 17) {
-            appendAiMessage(this.chatMessages, '经验性回避看似能躲开一时难受，实则会让情绪问题问题被拖延和放大，消耗大量心理能量在‘掩饰’和‘逃避’上，错过真正解决问题的时机。', true);
+            appendAiMessage(this.chatMessages, '经验性回避看似能躲开一时难受，实则会让情绪问题问题被拖延和放大，消耗大量心理能量在掩饰和逃避上，错过真正解决问题的时机。', true);
             this.step = 18;
         } else if (this.step === 18) {
             appendAiMessage(this.chatMessages, '看见自己的回避模式，就是改变的第一步。训练的目的，不是从不回避，而是让我们能更快地觉察到：“哦，我又在回避了。”然后给自己一个选择的机会。', true);
             this.step = 19;
         } else if (this.step === 19) {
-            appendAiMessage(this.chatMessages, '所以请尝试带着这份觉察，应用到日常生活中。当下次你想推开某种感受时，或许可以试着在心里说：“我感觉到我在想推开它，没关系，我看到你了。”', false);
+            appendAiMessage(this.chatMessages, '所以请尝试带着这份觉察，应用到日常生活中。当下次你想推开某种感受时，或许可以试着在心里说：“我感觉到我在想推开它，没关系，我注意到了。”', true);
             this.step = 20;
+        } else if (this.step === 20) {
+            appendAiMessage(this.chatMessages, '今天的练习就到这里啦。', false);
+            this.step = 21;
         }
     },
 
