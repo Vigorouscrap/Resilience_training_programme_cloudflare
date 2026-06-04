@@ -125,12 +125,128 @@ function removeModule66ReviewPanel(chatMessages) {
     if (card) card.remove();
 }
 
-function createModule66ReviewButton(label, onClick) {
+function createModule66ReviewStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .module66-review-panel {
+            display: grid;
+            gap: 0.85rem;
+        }
+        .module66-review-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+        .module66-review-branch {
+            display: grid;
+            gap: 0.75rem;
+            padding: 0.15rem 0 0 0.85rem;
+            border-left: 1px solid #d6e5f2;
+        }
+        .module66-review-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.7rem;
+            min-width: 0;
+            transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .module66-review-btn:hover:not(.disabled) {
+            background: rgba(255,255,255,0.94);
+            border-color: #7fa0c2;
+            color: #1e4a72;
+            transform: scale(1.05);
+        }
+        .module66-review-btn.is-active {
+            background: #58779b;
+            border-color: #58779b;
+            color: #ffffff;
+            box-shadow: 0 4px 8px rgba(88, 119, 155, 0.16);
+        }
+        .module66-review-btn.is-active:hover:not(.disabled) {
+            background: #58779b;
+            border-color: #58779b;
+            color: #ffffff;
+        }
+        .module66-review-btn.is-complete:not(.is-active) {
+            background: #eef5fb;
+            border-color: #c6d8ea;
+            color: #31516f;
+        }
+        .module66-review-btn.is-complete:not(.is-active):hover:not(.disabled) {
+            background: #eef5fb;
+            border-color: #7fa0c2;
+            color: #31516f;
+        }
+        .module66-review-btn__label {
+            min-width: 0;
+            white-space: normal;
+            text-align: left;
+        }
+        .module66-review-btn__meta {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.55rem;
+            height: 1.55rem;
+            padding: 0 0.42rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1;
+            background: #e4eef7;
+            color: #486987;
+        }
+        .module66-review-btn.hide-active-meta.is-active .module66-review-btn__meta {
+            display: none;
+        }
+        .module66-review-answer {
+            margin-top: -0.1rem;
+            padding: 0.9rem 1rem;
+            border-radius: 14px;
+            background: #f7fbff;
+            border: 1px solid #d6e5f2;
+            line-height: 1.7;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .module66-review-btn {
+                transition: none;
+            }
+        }
+    `;
+    return style;
+}
+
+function createModule66ReviewButton(label, onClick, options = {}) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'state-button';
-    button.innerText = label;
+    button.className = 'state-button module66-review-btn';
+    if (options.active) {
+        button.classList.add('is-active');
+    }
+    if (options.complete) {
+        button.classList.add('is-complete');
+    }
+    if (options.hideMetaWhenActive) {
+        button.classList.add('hide-active-meta');
+    }
     button.dataset.state = label;
+    button.setAttribute('aria-expanded', options.active ? 'true' : 'false');
+    button.title = options.active ? '点击折叠' : '点击展开';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'module66-review-btn__label';
+    labelSpan.innerText = label;
+    button.appendChild(labelSpan);
+
+    if (options.metaText != null && options.metaText !== '') {
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'module66-review-btn__meta';
+        metaSpan.innerText = options.metaText;
+        button.appendChild(metaSpan);
+    }
+
     button.addEventListener('click', onClick);
     return button;
 }
@@ -142,12 +258,23 @@ function showModule66ReviewOptions() {
     if (!panel) return;
 
     panel.innerHTML = '';
+    panel.appendChild(createModule66ReviewStyles());
 
     const topLevelGroup = document.createElement('div');
-    topLevelGroup.className = 'button-group';
+    topLevelGroup.className = 'button-group module66-review-group';
     module66ReviewSectionKeys.forEach(sectionKey => {
+        const isExpanded = this.module66State.expandedReviewSections.has(sectionKey);
         topLevelGroup.appendChild(
-            createModule66ReviewButton(sectionKey, () => this.toggleModule66ReviewSection(sectionKey))
+            createModule66ReviewButton(
+                sectionKey,
+                () => this.toggleModule66ReviewSection(sectionKey),
+                {
+                    active: isExpanded,
+                    complete: this.module66State.visitedReviewSections.has(sectionKey),
+                    metaText: String(Object.keys(module66ReviewItems[sectionKey]).length),
+                    hideMetaWhenActive: true
+                }
+            )
         );
     });
     panel.appendChild(topLevelGroup);
@@ -156,15 +283,22 @@ function showModule66ReviewOptions() {
         if (!this.module66State.expandedReviewSections.has(sectionKey)) return;
 
         const sectionWrap = document.createElement('div');
-        sectionWrap.style.marginTop = '0.9rem';
-        sectionWrap.style.paddingLeft = '0.8rem';
-        sectionWrap.style.borderLeft = '2px solid #d6e5f2';
+        sectionWrap.className = 'module66-review-branch';
 
         const subGroup = document.createElement('div');
-        subGroup.className = 'button-group';
+        subGroup.className = 'button-group module66-review-group';
         Object.keys(module66ReviewItems[sectionKey]).forEach(choice => {
+            const isExpanded = this.module66State.expandedReviewSubOptions[sectionKey].has(choice);
             subGroup.appendChild(
-                createModule66ReviewButton(choice, () => this.toggleModule66ReviewAnswer(sectionKey, choice))
+                createModule66ReviewButton(
+                    choice,
+                    () => this.toggleModule66ReviewAnswer(sectionKey, choice),
+                    {
+                        active: isExpanded,
+                        complete: this.module66State.visitedReviewSubOptions[sectionKey].has(choice),
+                        metaText: isExpanded ? '−' : '+'
+                    }
+                )
             );
         });
         sectionWrap.appendChild(subGroup);
@@ -173,12 +307,7 @@ function showModule66ReviewOptions() {
             if (!this.module66State.expandedReviewSubOptions[sectionKey].has(choice)) return;
 
             const answerWrap = document.createElement('div');
-            answerWrap.style.margin = '0.7rem 0 0 0';
-            answerWrap.style.padding = '0.9rem 1rem';
-            answerWrap.style.borderRadius = '14px';
-            answerWrap.style.background = '#f7fbff';
-            answerWrap.style.border = '1px solid #d6e5f2';
-            answerWrap.style.lineHeight = '1.7';
+            answerWrap.className = 'module66-review-answer';
             answerWrap.innerHTML = module66ReviewItems[sectionKey][choice];
             sectionWrap.appendChild(answerWrap);
         });
@@ -188,7 +317,7 @@ function showModule66ReviewOptions() {
 
     if (hasVisitedAllModule66ReviewItems(this.module66State)) {
         const actionGroup = document.createElement('div');
-        actionGroup.className = 'button-group';
+        actionGroup.className = 'button-group module66-review-group';
         actionGroup.style.marginTop = '1rem';
         actionGroup.appendChild(
             createModule66ReviewButton('已全部了解', () => this.completeModule66Review())
@@ -253,7 +382,13 @@ export const module66Handlers = {
         ensureModule66ReviewState(this.module66State);
         if (this.module66State.expandedReviewSections.has(sectionKey)) {
             this.module66State.expandedReviewSections.delete(sectionKey);
+            this.module66State.expandedReviewSubOptions[sectionKey].clear();
         } else {
+            module66ReviewSectionKeys.forEach(otherSectionKey => {
+                if (otherSectionKey === sectionKey) return;
+                this.module66State.expandedReviewSections.delete(otherSectionKey);
+                this.module66State.expandedReviewSubOptions[otherSectionKey].clear();
+            });
             this.module66State.expandedReviewSections.add(sectionKey);
         }
         showModule66ReviewOptions.call(this);
@@ -261,9 +396,17 @@ export const module66Handlers = {
 
     toggleModule66ReviewAnswer(sectionKey, choice) {
         ensureModule66ReviewState(this.module66State);
+        module66ReviewSectionKeys.forEach(otherSectionKey => {
+            if (otherSectionKey === sectionKey) return;
+            this.module66State.expandedReviewSections.delete(otherSectionKey);
+            this.module66State.expandedReviewSubOptions[otherSectionKey].clear();
+        });
+        this.module66State.expandedReviewSections.add(sectionKey);
+
         if (this.module66State.expandedReviewSubOptions[sectionKey].has(choice)) {
             this.module66State.expandedReviewSubOptions[sectionKey].delete(choice);
         } else {
+            this.module66State.expandedReviewSubOptions[sectionKey].clear();
             this.module66State.expandedReviewSubOptions[sectionKey].add(choice);
             this.module66State.visitedReviewSubOptions[sectionKey].add(choice);
         }
