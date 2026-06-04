@@ -7,6 +7,7 @@ https://resilience-training-programme-two.vercel.app
 
 本地测试：
 python -m http.server 8000 --directory src
+--bind 0.0.0.0  允许外部访问（局域网手机端访问）
 
 快捷测试入口示例：（请将`module`和`fast`参数替换为实际值）
 http://127.0.0.1:8000/?module=3-2&fast=1
