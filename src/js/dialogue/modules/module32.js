@@ -23,7 +23,7 @@ const module32DefinitionCardHtml = `
 const module32QuestionCards = [
     '<p>问题一：“努力了解项目相关信息”属于哪种应对方式呢？</p>',
     '<p>问题二：“强迫自己只去想‘肯定能完成项目’”属于哪种应对方式呢？</p>',
-    '<p>问题二：“压抑对不能升职的失落情绪”属于哪种应对方式呢？</p>'
+    '<p>问题三：“压抑对不能升职的失落情绪”属于哪种应对方式呢？</p>'
 ];
 
 const module32QuestionResponses = [
@@ -196,7 +196,7 @@ export const module32Handlers = {
             this.showModule32Question(2);
             this.step = 9;
         } else if (this.step === 9) {
-            appendAiMessage(this.chatMessages, '结合案例以及以上几个问题，我们不难总结出，积极应对是主动面对情绪、想办法缓解，而过度积极反刍则是：通过强迫自己必须积极来回避、压抑真实情绪。它表面看似乐观，实则阻碍了情绪的真实表达和处理。', true);
+            appendAiMessage(this.chatMessages, '结合案例以及以上几个问题，我们不难总结出，积极应对是主动面对情绪、想办法缓解，而过度积极反刍则是通过强迫自己必须积极来回避、压抑真实情绪。它表面看似乐观，实则阻碍了情绪的真实表达和处理。', true);
             this.step = 10;
         } else if (this.step === 10) {
             appendAiMessage(this.chatMessages, '那么，在了解了案例中小李的心理后，我们该如何使用上周学习的“观察、允许、扩展、行动”四步接纳技术，回应小李这种“既担心完不成项目，又强迫自己乐观；既失落，又压抑情绪”的矛盾心理？', true);

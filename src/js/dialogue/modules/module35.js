@@ -90,7 +90,7 @@ export const module35Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 12;
         } else if (this.step === 12) {
-            appendAiMessage(this.chatMessages, '现在，你有几分钟的时间来思考对你来说有可能触发的场景，然后像一个具体的接纳行动。', false);
+            appendAiMessage(this.chatMessages, '现在，你有几分钟的时间来思考对你来说有可能触发的场景，然后想一个具体的接纳行动。', false);
             appendContinueButton(this.chatMessages, 120);
             this.step = 13;
         } else if (this.step === 13) {

@@ -116,14 +116,14 @@ export const module27Handlers = {
             this.enableInputForModule(this.chatMessages);
             this.step = 7;
         } else if (this.step === 8) {
-            appendAiMessage(this.chatMessages, '感谢你的分享。这周我们认识了“经验性回避”，也就是当我们感到焦虑、受伤或压力时，有时会选择“推开感受”、“转移注意”或“假装没事”。此刻，回想一下当时自己遇见这件事的时候，是否也习惯性地进行了经验性回避了呢？', false);
+            appendAiMessage(this.chatMessages, '感谢你的分享。这周我们认识了“经验性回避”，也就是当我们感到焦虑、受伤或压力时，有时会选择推开感受、转移注意或假装没事。此刻，回想一下当时自己遇见这件事的时候，是否也习惯性地进行了经验性回避了呢？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
                 appendAiMessage(this.chatMessages, '感谢你的回答。那么后来你是否有意识地对自己说“我注意到我进行经验性回避了呢”或者“哦我注意到我在推开某种感受”？日常生活中我们可以多尝试这样的做法，从而有意识地迈出“应对焦虑或压力”的第一步。', true);
                 this.step = 10;
             });
         } else if (this.step === 9) {
-            appendAiMessage(this.chatMessages, '暂时没有想到也没关系。这周我们认识了“经验性回避”，也就是当我们感到焦虑、受伤或压力时，有时会选择“推开感受”、“转移注意”或“假装没事”。', true);
+            appendAiMessage(this.chatMessages, '暂时没有想到也没关系。这周我们认识了“经验性回避”，也就是当我们感到焦虑、受伤或压力时，有时会选择推开感受、转移注意或假装没事。', true);
             this.step = 11;
         } else if (this.step === 11) {
             appendAiMessage(this.chatMessages, '日常生活中我们可以尝试留心觉察，比如在感到一点点烦躁或紧张的时候，就停下来问问自己：“我现在是不是在试着推开某种感受？”这样的小练习，就能慢慢帮你更好地认识自己的应对模式。', true);
@@ -140,28 +140,28 @@ export const module27Handlers = {
             this.step = 14;
         } else if (this.step === 14) {
             this.showModule27AcceptanceCard(
-                '<p><strong>【第一步：观察】</strong></p><p>说什么做什么：观察自己，用“我现在感到____（情绪词），身体____（具体部位+感受）”句式表达，不添加“我不该这样”等评判的句子。</p>',
+                '<p><strong>【第一步：观察】</strong></p><p><i><u>说什么做什么</u></i>：观察自己，用“我现在感到____（情绪词），身体____（具体部位+感受）”句式表达，不添加“我不该这样”等评判的句子。</p>',
                 15,
                 '下一步',
                 15
             );
         } else if (this.step === 15) {
             this.showModule27AcceptanceCard(
-                '<p><strong>【第二步：允许】</strong></p><p>说什么做什么：用“遇到这种事，有这样的情绪是正常的，我允许它在这儿，不怪自己”类似的话，不否定、不压抑，像允许一位客人暂时坐在自己的客厅。</p>',
+                '<p><strong>【第二步：允许】</strong></p><p><i><u>说什么做什么</u></i>：用“遇到这种事，有这样的情绪是正常的，我允许它在这儿，不怪自己”类似的话，不否定、不压抑，像允许一位客人暂时坐在自己的客厅。</p>',
                 15,
                 '下一步',
                 16
             );
         } else if (this.step === 16) {
             this.showModule27AcceptanceCard(
-                '<p><strong>【第三步：扩展】</strong></p><p>说什么做什么：先关注情绪15秒，再慢慢将注意力转移到“呼吸/身体其他部位/周围声音”，用“除了____（情绪），我还能感受到____”来表达。</p>',
+                '<p><strong>【第三步：扩展】</strong></p><p><i><u>说什么做什么</u></i>：先关注情绪15秒，再慢慢将注意力转移到“呼吸/身体其他部位/周围声音”，用“除了____（情绪），我还能感受到____”来表达。</p>',
                 15,
                 '下一步',
                 17
             );
         } else if (this.step === 17) {
             this.showModule27AcceptanceCard(
-                '<p><strong>【第四步：行动】</strong></p><p>说什么做什么：选择做一个不需要费力气的小事（30秒内能完成），做完后说“我刚为自己做了____”。</p>',
+                '<p><strong>【第四步：行动】</strong></p><p><i><u>说什么做什么</u></i>：选择做一个不需要费力气的小事（30秒内能完成），做完后说“我刚为自己做了____”。</p>',
                 30,
                 '已完成',
                 18
