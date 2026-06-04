@@ -77,6 +77,11 @@ export const module67Handlers = {
                     <p>（对应改变：通过“以己为景”回到当下，缓解过度畅想的焦虑）</p>
                     <p>以前我总担心计划做不到，现在我会深呼吸，我想用这个动作告诉自己“慢慢来也可以”（动作：双手叉腰，缓慢深呼吸1次）</p>
                     <p>（对应改变：通过解离技术脱离自我怀疑，接纳不完美）</p>
+                `
+            );
+            appendSpecialCard(
+                this.chatMessages,
+                `
                     <p><strong>【进阶版：细节描述+情感动作】</strong></p>
                     <p><strong>核心逻辑：</strong>加入一个具体干预场景的细节，让改变更有画面感，动作可融入情感表达（如微笑、轻抱自己），强化分享的感染力。</p>
                     <p><strong>句式模板：</strong>记得上次______（具体场景），我用了______（技术），现在我______（改变），这个动作就是我当下的心情______（动作）。</p>
@@ -87,11 +92,8 @@ export const module67Handlers = {
                     <p>（对应改变：从盲目比较和自我否定，到跳出思维陷阱、明确个人价值方向，自我认同与价值清晰度提高）</p>
                 `
             );
-            appendButtonGroup(this.chatMessages, ['继续'], () => {
-                removeCurrentButtonGroup(this.chatMessages);
-                this.step = 7;
-                this.onContinue_Module67();
-            });
+            appendContinueButton(this.chatMessages, 0);
+            this.step = 7;
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '现在，请你从以上模版选择一个，然后仿照着来总结你这六周的改变吧！可以慢慢想然后输入到对话框中发送，请注意没有对错之分。', false);
             this.enableInputForModule(this.chatMessages);
@@ -105,10 +107,10 @@ export const module67Handlers = {
             appendContinueButton(this.chatMessages, 45);
             this.step = 11;
         } else if (this.step === 11) {
-            appendAiMessage(this.chatMessages, '为了能够将训练课程学到的内容和技术更持久灵活地应用和延续下去，我们提供了一个简单自我练习计划。', false);
             appendSpecialCard(
                 this.chatMessages,
                 `
+                    <p>为了能够将训练课程学到的内容和技术更持久灵活地应用和延续下去，我们提供了一个简单自我练习计划。</p>
                     <table style="border-collapse:collapse;width:100%;">
                         <tr>
                             <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">练习类别</th>
@@ -169,11 +171,8 @@ export const module67Handlers = {
                     </table>
                 `
             );
-            appendButtonGroup(this.chatMessages, ['继续'], () => {
-                removeCurrentButtonGroup(this.chatMessages);
-                this.step = 12;
-                this.onContinue_Module67();
-            });
+            appendContinueButton(this.chatMessages, 60);
+            this.step = 12;
         } else if (this.step === 12) {
             appendAiMessage(this.chatMessages, '你也可以从计划表中确认哪些是自己能坚持的，后续如果需要调整，也可以随时修改，重点是让练习融入生活。相信你能坚持下去，也期待看到你后续的成长。', true);
             this.step = 13;

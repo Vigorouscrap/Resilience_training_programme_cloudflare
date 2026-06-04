@@ -70,31 +70,32 @@ function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onCom
     });
 }
 
-function buildPerspectiveTable(leftEvent, leftBody, leftThought, leftIntensity, rightEvent, rightBody, rightThought, rightIntensity) {
+function buildPerspectiveTableHtml(rows) {
     return `
         <table style="border-collapse:collapse;width:100%;">
             <tr>
+                <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;"></th>
                 <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">第一人称体验者视角<br>（“我”的感受）</th>
                 <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">第三人称观察者视角<br>（“他/她”的观察）</th>
             </tr>
-            <tr>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">今天让我焦虑的压力事件：${leftEvent}</td>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">今天发生的事：${rightEvent}</td>
-            </tr>
-            <tr>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我现在的身体感觉：${leftBody}</td>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他的身体反应：${rightBody}</td>
-            </tr>
-            <tr>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我心里在想：${leftThought}</td>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他心里可能在想：${rightThought}</td>
-            </tr>
-            <tr>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我现在的焦虑感：${leftIntensity}分</td>
-                <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他现在的焦虑感看起来有：${rightIntensity}分</td>
-            </tr>
+            ${rows.map(([label, leftContent, rightContent]) => `
+                <tr>
+                    <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;font-weight:600;">${label}</td>
+                    <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">${leftContent}</td>
+                    <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">${rightContent}</td>
+                </tr>
+            `).join('')}
         </table>
     `;
+}
+
+function buildPerspectiveTable(leftEvent, leftBody, leftThought, leftIntensity, rightEvent, rightBody, rightThought, rightIntensity) {
+    return buildPerspectiveTableHtml([
+        ['事件极简描述', `今天让我焦虑的压力事件：${leftEvent}`, `今天发生的事：${rightEvent}`],
+        ['当下的身体反应', `我现在的身体感觉：${leftBody}`, `他的身体反应：${rightBody}`],
+        ['冒出来的想法', `我心里在想：${leftThought}`, `他心里可能在想：${rightThought}`],
+        ['情绪打分<br>（1-10分）', `我现在的焦虑感：${leftIntensity}分`, `他现在的焦虑感看起来有：${rightIntensity}分`]
+    ]);
 }
 
 function getDesireFeedback(text) {
@@ -131,30 +132,12 @@ export const module62Handlers = {
             appendAiMessage(this.chatMessages, '下面，我们提供了一个简洁的双视角记录表格。它展示了我们作为体验者和观察者时应当记录的方面：简单的事件描述、当下身体反应、想法、情绪打分。', false);
             appendSpecialCard(
                 this.chatMessages,
-                `
-                    <table style="border-collapse:collapse;width:100%;">
-                        <tr>
-                            <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">第一人称体验者视角<br>（“我”的感受）</th>
-                            <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">第三人称观察者视角<br>（“他/她”的观察）</th>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">今天让我焦虑的压力事件：______（例：导师说我的论文需要重写）</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">今天发生的事：______（例：他去找导师，导师提到他的论文需要重写）</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我现在的身体感觉：______（例：心跳快、手心出汗）</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他的身体反应：______（例：他说话时声音有点抖，手不自觉握起，呼吸比平时快）</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我心里在想：______（例：是不是我学习能力有问题？毕业会不会有问题？）</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他心里可能在想：______（例：他在怀疑自己的学习能力，也在害怕会影响到毕业）</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我现在的焦虑感：______分</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他现在的焦虑感看起来有：______分</td>
-                        </tr>
-                    </table>
-                `
+                buildPerspectiveTableHtml([
+                    ['事件极简描述', '今天让我焦虑的压力事件：______（例：导师说我的论文需要重写）', '今天发生的事：______（例：他去找导师，导师提到他的论文需要重写）'],
+                    ['当下的身体反应', '我现在的身体感觉：______（例：心跳快、手心出汗）', '他的身体反应：______（例：他说话时声音有点抖，手不自觉握起，呼吸比平时快）'],
+                    ['冒出来的想法', '我心里在想：______（例：是不是我学习能力有问题？毕业会不会有问题？）', '他心里可能在想：______（例：他在怀疑自己的学习能力，也在害怕会影响到毕业）'],
+                    ['情绪打分<br>（1-10分）', '我现在的焦虑感：______分', '他现在的焦虑感看起来有：______分']
+                ])
             );
             appendContinueButton(this.chatMessages);
             this.step = 4;
@@ -183,30 +166,12 @@ export const module62Handlers = {
             appendAiMessage(this.chatMessages, '下面表格记录了两个视角。这种从“我”到“他/她”的语言转换，本身就是一种强大的心理解离练习。它立刻在我们与强烈的情绪之间，创造了一个可以呼吸的观察空间。', false);
             appendSpecialCard(
                 this.chatMessages,
-                `
-                    <table style="border-collapse:collapse;width:100%;">
-                        <tr>
-                            <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">第一人称体验者视角<br>（“我”的感受）</th>
-                            <th style="border:1px solid #aac3df;padding:0.45rem 0.6rem;text-align:left;">第三人称观察者视角<br>（“他/她”的观察）</th>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我的提议被领导当场否决了，还说‘考虑不周’</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他在会议中的提议被否决了</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我现在的身体感觉：我感觉脸上火辣辣的，胃里发堵，心跳很快。</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他的身体反应：他的脸颊泛红，呼吸有些短促，身体姿态显得有些紧绷。</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我心里在想：我完了，同事肯定都在笑话我，领导会觉得我能力不行。</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他心里可能在想：他的脑海里可能在反复回放那个场景，担心同事的评价和领导对他能力的看法。</td>
-                        </tr>
-                        <tr>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">我现在的焦虑感：8分</td>
-                            <td style="border:1px solid #aac3df;padding:0.45rem 0.6rem;vertical-align:top;">他现在的焦虑感看起来有：7分</td>
-                        </tr>
-                    </table>
-                `
+                buildPerspectiveTableHtml([
+                    ['事件极简描述', '我的提议被领导当场否决了，还说‘考虑不周’', '他在会议中的提议被否决了'],
+                    ['当下的身体反应', '我现在的身体感觉：我感觉脸上火辣辣的，胃里发堵，心跳很快。', '他的身体反应：他的脸颊泛红，呼吸有些短促，身体姿态显得有些紧绷。'],
+                    ['冒出来的想法', '我心里在想：我完了，同事肯定都在笑话我，领导会觉得我能力不行。', '他心里可能在想：他的脑海里可能在反复回放那个场景，担心同事的评价和领导对他能力的看法。'],
+                    ['情绪打分<br>（1-10分）', '我现在的焦虑感：8分', '他现在的焦虑感看起来有：7分']
+                ])
             );
             appendUnderstandButton(this.chatMessages, () => {
                 this.step = 9;

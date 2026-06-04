@@ -2,13 +2,12 @@ import {
     appendAiMessage,
     appendSpecialCard,
     appendButtonGroup,
+    appendContinueButton,
     appendCardActionButtons,
     disableInput
 } from '../../ui.js';
 import {
-    removeCurrentCardActionButtons,
-    removeCurrentButtonGroup,
-    removeLastAiMessage
+    removeCurrentCardActionButtons
 } from './module5Shared.js';
 
 const module66ReviewItems = {
@@ -72,11 +71,8 @@ export const module66Handlers = {
         } else if (this.step === 3) {
             appendAiMessage(this.chatMessages, '接下来，将展示一个情景题，你可以尝试去回答并提出怎么做的想法，不用担心出错，我们只是对过往内容的自测回顾。', false);
             appendSpecialCard(this.chatMessages, '<p>小王是一位对自己要求很高的人，他一直为自己高效、尽责的工作态度感到自豪。最近他接手了一个重要项目，经常加班到深夜，并告诉自己“我必须坚持，不能有任何松懈”。这几天他持续感到疲惫、头痛，但总是告诉自己“这是努力的正常反应，撑过去就好了”。直到在一次会议中他因精力不济险些出错，才开始后怕：我是不是太执着于“优秀”的标签，反而在损害自己的健康和工作的质量？</p>');
-            appendButtonGroup(this.chatMessages, ['继续'], () => {
-                removeCurrentButtonGroup(this.chatMessages);
-                this.step = 4;
-                this.onContinue_Module66();
-            });
+            appendContinueButton(this.chatMessages, 60);
+            this.step = 4;
         } else if (this.step === 4) {
             appendAiMessage(this.chatMessages, '运用“解离”技术，小王可以如何与“我必须坚持，不能有任何松懈”的想法拉开距离？请举例说明。', false);
             this.enableInputForModule(this.chatMessages);
