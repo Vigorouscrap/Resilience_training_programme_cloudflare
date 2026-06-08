@@ -4,6 +4,77 @@
  */
 
 const revealStateKey = Symbol('dialogueRevealState');
+const waitStateKey = Symbol('dialogueWaitState');
+
+function getTestingConfig() {
+    const config = globalThis.__RESILIENCE_TESTING__;
+    return config && typeof config === 'object' ? config : {};
+}
+
+export function shouldSkipWaits() {
+    const config = getTestingConfig();
+    return Boolean(config.skipWaits);
+}
+
+function shouldShowSkipControl() {
+    const config = getTestingConfig();
+    return Boolean(config.skipMode || config.skipWaits);
+}
+
+function createSkipButton(label = '跳过等待') {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'wait-skip-btn';
+    btn.innerText = label;
+    return btn;
+}
+
+function attachSkipControl(host, controller, label = '跳过等待') {
+    if (!host || !controller || typeof controller.skip !== 'function' || !shouldShowSkipControl()) {
+        return null;
+    }
+
+    const btn = createSkipButton(label);
+    btn.addEventListener('click', () => {
+        controller.skip();
+    });
+    host.appendChild(btn);
+    return btn;
+}
+
+function getWaitState(chatMessages) {
+    if (!chatMessages[waitStateKey]) {
+        chatMessages[waitStateKey] = {
+            activeWait: null
+        };
+    }
+
+    return chatMessages[waitStateKey];
+}
+
+export function registerManagedWait(chatMessages, controller) {
+    if (!chatMessages || !controller || typeof controller.skip !== 'function') return null;
+    const state = getWaitState(chatMessages);
+    state.activeWait = controller;
+    return controller;
+}
+
+export function clearManagedWait(chatMessages, controller = null) {
+    if (!chatMessages) return;
+    const state = getWaitState(chatMessages);
+    if (!controller || state.activeWait === controller) {
+        state.activeWait = null;
+    }
+}
+
+export function skipCurrentWait(chatMessages) {
+    if (!chatMessages) return false;
+    const state = getWaitState(chatMessages);
+    const activeWait = state.activeWait;
+    if (!activeWait || typeof activeWait.skip !== 'function') return false;
+    activeWait.skip();
+    return true;
+}
 
 function getRevealState(chatMessages) {
     if (!chatMessages[revealStateKey]) {
@@ -26,16 +97,36 @@ function appendContinueButtonNow(chatMessages, delaySeconds = 0) {
     const btn = document.createElement('div');
     btn.className = 'continue-btn';
     btn.id = 'continueBtn';
-    if (delaySeconds > 0) {
+    const shouldDelay = delaySeconds > 0 && !shouldSkipWaits();
+
+    if (shouldDelay) {
         btn.classList.add('disabled');
         btn.innerText = `⏳ ${delaySeconds} 秒后继续`;
         let remaining = delaySeconds;
-        const timer = setInterval(() => {
+        let finished = false;
+        let timer = null;
+
+        const controller = registerManagedWait(chatMessages, {
+            type: 'continue-delay',
+            skip: () => {
+                if (finished) return;
+                finished = true;
+                if (timer) clearInterval(timer);
+                clearManagedWait(chatMessages, controller);
+                btn.classList.remove('disabled');
+                btn.innerText = '⏵ 点击继续';
+            }
+        });
+        attachSkipControl(wrap, controller, '跳过倒计时');
+
+        timer = setInterval(() => {
             remaining -= 1;
             if (remaining > 0) {
                 btn.innerText = `⏳ ${remaining} 秒后继续`;
             } else {
                 clearInterval(timer);
+                finished = true;
+                clearManagedWait(chatMessages, controller);
                 btn.classList.remove('disabled');
                 btn.innerText = '⏵ 点击继续';
             }
@@ -72,8 +163,9 @@ function startBottomCountdownNow(chatMessages, seconds, readyText, onComplete, o
     const tickMs = options.tickMs ?? 250;
     const formatCountdownText = options.formatCountdownText || (remaining => `⏳ ${remaining}秒后${readyText}`);
     const formatReadyText = options.formatReadyText || (() => readyText);
+    const skipWait = shouldSkipWaits();
 
-    if (seconds <= 0) {
+    if (seconds <= 0 || skipWait) {
         if (onComplete) onComplete();
         return;
     }
@@ -81,11 +173,28 @@ function startBottomCountdownNow(chatMessages, seconds, readyText, onComplete, o
     const deadline = Date.now() + (seconds * 1000);
     const timerDiv = appendCountdownTimerRow(chatMessages, options.align);
     let remaining = seconds;
+    let finished = false;
     timerDiv.innerText = formatCountdownText(remaining);
 
-    const timer = setInterval(() => {
+    let timer = null;
+    const controller = registerManagedWait(chatMessages, {
+        type: 'countdown',
+        skip: () => {
+            if (finished) return;
+            finished = true;
+            if (timer) clearInterval(timer);
+            clearManagedWait(chatMessages, controller);
+            if (!isChatSessionActive(chatMessages, sessionId)) return;
+            timerDiv.innerText = formatReadyText();
+            if (onComplete) onComplete();
+        }
+    });
+    attachSkipControl(timerDiv.parentElement, controller, '跳过倒计时');
+
+    timer = setInterval(() => {
         if (!isChatSessionActive(chatMessages, sessionId)) {
             clearInterval(timer);
+            clearManagedWait(chatMessages, controller);
             return;
         }
 
@@ -96,6 +205,8 @@ function startBottomCountdownNow(chatMessages, seconds, readyText, onComplete, o
         }
 
         clearInterval(timer);
+        finished = true;
+        clearManagedWait(chatMessages, controller);
         if (!isChatSessionActive(chatMessages, sessionId)) return;
         timerDiv.innerText = formatReadyText();
         if (onComplete) onComplete();
@@ -234,6 +345,7 @@ export function resetSequentialRender(chatMessages) {
     state.immediateLastContentType = null;
     state.pendingSegments = [];
     state.currentPendingSegment = null;
+    clearManagedWait(chatMessages);
 }
 
 /**
@@ -371,54 +483,98 @@ export function stopManagedMedia(root = document, options = {}) {
 export function playManagedAudio(root = document, audioSrc, options = {}) {
     if (!root || !audioSrc || typeof root.appendChild !== 'function') return null;
 
-    stopManagedMedia(root, { reset: options.reset !== false });
+    let audioElement = null;
+    queueUiMutation(root, () => {
+        stopManagedMedia(root, { reset: options.reset !== false });
 
-    const audioElement = document.createElement('audio');
-    audioElement.className = 'managed-audio';
-    audioElement.preload = options.preload || 'auto';
-    audioElement.playsInline = true;
-    audioElement.hidden = true;
-    audioElement.setAttribute('aria-hidden', 'true');
+        audioElement = document.createElement('audio');
+        audioElement.className = 'managed-audio';
+        audioElement.preload = options.preload || 'auto';
+        audioElement.playsInline = true;
+        audioElement.hidden = true;
+        audioElement.setAttribute('aria-hidden', 'true');
 
-    if (options.mimeType) {
-        const sourceElement = document.createElement('source');
-        sourceElement.src = audioSrc;
-        sourceElement.type = options.mimeType;
-        audioElement.appendChild(sourceElement);
-    } else {
-        audioElement.src = audioSrc;
-    }
-
-    let finished = false;
-    const sessionId = options.sessionId ?? getChatSessionId(root);
-    const onEnded = typeof options.onEnded === 'function' ? options.onEnded : null;
-
-    const cleanup = () => {
-        if (audioElement.parentNode) {
-            audioElement.parentNode.removeChild(audioElement);
+        if (options.mimeType) {
+            const sourceElement = document.createElement('source');
+            sourceElement.src = audioSrc;
+            sourceElement.type = options.mimeType;
+            audioElement.appendChild(sourceElement);
+        } else {
+            audioElement.src = audioSrc;
         }
-    };
 
-    const finalize = () => {
-        if (finished) return;
-        finished = true;
-        cleanup();
-        if (!onEnded) return;
-        if (sessionId && !isChatSessionActive(root, sessionId)) return;
-        onEnded();
-    };
+        let finished = false;
+        const sessionId = options.sessionId ?? getChatSessionId(root);
+        const onEnded = typeof options.onEnded === 'function' ? options.onEnded : null;
+        const synth = globalThis.speechSynthesis;
 
-    audioElement.addEventListener('ended', finalize, { once: true });
-    audioElement.addEventListener('error', finalize, { once: true });
+        const cleanup = () => {
+            if (audioElement?.parentNode) {
+                audioElement.parentNode.removeChild(audioElement);
+            }
+        };
 
-    root.appendChild(audioElement);
-
-    const playResult = audioElement.play();
-    if (playResult && typeof playResult.catch === 'function') {
-        playResult.catch(() => {
-            finalize();
+        const controller = registerManagedWait(root, {
+            type: 'audio',
+            skip: () => {
+                if (finished) return;
+                try {
+                    audioElement?.pause();
+                } catch (error) {
+                    // Ignore pause failures from partially initialized media elements.
+                }
+                if (synth && typeof synth.cancel === 'function') {
+                    synth.cancel();
+                }
+                finalize();
+            }
         });
-    }
+        const skipControlHost = document.createElement('div');
+        skipControlHost.className = 'countdown-wrapper after-card';
+        attachSkipControl(skipControlHost, controller, '跳过音频');
+
+        const finalize = () => {
+            if (finished) return;
+            finished = true;
+            clearManagedWait(root, controller);
+            if (skipControlHost.parentNode) {
+                skipControlHost.parentNode.removeChild(skipControlHost);
+            }
+            cleanup();
+            if (!onEnded) return;
+            if (sessionId && !isChatSessionActive(root, sessionId)) return;
+            onEnded();
+        };
+
+        audioElement.addEventListener('ended', finalize, { once: true });
+        audioElement.addEventListener('error', finalize, { once: true });
+
+        root.appendChild(audioElement);
+        if (skipControlHost.childElementCount > 0) {
+            root.appendChild(skipControlHost);
+            scrollChat(root);
+        }
+
+        const startPlayback = () => {
+            if (shouldSkipWaits()) {
+                setTimeout(() => {
+                    controller?.skip();
+                }, 0);
+                return;
+            }
+
+            const playResult = audioElement.play();
+            if (playResult && typeof playResult.catch === 'function') {
+                playResult.catch(() => {
+                    finalize();
+                });
+            }
+        };
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(startPlayback);
+        });
+    }, options.splitAfterCard === true);
 
     return audioElement;
 }
@@ -653,10 +809,48 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
             const timedIndicator = appendCountdownTimerRow(chatMessages, 'message');
             timedIndicator.innerText = '⏳ ' + Math.ceil(delayMs / 1000) + 's';
 
+            if (shouldSkipWaits()) {
+                timedIndicator.innerText = '✓';
+                setTimeout(() => {
+                    if (!isChatSessionActive(chatMessages, timedSessionId)) return;
+                    beginSequentialRender(chatMessages);
+                    try {
+                        callback();
+                    } finally {
+                        endSequentialRender(chatMessages);
+                    }
+                }, 0);
+                return;
+            }
+
             let remainingMs = delayMs;
-            const timerInterval = setInterval(() => {
+            let finished = false;
+            let timerInterval = null;
+
+            const controller = registerManagedWait(chatMessages, {
+                type: 'message-timer',
+                skip: () => {
+                    if (finished) return;
+                    finished = true;
+                    if (timerInterval) clearInterval(timerInterval);
+                    clearManagedWait(chatMessages, controller);
+                    timedIndicator.innerText = '✓';
+                    setTimeout(() => {
+                        if (!isChatSessionActive(chatMessages, timedSessionId)) return;
+                        beginSequentialRender(chatMessages);
+                        try {
+                            callback();
+                        } finally {
+                            endSequentialRender(chatMessages);
+                        }
+                    }, 0);
+                }
+            });
+
+            timerInterval = setInterval(() => {
                 if (!isChatSessionActive(chatMessages, timedSessionId)) {
                     clearInterval(timerInterval);
+                    clearManagedWait(chatMessages, controller);
                     return;
                 }
                 remainingMs = Math.max(0, timedDeadline - Date.now());
@@ -664,6 +858,8 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
                     timedIndicator.innerText = '⏳ ' + Math.ceil(remainingMs / 1000) + 's';
                 } else {
                     clearInterval(timerInterval);
+                    finished = true;
+                    clearManagedWait(chatMessages, controller);
                     timedIndicator.innerText = '✓';
                     setTimeout(() => {
                         if (!isChatSessionActive(chatMessages, timedSessionId)) return;

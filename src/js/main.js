@@ -7,6 +7,7 @@ import { PageManager } from './pages.js';
 import { PracticeTimer } from './timer.js';
 import { DialogueManager } from './dialogue.js';
 import { weekTitles, subModuleNames } from './data.js';
+import { skipCurrentWait } from './ui.js';
 
 const TESTING_GLOBAL_KEY = '__RESILIENCE_TESTING__';
 const TESTING_API_KEY = '__resilienceTest';
@@ -73,7 +74,8 @@ function getTestingConfigFromUrl() {
     const searchParams = new URLSearchParams(globalThis.location?.search || '');
     return {
         moduleId: normalizeModuleId(searchParams.get('module')),
-        fastMode: parseBooleanFlag(searchParams.get('fast')) || parseBooleanFlag(searchParams.get('skipTimers'))
+        fastMode: parseBooleanFlag(searchParams.get('fast')),
+        skipMode: parseBooleanFlag(searchParams.get('skip'))
     };
 }
 
@@ -207,11 +209,18 @@ function initApp() {
                 disableFastRuntime();
             }
         },
+        setSkipMode(enabled = true) {
+            updateTestingConfig({ skipMode: Boolean(enabled) });
+        },
+        skipCurrentWait() {
+            return skipCurrentWait(chatMessages);
+        },
         getState() {
             return {
                 currentModule: dialogueManager.currentModule,
                 step: dialogueManager.step,
-                fastMode: Boolean(ensureTestingConfig().fastMode)
+                fastMode: Boolean(ensureTestingConfig().fastMode),
+                skipMode: Boolean(ensureTestingConfig().skipMode)
             };
         }
     };

@@ -4,7 +4,10 @@ import {
     startBottomCountdown,
     queueUiMutation,
     getChatSessionId,
-    isChatSessionActive
+    isChatSessionActive,
+    clearManagedWait,
+    registerManagedWait,
+    shouldSkipWaits
 } from '../../ui.js';
 
 const module5CardStyles = `
@@ -172,23 +175,62 @@ export function speakText(chatMessages, text, options = {}) {
     const fallbackMs = options.fallbackMs ?? estimateSpeechDurationMs(plainText);
     const sessionId = getChatSessionId(chatMessages);
     const synth = globalThis.speechSynthesis;
+    let finished = false;
+    let fallbackTimer = null;
+    let utterance = null;
+
+    const finish = () => {
+        if (finished) return;
+        finished = true;
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+        clearManagedWait(chatMessages, controller);
+        if (!onEnd) return;
+        if (!isChatSessionActive(chatMessages, sessionId)) return;
+        onEnd();
+    };
+
+    const controller = registerManagedWait(chatMessages, {
+        type: 'speech',
+        skip: () => {
+            if (finished) return;
+            try {
+                if (synth && typeof synth.cancel === 'function') {
+                    synth.cancel();
+                }
+            } catch (error) {
+                // Ignore cancellation failures during testing skips.
+            }
+            if (utterance) {
+                utterance.onend = null;
+                utterance.onerror = null;
+            }
+            finish();
+        }
+    });
 
     if (!plainText) {
+        clearManagedWait(chatMessages, controller);
         if (onEnd) onEnd();
+        return;
+    }
+
+    if (shouldSkipWaits()) {
+        setTimeout(() => {
+            controller?.skip();
+        }, 0);
         return;
     }
 
     if (!synth || typeof globalThis.SpeechSynthesisUtterance === 'undefined') {
         if (onEnd) {
-            setTimeout(() => {
-                if (!isChatSessionActive(chatMessages, sessionId)) return;
-                onEnd();
-            }, fallbackMs);
+            fallbackTimer = setTimeout(finish, fallbackMs);
+        } else {
+            clearManagedWait(chatMessages, controller);
         }
         return;
     }
 
-    const utterance = new globalThis.SpeechSynthesisUtterance(plainText);
+    utterance = new globalThis.SpeechSynthesisUtterance(plainText);
     utterance.lang = options.lang || 'zh-CN';
     utterance.rate = options.rate ?? 0.92;
     utterance.pitch = options.pitch ?? 1;
@@ -199,21 +241,8 @@ export function speakText(chatMessages, text, options = {}) {
         utterance.voice = preferredVoice;
     }
 
-    let finished = false;
-    let fallbackTimer = null;
-
-    const finish = () => {
-        if (finished) return;
-        finished = true;
-        if (fallbackTimer) clearTimeout(fallbackTimer);
-        if (!onEnd) return;
-        if (!isChatSessionActive(chatMessages, sessionId)) return;
-        onEnd();
-    };
-
     utterance.onend = finish;
     utterance.onerror = finish;
-
     if (onEnd) {
         fallbackTimer = setTimeout(finish, fallbackMs);
     }

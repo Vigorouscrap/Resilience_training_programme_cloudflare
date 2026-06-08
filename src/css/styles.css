@@ -443,6 +443,22 @@
     cursor: default;
 }
 
+.wait-skip-btn {
+    background: rgba(255,255,255,0.94);
+    border: 1px solid rgba(123, 165, 207, 0.7);
+    color: #345a7d;
+    border-radius: 999px;
+    padding: 0.32rem 0.9rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(146, 174, 199, 0.18);
+}
+
+.wait-skip-btn:hover {
+    background: #eef5fd;
+}
+
 /* 杈撳叆鍖?*/
 .input-area {
     display: flex;
@@ -619,6 +635,8 @@
 
 .countdown-wrapper {
     display: flex;
+    align-items: center;
+    gap: 0.6rem;
     margin: -0.2rem 0 0.5rem 0;
 }
 
