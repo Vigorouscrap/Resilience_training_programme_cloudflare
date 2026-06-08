@@ -6,7 +6,8 @@ import {
     startBottomCountdown,
     queueUiMutation,
     getChatSessionId,
-    isChatSessionActive
+    isChatSessionActive,
+    playManagedAudio
 } from '../../ui.js';
 
 const module33GoalsCardHtml = `
@@ -22,6 +23,7 @@ const module33ScenesCardHtml = `
     <p><em><u>过度积极反刍者</u></em>：今天开会时，我感觉有个同事看我的眼神不太对，他是不是对我有意见？我是不是之前哪件事没做好得罪他了？我必须想清楚是哪里出了问题，不然以后没法相处了。</p>
     <p>（<em><u>核心</u></em>：因不确定的社交信号产生焦虑，试图通过反复思虑来获得控制感，回避不安情绪。）</p>
 `;
+const module33ScenesCardAudioPath = encodeURI('audio/module33/3-3场景卡片.mp3');
 
 const module33ResponseGuideCardHtml = `
     <table style="border-collapse:collapse;width:100%;">
@@ -76,6 +78,7 @@ const module33DemoCardHtml = `
     <br>
     <p><strong>接纳者：</strong>“（引导行动）你看，其实你做得挺好的。如果现在还是有点慌，要不要先喝口水，或者把今天的情况简单记一下？我们可以想一个小调整，而不是否定全部努力。”（——<span class="annotation">最后引导具体行动，是帮反刍者从“焦虑”转向“能做的事”，减少反刍带来的无力感。</span>）</p>
 `;
+const module33DemoCardAudioPath = encodeURI('audio/module33/3-3场景1反刍接纳者对话演示.mp3');
 
 const module33DemoSummaryCardHtml = `
     <p>先看见并说出情绪（观察）</p>
@@ -94,6 +97,7 @@ const module33Rounds = [
     {
         heading: '【第一轮：观察情绪 - 建立连接】',
         speech: '反刍者：今天开会时，我感觉有个同事看我的眼神不太对……他是不是对我有意见？我是不是之前哪件事没做好得罪他了？我必须想清楚是哪里出了问题，不然以后没法相处了……',
+        audioPath: encodeURI('audio/module33/3-3场景2反刍者演示1.mp3'),
         prompt: '请先在内心思考并小声说出你作为接纳者会给出的回应，30秒后将提供具体选项。',
         optionPrompt: '请选择你认为最合适的“接纳者”回应：',
         options: [
@@ -110,6 +114,7 @@ const module33Rounds = [
     {
         heading: '【第二轮：允许存在 - 解除自我批判】',
         speech: '反刍者：可能真的是我太敏感了。但我就是控制不住会想，万一他真的对我有看法怎么办……',
+        audioPath: encodeURI('audio/module33/3-3场景2反刍者演示2.mp3'),
         prompt: '请先在内心思考并小声说出你作为接纳者会给出的回应，30秒后将提供具体选项。',
         optionPrompt: '请选择你认为最合适的“接纳者”回应：',
         options: [
@@ -126,6 +131,7 @@ const module33Rounds = [
     {
         heading: '【第三轮：扩展认知 - 跳出思维窄巷】',
         speech: '反刍者：但我还是想知道，到底是我哪里做得不对。',
+        audioPath: encodeURI('audio/module33/3-3场景2反刍者演示3.mp3'),
         prompt: '请先在内心思考并小声说出你作为接纳者会给出的回应，30秒后将提供具体选项。',
         optionPrompt: '请选择你认为最合适的“接纳者”回应：',
         options: [
@@ -142,6 +148,7 @@ const module33Rounds = [
     {
         heading: '【第四轮：引导行动 - 锚定于当下】',
         speech: '反刍者：我和其他同事的相处还不错，前两天还和几个同事一起聚餐。但我现在还是觉得有点不踏实。',
+        audioPath: encodeURI('audio/module33/3-3场景2反刍者演示4.mp3'),
         prompt: '请先在内心思考并小声说出你作为接纳者会给出的回应，30秒后将提供具体选项。',
         optionPrompt: '请选择你认为最合适的“接纳者”回应：',
         options: [
@@ -240,10 +247,15 @@ export const module33Handlers = {
         } else if (this.step === 5) {
             appendAiMessage(this.chatMessages, '以下是两个多样化的“过度积极反刍”场景，每个场景已经明确“过度积极反刍者”的核心情绪与行为：', false);
             appendSpecialCard(this.chatMessages, module33ScenesCardHtml);
-            startCardCountdown(this.chatMessages, 30, '可继续', '继续', () => {
-                this.step = 6;
-                this.onContinue_Module33();
+            requestAnimationFrame(() => {
+                playManagedAudio(this.chatMessages, module33ScenesCardAudioPath, {
+                    mimeType: 'audio/mpeg',
+                    onEnded: () => {
+                        appendContinueButton(this.chatMessages);
+                    }
+                });
             });
+            this.step = 6;
         } else if (this.step === 6) {
             appendAiMessage(this.chatMessages, '当我们或他人陷入这些反刍循环时，对抗或讲道理往往无效。真正有帮助的，是“接纳式对话”的回应方式。', true);
             this.step = 7;
@@ -262,7 +274,14 @@ export const module33Handlers = {
         } else if (this.step === 9) {
             appendAiMessage(this.chatMessages, '我将扮演“反刍者”，你会看到屏幕上出现我的内心独白。然后，我将切换为“接纳者”，用上面表格中的四步进行回应。请仔细观察这个过程。', false);
             appendSpecialCard(this.chatMessages, module33DemoCardHtml);
-            appendContinueButton(this.chatMessages);
+            requestAnimationFrame(() => {
+                playManagedAudio(this.chatMessages, module33DemoCardAudioPath, {
+                    mimeType: 'audio/mpeg',
+                    onEnded: () => {
+                        appendContinueButton(this.chatMessages);
+                    }
+                });
+            });
             this.step = 10;
         } else if (this.step === 10) {
             appendAiMessage(this.chatMessages, '请注意，接纳者没有否定对方的担心，也没有说“别想了”。而是：', false);
@@ -319,9 +338,14 @@ export const module33Handlers = {
         const round = module33Rounds[index];
         appendSpecialCard(this.chatMessages, `<p><strong>${round.heading}</strong></p>`);
         appendAiMessage(this.chatMessages, round.speech, false);
-        appendAiMessage(this.chatMessages, round.prompt, false);
-        startCardCountdown(this.chatMessages, 30, '可继续', '继续', () => {
-            this.onContinue_Module33();
+        requestAnimationFrame(() => {
+            playManagedAudio(this.chatMessages, round.audioPath, {
+                mimeType: 'audio/mpeg',
+                onEnded: () => {
+                    appendAiMessage(this.chatMessages, round.prompt, false);
+                    appendContinueButton(this.chatMessages);
+                }
+            });
         });
     },
 

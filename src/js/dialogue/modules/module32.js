@@ -2,14 +2,18 @@ import {
     appendAiMessage,
     appendSpecialCard,
     appendButtonGroup,
+    appendContinueButton,
     startBottomCountdown,
     queueUiMutation,
     disableInput,
     getChatSessionId,
-    isChatSessionActive
+    isChatSessionActive,
+    playManagedAudio
 } from '../../ui.js';
 
 const module32CaseText = '小李是公司的一名员工，被要求负责一个重要项目。他一方面了解到项目的难度，非常担心自己经验不足会搞砸，夜里经常失眠，反复想“万一项目失败，我可能就要被开除了”；另一方面，他又不断地强迫自己“别想这些没用的，我肯定能完成这个项目”，甚至不敢向同事或领导透露任何一丝疑虑。同时，小李本来期待做好这个项目能升职，但得知晋升机会已给了别人，心里失落又觉得追求晋升的念头很浮躁，真正强大的人不会在意这个，不该有这种想法。';
+
+const module32CaseAudioPath = encodeURI('audio/module32/3-2小李案例-xr.mp3');
 
 const module32DefinitionCardHtml = `
     <p><strong>过度积极反刍</strong>是一种表面上看似积极，实际上却是在回避、压抑真实情绪的心理过程。它表现为：</p>
@@ -181,10 +185,13 @@ export const module32Handlers = {
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '现在，为了进一步了解这种模式，我们一起来看一个案例。', false);
             appendSpecialCard(this.chatMessages, `<p>${this.escapeHtml(module32CaseText)}</p>`);
-            startCardCountdown(this.chatMessages, 0, '可继续', '继续', () => {
-                this.step = 8;
-                this.onContinue_Module32();
+            playManagedAudio(this.chatMessages, module32CaseAudioPath, {
+                mimeType: 'audio/mpeg',
+                onEnded: () => {
+                    appendContinueButton(this.chatMessages);
+                }
             });
+            this.step = 8;
         } else if (this.step === 8) {
             appendAiMessage(this.chatMessages, '现在，我们首先来分析案例中的应对方式。我们设置了三个小问题，请你结合上面呈现的案例来做出选择。请注意我们只是讨论，不用害怕选错。', false);
             this.showModule32Question(0);
@@ -204,10 +211,13 @@ export const module32Handlers = {
         } else if (this.step === 11) {
             appendAiMessage(this.chatMessages, '现在，请再次阅读案例，试着感受案例中的情境，想象自己就是案例中的小李。', false);
             appendSpecialCard(this.chatMessages, `<p>${this.escapeHtml(module32CaseText)}</p>`);
-            startCardCountdown(this.chatMessages, 30, '可继续', '继续', () => {
-                this.step = 12;
-                this.onContinue_Module32();
+            playManagedAudio(this.chatMessages, module32CaseAudioPath, {
+                mimeType: 'audio/mpeg',
+                onEnded: () => {
+                    appendContinueButton(this.chatMessages);
+                }
             });
+            this.step = 12;
         } else if (this.step === 12) {
             appendAiMessage(this.chatMessages, '然后，根据你的感受来代替案例中的小李一步步做出下面的陈述。没有对错之分，请尝试大声说出来。', false);
             appendSpecialCard(this.chatMessages, module32ObservationCardHtml);

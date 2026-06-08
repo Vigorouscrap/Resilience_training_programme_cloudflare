@@ -389,20 +389,35 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
         audioElement.src = audioSrc;
     }
 
+    let finished = false;
+    const sessionId = options.sessionId ?? getChatSessionId(root);
+    const onEnded = typeof options.onEnded === 'function' ? options.onEnded : null;
+
     const cleanup = () => {
         if (audioElement.parentNode) {
             audioElement.parentNode.removeChild(audioElement);
         }
     };
 
-    audioElement.addEventListener('ended', cleanup, { once: true });
-    audioElement.addEventListener('error', cleanup, { once: true });
+    const finalize = () => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (!onEnded) return;
+        if (sessionId && !isChatSessionActive(root, sessionId)) return;
+        onEnded();
+    };
+
+    audioElement.addEventListener('ended', finalize, { once: true });
+    audioElement.addEventListener('error', finalize, { once: true });
 
     root.appendChild(audioElement);
 
     const playResult = audioElement.play();
     if (playResult && typeof playResult.catch === 'function') {
-        playResult.catch(() => {});
+        playResult.catch(() => {
+            finalize();
+        });
     }
 
     return audioElement;
