@@ -169,6 +169,14 @@ function removeCurrentButtonGroup(chatMessages) {
     if (currentBtnGroup) currentBtnGroup.remove();
 }
 
+function afterNextPaint(callback) {
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            callback();
+        });
+    });
+}
+
 function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onComplete) {
     startBottomCountdown(chatMessages, seconds, readyText, () => {
         appendButtonGroup(chatMessages, [buttonLabel], () => {
@@ -247,7 +255,7 @@ export const module33Handlers = {
         } else if (this.step === 5) {
             appendAiMessage(this.chatMessages, '以下是两个多样化的“过度积极反刍”场景，每个场景已经明确“过度积极反刍者”的核心情绪与行为：', false);
             appendSpecialCard(this.chatMessages, module33ScenesCardHtml);
-            requestAnimationFrame(() => {
+            afterNextPaint(() => {
                 playManagedAudio(this.chatMessages, module33ScenesCardAudioPath, {
                     mimeType: 'audio/mpeg',
                     onEnded: () => {
@@ -274,7 +282,7 @@ export const module33Handlers = {
         } else if (this.step === 9) {
             appendAiMessage(this.chatMessages, '我将扮演“反刍者”，你会看到屏幕上出现我的内心独白。然后，我将切换为“接纳者”，用上面表格中的四步进行回应。请仔细观察这个过程。', false);
             appendSpecialCard(this.chatMessages, module33DemoCardHtml);
-            requestAnimationFrame(() => {
+            afterNextPaint(() => {
                 playManagedAudio(this.chatMessages, module33DemoCardAudioPath, {
                     mimeType: 'audio/mpeg',
                     onEnded: () => {
@@ -338,7 +346,7 @@ export const module33Handlers = {
         const round = module33Rounds[index];
         appendSpecialCard(this.chatMessages, `<p><strong>${round.heading}</strong></p>`);
         appendAiMessage(this.chatMessages, round.speech, false);
-        requestAnimationFrame(() => {
+        afterNextPaint(() => {
             playManagedAudio(this.chatMessages, round.audioPath, {
                 mimeType: 'audio/mpeg',
                 onEnded: () => {
