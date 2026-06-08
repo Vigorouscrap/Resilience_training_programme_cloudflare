@@ -346,6 +346,68 @@ export function scrollChat(chatMessages) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+export function stopManagedMedia(root = document, options = {}) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+
+    const shouldReset = options.reset !== false;
+
+    root.querySelectorAll('audio, video').forEach((mediaElement) => {
+        try {
+            mediaElement.pause();
+        } catch (error) {
+            // Ignore pause failures from partially initialized media elements.
+        }
+
+        if (!shouldReset) return;
+
+        try {
+            mediaElement.currentTime = 0;
+        } catch (error) {
+            // Some media elements cannot seek until metadata is available.
+        }
+    });
+}
+
+export function playManagedAudio(root = document, audioSrc, options = {}) {
+    if (!root || !audioSrc || typeof root.appendChild !== 'function') return null;
+
+    stopManagedMedia(root, { reset: options.reset !== false });
+
+    const audioElement = document.createElement('audio');
+    audioElement.className = 'managed-audio';
+    audioElement.preload = options.preload || 'auto';
+    audioElement.playsInline = true;
+    audioElement.hidden = true;
+    audioElement.setAttribute('aria-hidden', 'true');
+
+    if (options.mimeType) {
+        const sourceElement = document.createElement('source');
+        sourceElement.src = audioSrc;
+        sourceElement.type = options.mimeType;
+        audioElement.appendChild(sourceElement);
+    } else {
+        audioElement.src = audioSrc;
+    }
+
+    const cleanup = () => {
+        if (audioElement.parentNode) {
+            audioElement.parentNode.removeChild(audioElement);
+        }
+    };
+
+    audioElement.addEventListener('ended', cleanup, { once: true });
+    audioElement.addEventListener('error', cleanup, { once: true });
+
+    root.appendChild(audioElement);
+
+    const playResult = audioElement.play();
+    if (playResult && typeof playResult.catch === 'function') {
+        playResult.catch(() => {});
+    }
+
+    return audioElement;
+}
+
 export function getChatSessionId(chatMessages) {
     return chatMessages?.dataset?.dialogueSessionId || '';
 }

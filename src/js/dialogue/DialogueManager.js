@@ -8,7 +8,8 @@ import {
     endSequentialRender,
     consumePendingSequentialRender,
     queueUiMutation,
-    resetSequentialRender
+    resetSequentialRender,
+    stopManagedMedia
 } from '../ui.js';
 import { module11Handlers } from './modules/module11.js';
 import { module12Handlers } from './modules/module12.js';
@@ -155,6 +156,7 @@ export class DialogueManager {
     }
 
     resetForModule(module) {
+        stopManagedMedia(this.chatMessages);
         this.invalidateAsyncCallbacks();
         this.currentModule = module;
         this.chatMessages.innerHTML = '';
@@ -357,6 +359,7 @@ export class DialogueManager {
         this.dialogueSessionId += 1;
         this.chatMessages.dataset.dialogueSessionId = String(this.dialogueSessionId);
         this.pendingContinueAction = null;
+        stopManagedMedia(this.chatMessages);
         resetSequentialRender(this.chatMessages);
     }
 

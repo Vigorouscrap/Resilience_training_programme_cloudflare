@@ -1,10 +1,13 @@
-﻿import {
+import {
     appendAiMessage,
     appendSpecialCard,
     appendContinueButton,
     appendHint,
-    appendAiMessageWithTimer
+    appendAiMessageWithTimer,
+    playManagedAudio
 } from '../../ui.js';
+
+const module15MilkExperienceAudioPath = encodeURI('audio/module15/1-5牛奶牛奶体验.mp3');
 
 export const module15Handlers = {
     onContinue_Module15() {
@@ -30,6 +33,7 @@ export const module15Handlers = {
             this.step = 4;
         } else if (this.step === 4) {
             appendAiMessage(this.chatMessages, '现在，请你在心里，或者轻声跟着我说【我现在特别想喝牛奶】，让我们一起重复5次，每说一次，都试着感受自己心里或身体的变化。', true);
+            playManagedAudio(this.chatMessages, module15MilkExperienceAudioPath, { mimeType: 'audio/mpeg' });
             this.step = 5;
         } else if (this.step === 5) {
             this.startSentenceRepetition();
@@ -48,17 +52,17 @@ export const module15Handlers = {
 
         const showNext = () => {
             if (sequence === 0) {
-                appendAiMessageWithTimer(this.chatMessages, sentence, 5000, () => {
+                appendAiMessageWithTimer(this.chatMessages, sentence, 7000, () => {
                     sequence++;
                     showNext();
                 });
             } else if (sequence === 1) {
-                appendAiMessageWithTimer(this.chatMessages, reflectionText, 5000, () => {
+                appendAiMessageWithTimer(this.chatMessages, reflectionText, 20000, () => {
                     sequence++;
                     showNext();
                 });
             } else if (sequence >= 2 && sequence <= 4) {
-                appendAiMessageWithTimer(this.chatMessages, sentence, 5000, () => {
+                appendAiMessageWithTimer(this.chatMessages, sentence, 7000, () => {
                     sequence++;
                     showNext();
                 });
