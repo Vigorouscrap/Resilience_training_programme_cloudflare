@@ -808,15 +808,17 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback, 
             const timedSessionId = getChatSessionId(chatMessages);
             const timedDeadline = Date.now() + delayMs;
             const timedIndicator = hideCountdown ? null : appendCountdownTimerRow(chatMessages, 'message');
-            const timedSkipHost = hideCountdown && shouldShowSkipControl()
-                ? (() => {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'countdown-wrapper after-message';
-                    chatMessages.appendChild(wrap);
-                    scrollChat(chatMessages);
-                    return wrap;
-                })()
-                : null;
+            const timedSkipHost = hideCountdown
+                ? (shouldShowSkipControl()
+                    ? (() => {
+                        const wrap = document.createElement('div');
+                        wrap.className = 'countdown-wrapper after-message';
+                        chatMessages.appendChild(wrap);
+                        scrollChat(chatMessages);
+                        return wrap;
+                    })()
+                    : null)
+                : timedIndicator?.parentElement || null;
 
             if (timedIndicator) {
                 timedIndicator.innerText = '⏳ ' + Math.ceil(delayMs / 1000) + 's';
@@ -849,7 +851,9 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback, 
                     finished = true;
                     if (timerInterval) clearInterval(timerInterval);
                     clearManagedWait(chatMessages, controller);
-                    timedIndicator.innerText = '✓';
+                    if (timedIndicator) {
+                        timedIndicator.innerText = '✓';
+                    }
                     setTimeout(() => {
                         if (!isChatSessionActive(chatMessages, timedSessionId)) return;
                         beginSequentialRender(chatMessages);
