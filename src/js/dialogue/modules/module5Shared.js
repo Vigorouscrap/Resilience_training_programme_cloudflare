@@ -272,11 +272,11 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
     const currentCard = cards[cards.length - 1];
     const replayBtn = currentCard?.querySelector('.module5-replay-btn');
 
-    const playReplayAudio = () => {
+    const playReplayAudio = (withFlowAdvance = false) => {
         if (options.audioPath) {
             playManagedAudio(chatMessages, options.audioPath, {
                 mimeType: options.audioMimeType || 'audio/mpeg',
-                onEnded: options.onEnded
+                onEnded: withFlowAdvance ? options.onEnded : null
             });
             return;
         }
@@ -289,7 +289,7 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
     };
 
     replayBtn?.addEventListener('click', () => {
-        playReplayAudio();
+        playReplayAudio(false);
     });
 
     if (typeof options.onInit === 'function' && currentCard) {
@@ -297,7 +297,7 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
     }
 
     if (options.autoPlay !== false) {
-        playReplayAudio();
+        playReplayAudio(true);
     }
 
     return currentCard;

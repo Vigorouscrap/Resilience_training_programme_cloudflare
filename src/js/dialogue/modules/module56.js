@@ -9,9 +9,7 @@ import {
     appendSpeechReplayCard,
     removeCurrentButtonGroup,
     removeCurrentCardActionButtons,
-    removeLastAiMessage,
-    estimateSpeechDurationMs,
-    speakText
+    removeLastAiMessage
 } from './module5Shared.js';
 
 const module56Metaphors = [
@@ -19,6 +17,7 @@ const module56Metaphors = [
         image: 'images/week5-metaphor-1.jpg',
         title: '隐喻一：舞台与观众',
         speechText: '请想象，你的整个内心世界，是一个永恒的舞台。此刻，舞台上正在上演什么？也许有一个叫“担忧”的演员在独白，也许有一个叫“开心”的演员在跳舞，还有一个叫“我做得不够好”的演员在背景里徘徊。这些思绪和情绪，都是舞台上的演员。它们会上场、表演、退场，剧目也会不断变换，但舞台始终在那里，不会因为演员的表演而改变。而你，有一个部分，始终是坐在台下观众席的“观察者”。 这个“观察性自我”不会跳上舞台和演员一起表演，它只是看着、知晓着舞台上发生的一切，不评判谁演得好、谁演得差。',
+        audioPath: encodeURI('audio/module56/5-6舞台与观众隐喻.mp3'),
         html: `
             <p class="module5-media-title">隐喻一：舞台与观众</p>
             <div class="module5-media-body">
@@ -32,6 +31,7 @@ const module56Metaphors = [
         image: 'images/week5-metaphor-2.jpg',
         title: '隐喻二：天空与天气',
         speechText: '现在，让我们把视角拉得更广阔一些。想象你的意识是一片无边无际的天空。你的思绪和情绪，就是天空中的“天气”。有时是明媚的晴天（代表着愉悦），有时是滚滚的乌云（代表着焦虑），有时是绵绵细雨（代表着忧伤）。天气瞬息万变，交织出现。但无论天气如何，雷暴还是彩虹，天空本身从不被伤害，也从不消失。它始终包容着一切气象的变化。那个“观察性自我”，就是这片天空本身。它不执着于留住晴天，也不抗拒暴雨来临。它只是平静地容纳，不被这些天气所影响。',
+        audioPath: encodeURI('audio/module56/5-6天空与天气隐喻.mp3'),
         html: `
             <p class="module5-media-title">隐喻二：天空与天气</p>
             <div class="module5-media-body">
@@ -45,6 +45,7 @@ const module56Metaphors = [
         image: 'images/week5-metaphor-3.jpg',
         title: '隐喻三：棋盘与棋手',
         speechText: '最后，让我们来看一个更富策略感的画面。想象你的内心是一个棋盘。每一个升起的念头和感受，就像落在棋盘上的棋子。有代表积极思维的白棋，也有代表消极思维的黑棋。它们不断落下，相互交织，构成复杂的局面。而“观察性自我”，就是那位正在对弈的“棋手”。一位明智的棋手，不会因为一颗黑棋落下就恐慌，也不会因为一颗白棋而沾沾自喜。他观察着整个棋局，冷静地思考，知道棋局永远在流动变化。你不是棋盘上任人摆布的棋子，你是下棋的人。',
+        audioPath: encodeURI('audio/module56/5-6棋盘与棋手隐喻.mp3'),
         html: `
             <p class="module5-media-title">隐喻三：棋盘与棋手</p>
             <div class="module5-media-body">
@@ -109,14 +110,25 @@ export const module56Handlers = {
                 this.onContinue_Module56();
             });
         } else if (this.step === 6) {
-            this.showModule56Metaphor(0, '现在慢慢地感受一下，此刻，你的“舞台”上正在上演什么？而那位“观众”，是否正安稳地坐在那里？', 7, 30);
+            this.showModule56Metaphor(0, 61);
+        } else if (this.step === 61) {
+            appendAiMessage(this.chatMessages, '现在慢慢地感受一下，此刻，你的“舞台”上正在上演什么？而那位“观众”，是否正安稳地坐在那里？', false);
+            appendContinueButton(this.chatMessages, 30);
+            this.step = 7;
         } else if (this.step === 7) {
-            this.showModule56Metaphor(1, '现在，做一次深呼吸，想象将气息带入那片内在的“天空”，感受它无边无际的包容性。允许你的“情绪天气”自然变化，同时知晓，那片观察着的“天空”，始终宁静而完整。', 8, 30);
+            this.showModule56Metaphor(1, 71);
+        } else if (this.step === 71) {
+            appendAiMessage(this.chatMessages, '现在，做一次深呼吸，想象将气息带入那片内在的“天空”，感受它无边无际的包容性。允许你的“情绪天气”自然变化，同时知晓，那片观察着的“天空”，始终宁静而完整。', false);
+            appendContinueButton(this.chatMessages, 30);
+            this.step = 8;
         } else if (this.step === 8) {
-            this.showModule56Metaphor(2, '感受一下，从“我是棋子”的视角，转换到“我是棋手”的视角。这种空间的转换，带来了什么样的感觉？', 9, 30);
+            this.showModule56Metaphor(2, 81);
+        } else if (this.step === 81) {
+            appendAiMessage(this.chatMessages, '感受一下，从“我是棋子”的视角，转换到“我是棋手”的视角。这种空间的转换，带来了什么样的感觉？', false);
+            appendContinueButton(this.chatMessages, 30);
+            this.step = 9;
         } else if (this.step === 9) {
             appendAiMessage(this.chatMessages, '回想最近几天，你的心理棋盘上，落下了哪些“黑子”和“白子”？而你，作为棋手，看到了吗？', false);
-            speakText(this.chatMessages, '回想最近几天，你的心理棋盘上，落下了哪些“黑子”和“白子”？而你，作为棋手，看到了吗？', { rate: 0.9, fallbackMs: 15000 });
             appendContinueButton(this.chatMessages, 15);
             this.step = 10;
         } else if (this.step === 10) {
@@ -150,33 +162,23 @@ export const module56Handlers = {
         }
     },
 
-    showModule56Metaphor(index, reflectionText, nextStep, delaySeconds) {
+    showModule56Metaphor(index, reflectionStep) {
         const metaphor = module56Metaphors[index];
-        const speechOptions = { rate: 0.88 };
-        const cardSpeechFallbackMs = estimateSpeechDurationMs(metaphor.speechText, 280, 5000, 180000);
         appendSpeechReplayCard(
             this.chatMessages,
             metaphor.html,
             metaphor.speechText,
             {
                 replayLabel: '再次播放',
-                speechOptions,
-                autoPlay: false
+                audioPath: metaphor.audioPath,
+                audioMimeType: 'audio/mpeg',
+                disableSpeechFallback: true,
+                onEnded: () => {
+                    this.step = reflectionStep;
+                    appendContinueButton(this.chatMessages);
+                }
             }
         );
-        speakText(this.chatMessages, metaphor.speechText, {
-            ...speechOptions,
-            fallbackMs: cardSpeechFallbackMs,
-            onEnd: () => {
-                appendAiMessage(this.chatMessages, reflectionText, false);
-                speakText(this.chatMessages, reflectionText, {
-                    ...speechOptions,
-                    fallbackMs: delaySeconds * 1000
-                });
-                appendContinueButton(this.chatMessages, delaySeconds);
-            }
-        });
-        this.step = nextStep;
     },
 
     showModule56FaqOptions() {
