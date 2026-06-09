@@ -281,6 +281,10 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
             return;
         }
 
+        if (options.disableSpeechFallback === true) {
+            return;
+        }
+
         speakText(chatMessages, speechText, options.speechOptions);
     };
 
