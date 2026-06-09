@@ -7,7 +7,8 @@ import {
     isChatSessionActive,
     clearManagedWait,
     registerManagedWait,
-    shouldSkipWaits
+    shouldSkipWaits,
+    playManagedAudio
 } from '../../ui.js';
 
 const module5CardStyles = `
@@ -271,8 +272,19 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
     const currentCard = cards[cards.length - 1];
     const replayBtn = currentCard?.querySelector('.module5-replay-btn');
 
-    replayBtn?.addEventListener('click', () => {
+    const playReplayAudio = () => {
+        if (options.audioPath) {
+            playManagedAudio(chatMessages, options.audioPath, {
+                mimeType: options.audioMimeType || 'audio/mpeg'
+            });
+            return;
+        }
+
         speakText(chatMessages, speechText, options.speechOptions);
+    };
+
+    replayBtn?.addEventListener('click', () => {
+        playReplayAudio();
     });
 
     if (typeof options.onInit === 'function' && currentCard) {
@@ -280,7 +292,7 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
     }
 
     if (options.autoPlay !== false) {
-        speakText(chatMessages, speechText, options.speechOptions);
+        playReplayAudio();
     }
 
     return currentCard;

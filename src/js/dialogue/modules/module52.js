@@ -2,12 +2,12 @@ import {
     appendAiMessage,
     appendSpecialCard,
     appendButtonGroup,
-    appendContinueButton
+    appendContinueButton,
+    playManagedAudio
 } from '../../ui.js';
 import {
     appendSpeechReplayCard,
     removeCurrentButtonGroup,
-    speakText,
     startCardCountdown
 } from './module5Shared.js';
 
@@ -17,6 +17,17 @@ const module52BalloonVideoMovPath = 'images/week5-balloon.mov';
 const module52PracticeThoughts = {
     想法1: '我绝不能在这个场合说错话，不然就完了。',
     想法2: '这么大的事，我得自己面对，不能麻烦家人。'
+};
+
+const module52TechniqueDemoAudioPaths = [
+    encodeURI('audio/module52/5-2气球放飞法演示.mp3'),
+    encodeURI('audio/module52/5-2角色转换法演示.mp3'),
+    encodeURI('audio/module52/5-2时间线法演示.mp3')
+];
+
+const module52BalloonPracticeAudioPaths = {
+    想法1: encodeURI('audio/module52/5-2想法1练习气球.mp3'),
+    想法2: encodeURI('audio/module52/5-2想法2练习气球.mp3')
 };
 
 const module52TechniqueCards = [
@@ -167,9 +178,11 @@ export const module52Handlers = {
             this.step = 9;
         } else if (this.step === 9) {
             const practiceThought = this.escapeHtml(getModule52PracticeSpeechText(this.module52State.selectedThought));
-            const text = `首先是气球法。请闭上眼睛。想象“${practiceThought}”这句话写在一个气球上…感受一下握着它的感觉…现在，慢慢地、有意识地松开你的手指…看着它飘走…`;
+            const text = `首先是气球法。请闭上眼睛。想象把“${practiceThought}”这句话写在一个气球上…感受一下握着它的感觉…现在，慢慢地、有意识地松开你的手指…看着它飘走…`;
             appendAiMessage(this.chatMessages, text, false);
-            speakText(this.chatMessages, text, { rate: 0.9, fallbackMs: 30000 });
+            playManagedAudio(this.chatMessages, module52BalloonPracticeAudioPaths[this.module52State.selectedThought], {
+                mimeType: 'audio/mpeg'
+            });
             appendContinueButton(this.chatMessages, 45);
             this.step = 10;
         } else if (this.step === 10) {
@@ -179,7 +192,6 @@ export const module52Handlers = {
             const practiceThought = this.escapeHtml(getModule52PracticeSpeechText(this.module52State.selectedThought));
             const text = `假设你最好的朋友对你说：“${practiceThought}”你会怎么安慰他？请在心里或轻声说出你的回答。`;
             appendAiMessage(this.chatMessages, text, false);
-            speakText(this.chatMessages, text, { rate: 0.9, fallbackMs: 30000 });
             appendContinueButton(this.chatMessages, 45);
             this.step = 12;
         } else if (this.step === 12) {
@@ -189,7 +201,6 @@ export const module52Handlers = {
             const selectedThought = getModule52PracticeSpeechText(this.module52State.selectedThought);
             const text = `现在，想象自己站在时间轴上，感受一下这个“${selectedThought}”的想法。然后，向前走到“一年后”的位置，回头看现在的这个想法——一年后的你，会觉得这个要求还像现在这么绝对和沉重吗？试着感受一下那种时间带来的距离感。`;
             appendAiMessage(this.chatMessages, text, false);
-            speakText(this.chatMessages, text, { rate: 0.9, fallbackMs: 30000 });
             appendContinueButton(this.chatMessages, 45);
             this.step = 14;
         } else if (this.step === 14) {
@@ -225,6 +236,8 @@ export const module52Handlers = {
             technique.speechText,
             {
                 replayLabel: '再次播放AI音频',
+                audioPath: module52TechniqueDemoAudioPaths[index],
+                audioMimeType: 'audio/mpeg',
                 speechOptions: { rate: 0.9 },
                 onInit: technique.onInit
             }
