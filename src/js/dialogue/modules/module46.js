@@ -6,7 +6,8 @@ import {
     disableInput,
     startBottomCountdown,
     getChatSessionId,
-    isChatSessionActive
+    isChatSessionActive,
+    playManagedAudio
 } from '../../ui.js';
 
 const module46ScenarioCardHtml = `
@@ -18,54 +19,56 @@ const module46DemoDialogueSequence = [
     {
         avatar: '当',
         text: '当事人AI（焦虑状态）：“唉，我完了。今天汇报的时候竟然说错了一个关键数据，虽然马上纠正了，但所有人都听到了。我搞砸了这么重要的场合，领导和同事肯定都在心里给我打叉，觉得我能力不行。我的职业形象全毁了。”',
-        delayMs: 9000
+        audioPath: encodeURI('audio/module46/4-6当事人1-yx.mp3')
     },
     {
         avatar: '支',
         text: '支持者AI：“我听到了，你现在被一个‘我搞砸了，职业形象全毁了’的想法紧紧抓住，这让你感到非常焦虑和挫败。”（识别与共情）',
-        delayMs: 7000
+        audioPath: encodeURI('audio/module46/4-6支持者1-xh.mp3')
     },
     {
         avatar: '当',
         text: '当事人AI：“不止是想法，这就是事实啊！那么多人看着呢。”',
-        delayMs: 5000
+        audioPath: encodeURI('audio/module46/4-6当事人2-yx.mp3')
     },
     {
         avatar: '支',
         text: '支持者AI：“我理解那感觉非常真实。我们可以试着先把这个想法‘放’到眼前看看吗？比如，给它贴个标签：这是一个关于‘职业形象彻底崩溃’的灾难化预测。”（贴标签）',
-        delayMs: 8500
+        audioPath: encodeURI('audio/module46/4-6支持者2-xh.mp3')
     },
     {
         avatar: '当',
         text: '当事人AI：“灾难化预测……是什么意思？”',
-        delayMs: 4500
+        audioPath: encodeURI('audio/module46/4-6当事人3-yx.mp3')
     },
     {
         avatar: '支',
         text: '支持者AI：“意思是，这个想法把一次口误的后果，想象成了无法挽回的终极灾难。它是一个‘预测’，而不是已经发生的‘事实’。事实是：一，你完成了一次季度汇报；二，过程中出现了一个口误，并已纠正。而‘形象全毁、能力被否定’的想法是你对未来的悲观推测。”（区分想法与事实）',
-        delayMs: 10000
+        audioPath: encodeURI('audio/module46/4-6支持者3-xh.mp3')
     },
     {
         avatar: '当',
         text: '当事人AI：“可是他们肯定会对我有看法啊。”',
-        delayMs: 4500
+        audioPath: encodeURI('audio/module46/4-6当事人4-yx.mp3')
     },
     {
         avatar: '支',
         text: '支持者AI：“有可能，但这仍然是一种‘他们可能会对我有看法’的想法或担心。当我们把它贴上‘这是猜测他人想法’的标签时，我们就可以意识到，这和我们‘知道’他们怎么想是两回事。把想法当作事实，会让我们陷入更深的焦虑。”（巩固解离，将想法客观化）',
-        delayMs: 9500
+        audioPath: encodeURI('audio/module46/4-6支持者4-xh.mp3')
     },
     {
         avatar: '当',
         text: '当事人AI：“……你这么一说，好像是的。我被那个‘我完了’的想法带着跑了，感觉天都塌了。”',
-        delayMs: 6500
+        audioPath: encodeURI('audio/module46/4-6当事人5-yx.mp3')
     },
     {
         avatar: '支',
         text: '支持者AI：“是的，想法有时候就像一部逼真的恐怖片，让我们身临其境。但我们其实只是正在看一部叫《我搞砸了》的电影’，而不是真的生活在那个灾难场景里。当我们能看清这只是脑海中的一部电影，压力感就会开始松动，我们才能腾出空间去想：那么，基于目前的事实，我现在可以做哪一件小事？”（引入行动视角）',
-        delayMs: 12000
+        audioPath: encodeURI('audio/module46/4-6支持者5-xh.mp3')
     }
 ];
+
+const module46NewScenarioSpeakerAudioPath = encodeURI('audio/module46/4-6新场景练习当事人-yz.mp3');
 
 const module46SummaryCardHtml = `
     <p><strong>共情与识别：</strong>首先接纳对方的情绪，并准确复述出困扰他的核心想法。</p>
@@ -141,62 +144,7 @@ function unlockModule46InputAfterDelay(context, seconds) {
     }, 250);
 }
 
-function appendModule46SpeakerMessageWithTimer(chatMessages, avatarText, text, delayMs, callback) {
-    {
-        const sessionId = getChatSessionId(chatMessages);
-        const deadline = Date.now() + delayMs;
-
-        const timedRow = document.createElement('div');
-        timedRow.className = 'message-row-left';
-
-        const timedAvatar = document.createElement('div');
-        timedAvatar.className = 'avatar';
-        timedAvatar.innerText = avatarText;
-
-        const timedBubble = document.createElement('div');
-        timedBubble.className = 'bubble-left';
-        timedBubble.innerHTML = text;
-
-        timedRow.appendChild(timedAvatar);
-        timedRow.appendChild(timedBubble);
-        chatMessages.appendChild(timedRow);
-
-        const timerWrap = document.createElement('div');
-        timerWrap.className = 'countdown-wrapper after-message';
-        const timer = document.createElement('div');
-        timer.className = 'card-timer';
-        timerWrap.appendChild(timer);
-        chatMessages.appendChild(timerWrap);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        const tick = () => {
-            if (!isChatSessionActive(chatMessages, sessionId)) {
-                return false;
-            }
-
-            const remainingMs = Math.max(0, deadline - Date.now());
-            if (remainingMs > 0) {
-                timer.innerText = `⏳ ${Math.ceil(remainingMs / 1000)}s`;
-                return true;
-            }
-
-            timer.innerText = '✓';
-            setTimeout(() => {
-                if (!isChatSessionActive(chatMessages, sessionId)) return;
-                callback();
-            }, 100);
-            return false;
-        };
-
-        if (!tick()) return;
-
-        const timedInterval = setInterval(() => {
-            if (!tick()) {
-                clearInterval(timedInterval);
-            }
-        }, 100);
-        return;
-    }
+function appendModule46SpeakerMessage(chatMessages, avatarText, text) {
     const row = document.createElement('div');
     row.className = 'message-row-left';
 
@@ -208,45 +156,10 @@ function appendModule46SpeakerMessageWithTimer(chatMessages, avatarText, text, d
     bubble.className = 'bubble-left';
     bubble.innerHTML = text;
 
-    const timer = document.createElement('div');
-    timer.className = 'card-timer';
-    timer.style.marginLeft = '0.7rem';
-
     row.appendChild(avatar);
     row.appendChild(bubble);
-    row.appendChild(timer);
     chatMessages.appendChild(row);
     chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    const sessionId = getChatSessionId(chatMessages);
-    const deadline = Date.now() + delayMs;
-
-    const tick = () => {
-        if (!isChatSessionActive(chatMessages, sessionId)) {
-            return false;
-        }
-
-        const remainingMs = Math.max(0, deadline - Date.now());
-        if (remainingMs > 0) {
-            timer.innerText = `⏳${Math.ceil(remainingMs / 1000)}s`;
-            return true;
-        }
-
-        timer.innerText = '✓';
-        setTimeout(() => {
-            if (!isChatSessionActive(chatMessages, sessionId)) return;
-            callback();
-        }, 100);
-        return false;
-    };
-
-    if (!tick()) return;
-
-    const interval = setInterval(() => {
-        if (!tick()) {
-            clearInterval(interval);
-        }
-    }, 100);
 }
 
 function startModule46DialogueSequence(context, sequence, onComplete) {
@@ -257,13 +170,11 @@ function startModule46DialogueSequence(context, sequence, onComplete) {
         }
 
         const item = sequence[index];
-        appendModule46SpeakerMessageWithTimer(
-            context.chatMessages,
-            item.avatar,
-            item.text,
-            item.delayMs,
-            () => runItem(index + 1)
-        );
+        appendModule46SpeakerMessage(context.chatMessages, item.avatar, item.text);
+        playManagedAudio(context.chatMessages, item.audioPath, {
+            mimeType: 'audio/mpeg',
+            onEnded: () => runItem(index + 1)
+        });
     };
 
     runItem(0);
@@ -330,8 +241,14 @@ export const module46Handlers = {
                 this.onContinue_Module46();
             });
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '（当事人）：前段时间看到网上说投资项目好，我就把自己攒了好几年的积蓄，加上借来的一些钱，全都投进去了……现在全亏光了，一分不剩。我睡不着，吃不下，我真是完蛋了，这辈子都翻不了身，没法活了。我真的觉得走到绝路了。', true);
-            this.step = 17;
+            appendAiMessage(this.chatMessages, '（当事人）：前段时间看到网上说投资项目好，我就把自己攒了好几年的积蓄，加上借来的一些钱，全都投进去了……现在全亏光了，一分不剩。我睡不着，吃不下，我真是完蛋了，这辈子都翻不了身，没法活了。我真的觉得走到绝路了。', false);
+            playManagedAudio(this.chatMessages, module46NewScenarioSpeakerAudioPath, {
+                mimeType: 'audio/mpeg',
+                onEnded: () => {
+                    this.step = 17;
+                    this.onContinue_Module46();
+                }
+            });
         } else if (this.step === 17) {
             appendAiMessage(this.chatMessages, '作为支持者，你将如何回应呢？请将要对当事人说的话输入在对话框中，你有充足的时间先进行思考和然后再回应，没有固定答案和对错。', false);
             unlockModule46InputAfterDelay(this, 120);
