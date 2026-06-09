@@ -32,7 +32,9 @@ export const module15Handlers = {
             appendAiMessage(this.chatMessages, '首先，请为自己找一个舒适的坐姿，放松肩膀。然后轻轻闭上眼睛或者看着前方，让自己的身体先放松下来，不用紧张，跟着我的指令做就好。', true);
             this.step = 4;
         } else if (this.step === 4) {
-            appendAiMessage(this.chatMessages, '现在，请你在心里，或者轻声跟着我说【我现在特别想喝牛奶】，让我们一起重复5次，每说一次，都试着感受自己心里或身体的变化。', true);
+            appendAiMessageWithTimer(this.chatMessages, '现在，请你在心里，或者轻声跟着我说【我现在特别想喝牛奶】，让我们一起重复5次，每说一次，都试着感受自己心里或身体的变化。', 17000, () => {
+                this.onContinue_Module15();
+            }, { hideCountdown: true });
             playManagedAudio(this.chatMessages, module15MilkExperienceAudioPath, { mimeType: 'audio/mpeg' });
             this.step = 5;
         } else if (this.step === 5) {
@@ -55,22 +57,22 @@ export const module15Handlers = {
                 appendAiMessageWithTimer(this.chatMessages, sentence, 7000, () => {
                     sequence++;
                     showNext();
-                });
+                }, { hideCountdown: true });
             } else if (sequence === 1) {
                 appendAiMessageWithTimer(this.chatMessages, reflectionText, 20000, () => {
                     sequence++;
                     showNext();
-                });
+                }, { hideCountdown: true });
             } else if (sequence >= 2 && sequence <= 4) {
                 appendAiMessageWithTimer(this.chatMessages, sentence, 7000, () => {
                     sequence++;
                     showNext();
-                });
+                }, { hideCountdown: true });
             } else if (sequence === 5) {
                 appendAiMessageWithTimer(this.chatMessages, sentence, 10000, () => {
                     sequence++;
                     showNext();
-                });
+                }, { hideCountdown: true });
             } else if (sequence === 6) {
                 appendContinueButton(this.chatMessages);
                 this.step = 6;

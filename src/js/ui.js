@@ -789,7 +789,8 @@ export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTime
 /**
  * 添加计时消息
  */
-export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) {
+export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback, options = {}) {
+    const hideCountdown = Boolean(options.hideCountdown);
     appendContentOrQueue(chatMessages, 'message', () => {
         {
             const timedRow = document.createElement('div');
@@ -806,11 +807,25 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
 
             const timedSessionId = getChatSessionId(chatMessages);
             const timedDeadline = Date.now() + delayMs;
-            const timedIndicator = appendCountdownTimerRow(chatMessages, 'message');
-            timedIndicator.innerText = '⏳ ' + Math.ceil(delayMs / 1000) + 's';
+            const timedIndicator = hideCountdown ? null : appendCountdownTimerRow(chatMessages, 'message');
+            const timedSkipHost = hideCountdown && shouldShowSkipControl()
+                ? (() => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'countdown-wrapper after-message';
+                    chatMessages.appendChild(wrap);
+                    scrollChat(chatMessages);
+                    return wrap;
+                })()
+                : null;
+
+            if (timedIndicator) {
+                timedIndicator.innerText = '⏳ ' + Math.ceil(delayMs / 1000) + 's';
+            }
 
             if (shouldSkipWaits()) {
-                timedIndicator.innerText = '✓';
+                if (timedIndicator) {
+                    timedIndicator.innerText = '✓';
+                }
                 setTimeout(() => {
                     if (!isChatSessionActive(chatMessages, timedSessionId)) return;
                     beginSequentialRender(chatMessages);
@@ -846,6 +861,9 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
                     }, 0);
                 }
             });
+            if (timedSkipHost) {
+                attachSkipControl(timedSkipHost, controller, '跳过等待');
+            }
 
             timerInterval = setInterval(() => {
                 if (!isChatSessionActive(chatMessages, timedSessionId)) {
@@ -855,12 +873,16 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback) 
                 }
                 remainingMs = Math.max(0, timedDeadline - Date.now());
                 if (remainingMs > 0) {
-                    timedIndicator.innerText = '⏳ ' + Math.ceil(remainingMs / 1000) + 's';
+                    if (timedIndicator) {
+                        timedIndicator.innerText = '⏳ ' + Math.ceil(remainingMs / 1000) + 's';
+                    }
                 } else {
                     clearInterval(timerInterval);
                     finished = true;
                     clearManagedWait(chatMessages, controller);
-                    timedIndicator.innerText = '✓';
+                    if (timedIndicator) {
+                        timedIndicator.innerText = '✓';
+                    }
                     setTimeout(() => {
                         if (!isChatSessionActive(chatMessages, timedSessionId)) return;
                         beginSequentialRender(chatMessages);
