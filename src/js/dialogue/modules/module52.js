@@ -181,9 +181,11 @@ export const module52Handlers = {
             const text = `首先是气球法。请闭上眼睛。想象把“${practiceThought}”这句话写在一个气球上…感受一下握着它的感觉…现在，慢慢地、有意识地松开你的手指…看着它飘走…`;
             appendAiMessage(this.chatMessages, text, false);
             playManagedAudio(this.chatMessages, module52BalloonPracticeAudioPaths[this.module52State.selectedThought], {
-                mimeType: 'audio/mpeg'
+                mimeType: 'audio/mpeg',
+                onEnded: () => {
+                    appendContinueButton(this.chatMessages);
+                }
             });
-            appendContinueButton(this.chatMessages, 45);
             this.step = 10;
         } else if (this.step === 10) {
             appendAiMessage(this.chatMessages, '很好，接下来我们试试角色转化法。', true);
@@ -221,9 +223,8 @@ export const module52Handlers = {
         startCardCountdown(this.chatMessages, 30, '可演示', () => {
             appendButtonGroup(this.chatMessages, ['演示'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
-                this.showModule52TechniqueDemo(index);
-                appendContinueButton(this.chatMessages);
                 this.step = nextStep;
+                this.showModule52TechniqueDemo(index);
             });
         });
     },
@@ -239,7 +240,10 @@ export const module52Handlers = {
                 audioPath: module52TechniqueDemoAudioPaths[index],
                 audioMimeType: 'audio/mpeg',
                 speechOptions: { rate: 0.9 },
-                onInit: technique.onInit
+                onInit: technique.onInit,
+                onEnded: () => {
+                    appendContinueButton(this.chatMessages);
+                }
             }
         );
     }

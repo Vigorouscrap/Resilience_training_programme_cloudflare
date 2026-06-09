@@ -275,7 +275,8 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
     const playReplayAudio = () => {
         if (options.audioPath) {
             playManagedAudio(chatMessages, options.audioPath, {
-                mimeType: options.audioMimeType || 'audio/mpeg'
+                mimeType: options.audioMimeType || 'audio/mpeg',
+                onEnded: options.onEnded
             });
             return;
         }
