@@ -1,6 +1,7 @@
 import {
     appendAiMessage,
     appendSpecialCard,
+    appendDialogueCard,
     appendButtonGroup,
     appendContinueButton,
     disableInput,
@@ -17,52 +18,62 @@ const module46ScenarioCardHtml = `
 
 const module46DemoDialogueSequence = [
     {
-        avatar: '当',
+        side: 'left',
+        label: '当事人',
         text: '当事人AI（焦虑状态）：“唉，我完了。今天汇报的时候竟然说错了一个关键数据，虽然马上纠正了，但所有人都听到了。我搞砸了这么重要的场合，领导和同事肯定都在心里给我打叉，觉得我能力不行。我的职业形象全毁了。”',
         audioPath: encodeURI('audio/module46/4-6当事人1-yx.mp3')
     },
     {
-        avatar: '支',
+        side: 'right',
+        label: '支持者',
         text: '支持者AI：“我听到了，你现在被一个‘我搞砸了，职业形象全毁了’的想法紧紧抓住，这让你感到非常焦虑和挫败。”（识别与共情）',
         audioPath: encodeURI('audio/module46/4-6支持者1-xh.mp3')
     },
     {
-        avatar: '当',
+        side: 'left',
+        label: '当事人',
         text: '当事人AI：“不止是想法，这就是事实啊！那么多人看着呢。”',
         audioPath: encodeURI('audio/module46/4-6当事人2-yx.mp3')
     },
     {
-        avatar: '支',
+        side: 'right',
+        label: '支持者',
         text: '支持者AI：“我理解那感觉非常真实。我们可以试着先把这个想法‘放’到眼前看看吗？比如，给它贴个标签：这是一个关于‘职业形象彻底崩溃’的灾难化预测。”（贴标签）',
         audioPath: encodeURI('audio/module46/4-6支持者2-xh.mp3')
     },
     {
-        avatar: '当',
+        side: 'left',
+        label: '当事人',
         text: '当事人AI：“灾难化预测……是什么意思？”',
         audioPath: encodeURI('audio/module46/4-6当事人3-yx.mp3')
     },
     {
-        avatar: '支',
+        side: 'right',
+        label: '支持者',
         text: '支持者AI：“意思是，这个想法把一次口误的后果，想象成了无法挽回的终极灾难。它是一个‘预测’，而不是已经发生的‘事实’。事实是：一，你完成了一次季度汇报；二，过程中出现了一个口误，并已纠正。而‘形象全毁、能力被否定’的想法是你对未来的悲观推测。”（区分想法与事实）',
         audioPath: encodeURI('audio/module46/4-6支持者3-xh.mp3')
     },
     {
-        avatar: '当',
+        side: 'left',
+        label: '当事人',
         text: '当事人AI：“可是他们肯定会对我有看法啊。”',
         audioPath: encodeURI('audio/module46/4-6当事人4-yx.mp3')
     },
     {
-        avatar: '支',
+        side: 'right',
+        label: '支持者',
         text: '支持者AI：“有可能，但这仍然是一种‘他们可能会对我有看法’的想法或担心。当我们把它贴上‘这是猜测他人想法’的标签时，我们就可以意识到，这和我们‘知道’他们怎么想是两回事。把想法当作事实，会让我们陷入更深的焦虑。”（巩固解离，将想法客观化）',
         audioPath: encodeURI('audio/module46/4-6支持者4-xh.mp3')
     },
     {
-        avatar: '当',
+        side: 'left',
+        label: '当事人',
         text: '当事人AI：“……你这么一说，好像是的。我被那个‘我完了’的想法带着跑了，感觉天都塌了。”',
         audioPath: encodeURI('audio/module46/4-6当事人5-yx.mp3')
     },
     {
-        avatar: '支',
+        side: 'right',
+        label: '支持者',
         text: '支持者AI：“是的，想法有时候就像一部逼真的恐怖片，让我们身临其境。但我们其实只是正在看一部叫《我搞砸了》的电影’，而不是真的生活在那个灾难场景里。当我们能看清这只是脑海中的一部电影，压力感就会开始松动，我们才能腾出空间去想：那么，基于目前的事实，我现在可以做哪一件小事？”（引入行动视角）',
         audioPath: encodeURI('audio/module46/4-6支持者5-xh.mp3')
     }
@@ -144,22 +155,12 @@ function unlockModule46InputAfterDelay(context, seconds) {
     }, 250);
 }
 
-function appendModule46SpeakerMessage(chatMessages, avatarText, text) {
-    const row = document.createElement('div');
-    row.className = 'message-row-left';
-
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar';
-    avatar.innerText = avatarText;
-
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble-left';
-    bubble.innerHTML = text;
-
-    row.appendChild(avatar);
-    row.appendChild(bubble);
-    chatMessages.appendChild(row);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+function appendModule46SpeakerMessage(chatMessages, item, options = {}) {
+    appendDialogueCard(chatMessages, {
+        cardKey: options.cardKey || '',
+        title: options.title || '',
+        items: [item]
+    });
 }
 
 function startModule46DialogueSequence(context, sequence, onComplete) {
@@ -170,7 +171,10 @@ function startModule46DialogueSequence(context, sequence, onComplete) {
         }
 
         const item = sequence[index];
-        appendModule46SpeakerMessage(context.chatMessages, item.avatar, item.text);
+        appendModule46SpeakerMessage(context.chatMessages, item, {
+            cardKey: 'module46-demo-dialogue',
+            title: index === 0 ? '对话示范' : ''
+        });
         playManagedAudio(context.chatMessages, item.audioPath, {
             mimeType: 'audio/mpeg',
             onEnded: () => runItem(index + 1)
@@ -241,7 +245,11 @@ export const module46Handlers = {
                 this.onContinue_Module46();
             });
         } else if (this.step === 16) {
-            appendAiMessage(this.chatMessages, '（当事人）：前段时间看到网上说投资项目好，我就把自己攒了好几年的积蓄，加上借来的一些钱，全都投进去了……现在全亏光了，一分不剩。我睡不着，吃不下，我真是完蛋了，这辈子都翻不了身，没法活了。我真的觉得走到绝路了。', false);
+            appendModule46SpeakerMessage(this.chatMessages, {
+                side: 'left',
+                label: '当事人',
+                text: '前段时间看到网上说投资项目好，我就把自己攒了好几年的积蓄，加上借来的一些钱，全都投进去了……现在全亏光了，一分不剩。我睡不着，吃不下，我真是完蛋了，这辈子都翻不了身，没法活了。我真的觉得走到绝路了。'
+            }, { title: '情景练习' });
             playManagedAudio(this.chatMessages, module46NewScenarioSpeakerAudioPath, {
                 mimeType: 'audio/mpeg',
                 onEnded: () => {

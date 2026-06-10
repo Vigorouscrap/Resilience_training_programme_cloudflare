@@ -413,6 +413,69 @@
     color: red;
 }
 
+.dialogue-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    width: min(100%, 42rem);
+    padding: 1rem;
+}
+
+.dialogue-card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #365978;
+}
+
+.dialogue-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: min(100%, 31rem);
+}
+
+.dialogue-card-row.is-supporter {
+    align-self: flex-end;
+}
+
+.dialogue-card-row.is-client {
+    align-self: flex-start;
+}
+
+.dialogue-card-meta {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #54718d;
+    padding: 0 0.2rem;
+}
+
+.dialogue-card-row.is-supporter .dialogue-card-meta {
+    text-align: right;
+}
+
+.dialogue-card-bubble {
+    padding: 0.9rem 1.05rem;
+    border-radius: 1.15rem;
+    line-height: 1.7;
+    font-size: 0.98rem;
+    word-break: break-word;
+}
+
+.dialogue-card-bubble-left {
+    background: rgba(255, 255, 255, 0.9);
+    color: #20384c;
+    border-radius: 1.15rem 1.15rem 1.15rem 0.45rem;
+    box-shadow: 0 8px 18px rgba(123, 151, 176, 0.14);
+}
+
+.dialogue-card-bubble-right {
+    background: linear-gradient(180deg, #5f87a8 0%, #4d7392 100%);
+    color: #ffffff;
+    border-radius: 1.15rem 1.15rem 0.45rem 1.15rem;
+    box-shadow: 0 10px 20px rgba(77, 115, 146, 0.18);
+}
+
 .continue-wrapper {
     display: flex;
     justify-content: flex-start;
@@ -795,6 +858,15 @@
     .message-row-right,
     .special-card {
         max-width: 100%;
+    }
+
+    .dialogue-card {
+        width: 100%;
+        padding: 0.95rem;
+    }
+
+    .dialogue-card-row {
+        width: min(100%, 26rem);
     }
 
     .avatar {

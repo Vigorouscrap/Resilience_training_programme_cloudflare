@@ -423,6 +423,56 @@ export function appendSpecialCard(chatMessages, html) {
     });
 }
 
+export function appendDialogueCard(chatMessages, options = {}) {
+    appendContentOrQueue(chatMessages, 'card', () => {
+        const cardKey = options.cardKey ? String(options.cardKey) : '';
+        let card = null;
+
+        if (cardKey) {
+            card = chatMessages.querySelector(`.dialogue-card[data-dialogue-card-key="${cardKey}"]`);
+        }
+
+        if (!card) {
+            card = document.createElement('section');
+            card.className = 'special-card dialogue-card';
+            card.setAttribute('role', 'group');
+            if (cardKey) {
+                card.dataset.dialogueCardKey = cardKey;
+            }
+
+            if (options.title) {
+                const title = document.createElement('p');
+                title.className = 'dialogue-card-title';
+                title.innerText = options.title;
+                card.appendChild(title);
+            }
+
+            chatMessages.appendChild(card);
+        }
+
+        const items = Array.isArray(options.items) ? options.items : [];
+        items.forEach((item) => {
+            const row = document.createElement('div');
+            const side = item?.side === 'right' ? 'right' : 'left';
+            row.className = `dialogue-card-row ${side === 'right' ? 'is-supporter' : 'is-client'}`;
+
+            const meta = document.createElement('div');
+            meta.className = 'dialogue-card-meta';
+            meta.innerText = item?.label || '';
+
+            const bubble = document.createElement('div');
+            bubble.className = `dialogue-card-bubble ${side === 'right' ? 'dialogue-card-bubble-right' : 'dialogue-card-bubble-left'}`;
+            bubble.innerHTML = prepareMessageHtml(item?.text || '');
+
+            row.appendChild(meta);
+            row.appendChild(bubble);
+            card.appendChild(row);
+        });
+
+        scrollChat(chatMessages);
+    });
+}
+
 /**
  * 添加继续按钮
  */
