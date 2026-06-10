@@ -6,8 +6,16 @@ import {
 } from '../../ui.js';
 import {
     removeCurrentButtonGroup,
-    startSpokenSequence
+    appendSpeechReplayCard
 } from './module5Shared.js';
+
+const module57MeditationAudioPath = encodeURI('audio/冥想呼吸.mp3');
+const module57MeditationCardHtml = `
+    <p class="module5-media-title">【冥想呼吸】</p>
+    <div class="module5-media-body">
+        <p>请闭上眼睛，跟随音频引导进行练习。</p>
+    </div>
+`;
 
 function getModule57BreathSummary(answers) {
     const yesCount = answers.filter(answer => answer === '是').length;
@@ -156,9 +164,20 @@ export const module57Handlers = {
     },
 
     startModule57MeditationSequence() {
-        startSpokenSequence(this, getModule57MeditationSequence(), () => {
-            this.step = 3;
-            this.onContinue_Module57();
-        });
+        appendSpeechReplayCard(
+            this.chatMessages,
+            module57MeditationCardHtml,
+            '',
+            {
+                replayLabel: '再次播放',
+                audioPath: module57MeditationAudioPath,
+                audioMimeType: 'audio/mpeg',
+                disableSpeechFallback: true,
+                onEnded: () => {
+                    this.step = 3;
+                    this.onContinue_Module57();
+                }
+            }
+        );
     }
 };
