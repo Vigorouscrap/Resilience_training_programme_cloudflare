@@ -410,7 +410,8 @@
 
 .special-card .annotation {
     font-style: italic;
-    color: red;
+    color: #b5473e;
+    font-weight: 600;
 }
 
 .dialogue-card {
@@ -474,6 +475,10 @@
     color: #ffffff;
     border-radius: 1.15rem 1.15rem 0.45rem 1.15rem;
     box-shadow: 0 10px 20px rgba(77, 115, 146, 0.18);
+}
+
+.dialogue-card-bubble-right .annotation {
+    color: #ffe08a;
 }
 
 .continue-wrapper {
