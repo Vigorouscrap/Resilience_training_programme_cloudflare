@@ -1,6 +1,7 @@
 import {
     appendAiMessage,
     appendSpecialCard,
+    appendDialogueCard,
     appendButtonGroup,
     appendContinueButton,
     startBottomCountdown,
@@ -61,23 +62,56 @@ const module33Scene1CardHtml = `
     <p>（<em><u>核心</u></em>：因饮食超过计划产生自我批判，“陷入做得不够好→影响减肥计划”的反刍。）</p>
 `;
 
-const module33DemoCardHtml = `
-    <p><strong>反刍者：</strong>“我今天多吃了一块蛋糕，网上说这样明天会重很多！我怎么这么缺乏意志力？”</p>
-    <br>
-    <p><strong>接纳者：</strong>“（观察）听起来你特别在意体重的变化，因为这一块蛋糕，现在既担心又有点自责，对吗？”）（——<span class="annotation">这里先点出反刍者的“在意”和“自责”，帮其看见自己没说出来的情绪，而不是直接否定她的担心。</span>）</p>
-    <br>
-    <p><strong>反刍者：</strong>“对，就是觉得自己太没用了，这点要求都达不到。”</p>
-    <br>
-    <p><strong>接纳者：</strong>“（允许）其实真的不用这么怪自己。饮食控制本来就不容易，偶尔超出计划，很多人都会这样。有这些情绪很正常，它不是你的错。”（——<span class="annotation">这里强调“正常”和“不是错”，是让反刍者不用对抗自己的负面感受，减少自我批判。</span>）</p>
-    <br>
-    <p><strong>反刍者：</strong>“可我还是担心体重减不下来。”</p>
-    <br>
-    <p><strong>接纳者：</strong>“（扩展）我理解这份担心。那除了这一块蛋糕，你这周有没有坚持完成了计划内的运动？或者有没有哪一餐是成功按照计划健康饮食的？”（——<span class="annotation">这里引导反刍者想其他积极的事，是帮反刍者从“没做好”的反刍里抽离出来，不让注意力只盯着负面点。</span>）</p>
-    <br>
-    <p><strong>反刍者：</strong>“嗯…昨天前天都去跑步了，午餐也吃得挺健康的。”</p>
-    <br>
-    <p><strong>接纳者：</strong>“（引导行动）你看，其实你做得挺好的。如果现在还是有点慌，要不要先喝口水，或者把今天的情况简单记一下？我们可以想一个小调整，而不是否定全部努力。”（——<span class="annotation">最后引导具体行动，是帮反刍者从“焦虑”转向“能做的事”，减少反刍带来的无力感。</span>）</p>
-`;
+const module33DemoDialogueSequence = [
+    {
+        delayMs: 0,
+        side: 'left',
+        label: '反刍者',
+        text: '我今天多吃了一块蛋糕，网上说这样明天会重很多！我怎么这么缺乏意志力？连这点小事都做不好，减肥计划全都毁了！'
+    },
+    {
+        delayMs: 9500,
+        side: 'right',
+        label: '接纳者',
+        text: '（观察）听起来你特别在意体重的变化，因为这一块蛋糕，现在既担心又有点自责，对吗？（——<span class="annotation">这里先点出反刍者的“在意”和“自责”，帮其看见自己没说出来的情绪，而不是直接否定她的担心。</span>）'
+    },
+    {
+        delayMs: 20500,
+        side: 'left',
+        label: '反刍者',
+        text: '对，就是觉得自己太没用了，这点要求都达不到。'
+    },
+    {
+        delayMs: 25000,
+        side: 'right',
+        label: '接纳者',
+        text: '（允许）其实真的不用这么怪自己。饮食控制本来就不容易，偶尔超出计划，很多人都会这样。有这些情绪很正常，它不是你的错。（——<span class="annotation">这里强调“正常”和“不是错”，是让反刍者不用对抗自己的负面感受，减少自我批判。</span>）'
+    },
+    {
+        delayMs: 39500,
+        side: 'left',
+        label: '反刍者',
+        text: '可我还是担心体重减不下来。'
+    },
+    {
+        delayMs: 42500,
+        side: 'right',
+        label: '接纳者',
+        text: '（扩展）我理解这份担心。那除了这一块蛋糕，你这周有没有坚持完成了计划内的运动？或者有没有哪一餐是成功按照计划健康饮食的？（——<span class="annotation">这里引导反刍者想其他积极的事，是帮反刍者从“没做好”的反刍里抽离出来，不让注意力只盯着负面点。</span>）'
+    },
+    {
+        delayMs: 58500,
+        side: 'left',
+        label: '反刍者',
+        text: '嗯…昨天前天都去跑步了，午餐也吃得挺健康的。'
+    },
+    {
+        delayMs: 64000,
+        side: 'right',
+        label: '接纳者',
+        text: '（引导行动）你看，其实你做得挺好的。如果现在还是有点慌，要不要先喝口水，或者把今天的情况简单记一下？我们可以想一个小调整，而不是否定全部努力。（——<span class="annotation">最后引导具体行动，是帮反刍者从“焦虑”转向“能做的事”，减少反刍带来的无力感。</span>）'
+    }
+];
 const module33DemoCardAudioPath = encodeURI('audio/module33/3-3场景1反刍接纳者对话演示.mp3');
 
 const module33DemoSummaryCardHtml = `
@@ -223,6 +257,56 @@ function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onCom
     });
 }
 
+function appendModule33DemoMessage(chatMessages, item, options = {}) {
+    appendDialogueCard(chatMessages, {
+        cardKey: options.cardKey || '',
+        title: options.title || '',
+        items: [item]
+    });
+}
+
+function startModule33DemoDialogueSequence(context, onComplete) {
+    const sessionId = getChatSessionId(context.chatMessages);
+    const shownIndexes = new Set();
+    let finalized = false;
+
+    const appendItem = (index) => {
+        if (shownIndexes.has(index)) return;
+        const item = module33DemoDialogueSequence[index];
+        if (!item) return;
+
+        appendModule33DemoMessage(context.chatMessages, item, {
+            cardKey: 'module33-scene1-demo',
+            title: shownIndexes.size === 0 ? '对话示范' : ''
+        });
+        shownIndexes.add(index);
+    };
+
+    const flushRemainingItems = () => {
+        module33DemoDialogueSequence.forEach((_, index) => appendItem(index));
+    };
+
+    const finalize = () => {
+        if (finalized) return;
+        finalized = true;
+        flushRemainingItems();
+        if (!isChatSessionActive(context.chatMessages, sessionId)) return;
+        onComplete();
+    };
+
+    module33DemoDialogueSequence.forEach((item, index) => {
+        setTimeout(() => {
+            if (!isChatSessionActive(context.chatMessages, sessionId) || finalized) return;
+            appendItem(index);
+        }, item.delayMs);
+    });
+
+    playManagedAudio(context.chatMessages, module33DemoCardAudioPath, {
+        mimeType: 'audio/mpeg',
+        onEnded: finalize
+    });
+}
+
 export const module33Handlers = {
     onContinue_Module33() {
         if (this.step === 0) {
@@ -271,12 +355,8 @@ export const module33Handlers = {
             this.step = 9;
         } else if (this.step === 9) {
             appendAiMessage(this.chatMessages, '我将扮演“反刍者”，你会看到屏幕上出现我的内心独白。然后，我将切换为“接纳者”，用上面表格中的四步进行回应。请仔细观察这个过程。', false);
-            appendSpecialCard(this.chatMessages, module33DemoCardHtml);
-            playManagedAudio(this.chatMessages, module33DemoCardAudioPath, {
-                mimeType: 'audio/mpeg',
-                onEnded: () => {
-                    appendContinueButton(this.chatMessages);
-                }
+            startModule33DemoDialogueSequence(this, () => {
+                appendContinueButton(this.chatMessages);
             });
             this.step = 10;
         } else if (this.step === 10) {
