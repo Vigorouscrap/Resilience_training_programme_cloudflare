@@ -4,6 +4,15 @@ import {
     appendContinueButton,
     disableInput
 } from '../../ui.js';
+import { appendSpeechReplayCard } from './module5Shared.js';
+
+const module42TrainMeditationAudioPath = encodeURI('audio/module42&47/火车站台冥想.mp3');
+const module42TrainMeditationCardHtml = `
+    <p class="module5-media-title">【火车站台冥想】</p>
+    <div class="module5-media-body">
+        <p>请闭上眼睛，跟随音频引导进行练习。</p>
+    </div>
+`;
 
 function removeCurrentButtonGroup(chatMessages) {
     const currentBtnGroup = chatMessages.querySelector('.button-group');
@@ -50,18 +59,19 @@ export const module42Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 3;
         } else if (this.step === 3) {
-            const meditationText = [
-                '（播放插入的音频：音频待定）以温和舒缓的语调开场，“现在请你想象自己站在一个安静的火车站台，站台很干净，周围没有拥挤的人群，只有微风轻轻吹过。接下来，你慢慢想到了一些曾经出现过的想法——可能是“今天要不要出去逛逛”这样的日常想法，可能是“他可能讨厌我”这样的由一个小挫折引发的焦虑想法，也可能是“必须每天保持好心情”这样的规则想法，然后你看到一列列火车从远方向站台这里驶来，每列火车上都写着一个你刚刚脑海中想到的想法。”',
-                '音频中段加入细节引导：当火车靠近时，你站在原地，做一个平静的观察者。你可以清晰看到车身上的文字，看着火车慢慢从站台一端驶入，再从另一端驶出，消失在视野里。如果某列火车停留时间较长，没关系，继续保持观察，它总会慢慢离开。',
-                '音频尾声进行过渡：现在，最后一列火车也已经驶离站台，你依然站在安静的站台上，感受此刻内心的状态，慢慢将注意力拉回到自己的呼吸上。”',
-                '冥想收尾：结束后，给予30秒缓冲时间，轻声引导：现在请慢慢睁开眼睛，花10秒钟看看周围的环境，活动一下手指，让自己逐渐回到现场。'
-            ].map(paragraph => `<p>${paragraph}</p>`).join('');
-
-            this.startWeek2TimedSequence(
-                [this.createTimedSequenceItem(meditationText, 330000)],
-                () => {
-                    this.step = 4;
-                    this.onContinue_Module42();
+            appendSpeechReplayCard(
+                this.chatMessages,
+                module42TrainMeditationCardHtml,
+                '',
+                {
+                    replayLabel: '再次播放',
+                    audioPath: module42TrainMeditationAudioPath,
+                    audioMimeType: 'audio/mpeg',
+                    disableSpeechFallback: true,
+                    onEnded: () => {
+                        this.step = 4;
+                        this.onContinue_Module42();
+                    }
                 }
             );
         } else if (this.step === 4) {

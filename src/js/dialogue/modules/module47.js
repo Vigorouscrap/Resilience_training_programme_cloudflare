@@ -4,11 +4,20 @@ import {
     appendButtonGroup,
     appendContinueButton
 } from '../../ui.js';
+import { appendSpeechReplayCard } from './module5Shared.js';
 
 const module47AllianceCardHtml = `
     <p><strong>想象一下，当遇到压力或遭遇挫折后，强烈的情绪和想法袭来：</strong></p>
     <p><strong>认知解离，</strong>就像是拉开距离，看清想法是什么。回答的是：“这个在我脑海里大声嚷嚷的东西，究竟是什么？是一个事实，还是一个被情绪放大了的想法故事？”</p>
     <p><strong>接纳技术，</strong>则是在看清之后允许它的存在，不与它对抗。回答的是：“好吧，我看到了这个令人不舒服的想法/情绪，我允许你在这里，但我不需要被你控制，我可以带着你继续生活。”</p>
+`;
+
+const module47TrainMeditationAudioPath = encodeURI('audio/module42&47/火车站台冥想.mp3');
+const module47TrainMeditationCardHtml = `
+    <p class="module5-media-title">【火车站台冥想】</p>
+    <div class="module5-media-body">
+        <p>请闭上眼睛，跟随音频引导进行练习。</p>
+    </div>
 `;
 
 function removeCurrentButtonGroup(chatMessages) {
@@ -76,18 +85,19 @@ export const module47Handlers = {
             appendContinueButton(this.chatMessages);
             this.step = 12;
         } else if (this.step === 12) {
-            const trainMeditationHtml = [
-                '（播放插入的音频：音频待定）以温和舒缓的语调开场，“现在请你想象自己站在一个安静的火车站台，站台很干净，周围没有拥挤的人群，只有微风轻轻吹过。接下来，你慢慢想到了一些曾经出现过的想法——可能是“今天要不要出去逛逛”这样的日常想法，可能是“他可能讨厌我”这样的由一个小挫折引发的焦虑想法，也可能是“必须每天保持好心情”这样的规则想法，然后你看到一列列火车从远方向站台这里驶来，每列火车上都写着一个你刚刚脑海中想到的想法。”',
-                '音频中段加入细节引导：当火车靠近时，你站在原地，做一个平静的观察者。你可以清晰看到车身上的文字，看着火车慢慢从站台一端驶入，再从另一端驶出，消失在视野里。如果某列火车停留时间较长，没关系，继续保持观察，它总会慢慢离开。',
-                '音频尾声进行过渡：现在，最后一列火车也已经驶离站台，你依然站在安静的站台上，感受此刻内心的状态，慢慢将注意力拉回到自己的呼吸上。”',
-                '冥想收尾：结束后，给予30秒缓冲时间，轻声引导：现在请慢慢睁开眼睛，花10秒钟看看周围的环境，活动一下手指，让自己逐渐回到现场。'
-            ].map(text => `<p>${text}</p>`).join('');
-
-            this.startWeek2TimedSequence(
-                [this.createTimedSequenceItem(trainMeditationHtml, 330000)],
-                () => {
-                    this.step = 13;
-                    this.onContinue_Module47();
+            appendSpeechReplayCard(
+                this.chatMessages,
+                module47TrainMeditationCardHtml,
+                '',
+                {
+                    replayLabel: '再次播放',
+                    audioPath: module47TrainMeditationAudioPath,
+                    audioMimeType: 'audio/mpeg',
+                    disableSpeechFallback: true,
+                    onEnded: () => {
+                        this.step = 13;
+                        this.onContinue_Module47();
+                    }
                 }
             );
         } else if (this.step === 13) {
