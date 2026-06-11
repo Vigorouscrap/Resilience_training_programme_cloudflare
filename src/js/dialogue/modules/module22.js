@@ -77,6 +77,11 @@ export const module22Handlers = {
                 (choice) => this.handleModule22CaseChoice(choice)
             );
             this.step = 5;
+        } else if (this.step === 7) {
+            appendSpecialCard(this.chatMessages, '<p><strong>第二步：影响觉察</strong></p>');
+            appendAiMessage(this.chatMessages, this.getModule22SelectedCase().impactPrompt, false);
+            this.enableInputForModule(this.chatMessages);
+            this.step = 8;
         } else if (this.step === 8) {
             appendAiMessage(this.chatMessages, '感谢你的回答。我总结了一些可能造成的影响，一起来看看吧。', false);
             appendSpecialCard(this.chatMessages, this.getModule22SelectedCase().impactCard);
@@ -187,10 +192,8 @@ export const module22Handlers = {
             }
 
             appendAiMessage(this.chatMessages, response.replyText, false);
-            appendSpecialCard(this.chatMessages, '<p><strong>第二步：影响觉察</strong></p>');
-            appendAiMessage(this.chatMessages, caseData.impactPrompt, false);
-            this.enableInputForModule(this.chatMessages);
-            this.step = 8;
+            appendContinueButton(this.chatMessages);
+            this.step = 7;
         } else if (this.step === 8) {
             this.module22State.impactAnswer = text;
             disableInput(this.inputArea, this.userInput);

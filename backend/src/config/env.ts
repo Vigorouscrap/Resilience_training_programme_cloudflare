@@ -1,4 +1,17 @@
-import 'dotenv/config';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import dotenv from 'dotenv';
+
+const envFileCandidates = [
+    resolve(process.cwd(), '.env.local'),
+    resolve(process.cwd(), '.env')
+];
+
+for (const envFilePath of envFileCandidates) {
+    if (existsSync(envFilePath)) {
+        dotenv.config({ path: envFilePath, override: false });
+    }
+}
 
 const REQUIRED_ENV_KEYS = [
     'AI_PROVIDER',
