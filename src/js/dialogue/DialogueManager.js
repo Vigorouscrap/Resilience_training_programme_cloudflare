@@ -50,7 +50,14 @@ export class DialogueManager {
         this.dialogueSessionId = 0;
         this.isContinuing = false;
         this.pendingContinueAction = null;
-        this.participant = { name: '朋友', habit: '那个习惯', quality: '内在品质' };
+        this.participant = {
+            name: '朋友',
+            hometown: '',
+            habit: '那个习惯',
+            quality: '内在品质',
+            introRawText: '',
+            introClassification: ''
+        };
         this.module12State = {
             visitedButtons: new Set(),
             phase: 'dialogue'
@@ -163,7 +170,14 @@ export class DialogueManager {
         this.pendingContinueAction = null;
         resetSequentialRender(this.chatMessages);
         this.step = -1;
-        this.participant = { name: '', habit: '', quality: '' };
+        this.participant = {
+            name: '',
+            hometown: '',
+            habit: '',
+            quality: '',
+            introRawText: '',
+            introClassification: ''
+        };
         disableInput(this.inputArea, this.userInput);
 
         beginSequentialRender(this.chatMessages);
@@ -474,6 +488,10 @@ export class DialogueManager {
         appendUserMessage(this.chatMessages, text);
         beginSequentialRender(this.chatMessages);
         try {
+            if (this.currentModule === '1-1') {
+                this.handleModule11UserMessage(text);
+                return;
+            }
             if (this.currentModule === '1-3') {
                 this.handleModule13DocxUserMessage(text);
                 return;
@@ -538,29 +556,6 @@ export class DialogueManager {
             } else if (this.currentModule === '1-5' && this.step === 3) {
                 disableInput(this.inputArea, this.userInput);
                 this.step = 3;
-                this.onContinue();
-            } else if (this.currentModule === '1-1' && this.step === 6) {
-                let name = '朋友', habit = '那个习惯', quality = '内在品质';
-                if (text.includes('我叫') || text.includes('我是')) {
-                    let match = text.match(/(?:我叫|我是|称呼我)[\s,，]*([^\s,，]{1,8})/);
-                    if (match) name = match[1];
-                } else {
-                    name = text.split(/[ ,，]/)[0] || '参与者';
-                }
-                if (text.includes('喜欢')) {
-                    let m = text.match(/喜欢[\s,，]*([^。，]{2,12})/);
-                    if (m) habit = m[1];
-                }
-                if (text.includes('品质') || text.includes('培养')) {
-                    let m = text.match(/培养[\s,，]*([^。，]{2,12})/);
-                    if (m) quality = m[1];
-                }
-                this.participant.name = name;
-                this.participant.habit = habit;
-                this.participant.quality = quality;
-
-                disableInput(this.inputArea, this.userInput);
-                this.step = 6;
                 this.onContinue();
             }
         } finally {

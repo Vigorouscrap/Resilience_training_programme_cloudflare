@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ModuleRunStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum ExportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id               String                  @id @default(cuid())
+  email            String?                 @unique
+  displayName      String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  authIdentities   AuthIdentity[]
+  appSessions      AppSession[]
+  moduleRuns       ModuleRun[]
+  exportJobs       ExportJob[]
+  aiReplyEvents    AiReplyEvent[]
+}
+
+model AuthIdentity {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String
+  providerSubjectId String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerSubjectId])
+}
+
+model AppSession {
+  id                String                  @id @default(cuid())
+  sessionKey        String                  @unique
+  userId            String?
+  status            SessionStatus           @default(ACTIVE)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  lastSeenAt        DateTime?
+  metadata          Json?
+  user              User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  moduleRuns        ModuleRun[]
+  contextSnapshots  ModuleContextSnapshot[]
+  aiReplyEvents     AiReplyEvent[]
+}
+
+model ModuleRun {
+  id                String                  @id @default(cuid())
+  sessionId         String
+  userId            String?
+  moduleId          String
+  status            ModuleRunStatus         @default(ACTIVE)
+  startedAt         DateTime                @default(now())
+  completedAt       DateTime?
+  state             Json?
+  session           AppSession              @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user              User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  contextSnapshots  ModuleContextSnapshot[]
+  aiReplyEvents     AiReplyEvent[]
+
+  @@index([sessionId, moduleId])
+}
+
+model ModuleContextSnapshot {
+  id             String    @id @default(cuid())
+  sessionId      String
+  moduleRunId    String?
+  moduleId       String
+  step           Int?
+  hookId         String?
+  payload        Json
+  createdAt      DateTime  @default(now())
+  session        AppSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  moduleRun      ModuleRun? @relation(fields: [moduleRunId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, moduleId])
+}
+
+model PromptVersion {
+  id             String   @id @default(cuid())
+  hookId         String
+  version        String
+  provider       String
+  model          String
+  description    String?
+  createdAt      DateTime @default(now())
+  metadata       Json?
+  aiReplyEvents  AiReplyEvent[]
+
+  @@unique([hookId, version])
+}
+
+model AiReplyEvent {
+  id                String         @id @default(cuid())
+  sessionId         String
+  moduleRunId       String?
+  userId            String?
+  moduleId          String
+  hookId            String
+  promptVersionId   String?
+  provider          String
+  model             String
+  requestPayload    Json
+  responsePayload   Json?
+  fallbackUsed      Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  session           AppSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  moduleRun         ModuleRun?     @relation(fields: [moduleRunId], references: [id], onDelete: SetNull)
+  user              User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  promptVersion     PromptVersion? @relation(fields: [promptVersionId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, moduleId, hookId])
+}
+
+model ExportJob {
+  id              String          @id @default(cuid())
+  userId          String?
+  sessionId       String?
+  status          ExportJobStatus @default(PENDING)
+  exportType      String
+  requestPayload  Json
+  resultPayload   Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

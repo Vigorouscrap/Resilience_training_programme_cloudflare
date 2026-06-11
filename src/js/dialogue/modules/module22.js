@@ -5,6 +5,7 @@ import {
     appendContinueButton,
     disableInput
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 const module22Cases = {
     a: {
@@ -41,6 +42,12 @@ const module22Cases = {
 
 const connectionOptions = ['a是的，我理解这种模式', 'b我见过类似的情况', 'c 没有，但我想更了解这种现象'];
 
+function getModule22Variant(caseKey) {
+    if (caseKey === 'b') return 'xiaolin';
+    if (caseKey === 'c') return 'jiayi';
+    return 'zhangtian';
+}
+
 export const module22Handlers = {
     onContinue_Module22() {
         if (this.step === 0) {
@@ -70,13 +77,6 @@ export const module22Handlers = {
                 (choice) => this.handleModule22CaseChoice(choice)
             );
             this.step = 5;
-        } else if (this.step === 7) {
-            const caseData = this.getModule22SelectedCase();
-            appendAiMessage(this.chatMessages, caseData.emotionResponse, false);
-            appendSpecialCard(this.chatMessages, '<p><strong>第二步：影响觉察</strong></p>');
-            appendAiMessage(this.chatMessages, caseData.impactPrompt, false);
-            this.enableInputForModule(this.chatMessages);
-            this.step = 8;
         } else if (this.step === 8) {
             appendAiMessage(this.chatMessages, '感谢你的回答。我总结了一些可能造成的影响，一起来看看吧。', false);
             appendSpecialCard(this.chatMessages, this.getModule22SelectedCase().impactCard);
@@ -159,12 +159,38 @@ export const module22Handlers = {
         this.step = 6;
     },
 
-    handleModule22UserMessage(text) {
+    async handleModule22UserMessage(text) {
         if (this.step === 6) {
             this.module22State.emotionAnswer = text;
             disableInput(this.inputArea, this.userInput);
-            this.step = 7;
-            this.onContinue();
+
+            const caseData = this.getModule22SelectedCase();
+            const activeSessionId = this.dialogueSessionId;
+            const caseKey = this.module22State.selectedCase || 'a';
+
+            const response = await runAiHook({
+                hookId: 'module-2-2.case-emotion-feedback',
+                moduleId: '2-2',
+                step: 6,
+                variant: getModule22Variant(caseKey),
+                userInput: text,
+                context: {
+                    caseKey,
+                    caseOption: caseData.option,
+                    caseEmotionPrompt: caseData.emotionPrompt
+                },
+                fallbackText: caseData.emotionResponse
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '2-2') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, false);
+            appendSpecialCard(this.chatMessages, '<p><strong>第二步：影响觉察</strong></p>');
+            appendAiMessage(this.chatMessages, caseData.impactPrompt, false);
+            this.enableInputForModule(this.chatMessages);
+            this.step = 8;
         } else if (this.step === 8) {
             this.module22State.impactAnswer = text;
             disableInput(this.inputArea, this.userInput);

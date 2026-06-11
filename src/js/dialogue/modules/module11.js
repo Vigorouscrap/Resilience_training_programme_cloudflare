@@ -1,9 +1,47 @@
-﻿import {
+import {
     appendAiMessage,
     appendSpecialCard,
     appendContinueButton,
-    appendHint
+    appendHint,
+    disableInput
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
+
+function parseModule11Intro(text) {
+    const normalizedText = String(text || '').trim();
+
+    const nameMatch = normalizedText.match(/(?:我叫|我是|称呼我)[\s,，]*([^\s,，。]{1,8})/);
+    const hometownMatch = normalizedText.match(/(?:来自|家乡是|家乡在)[\s,，]*([^，。,。]{2,16})/);
+    const habitMatch = normalizedText.match(/(?:喜欢|爱好是|平时喜欢)[\s,，]*([^。，]{2,16})/);
+    const qualityMatch = normalizedText.match(/(?:培养|希望拥有|希望变得更)[\s,，]*([^。，]{2,12})/);
+
+    const extracted = {
+        name: nameMatch?.[1] || normalizedText.split(/[ ,，]/)[0] || '参与者',
+        hometown: hometownMatch?.[1] || '',
+        habit: habitMatch?.[1] || '那个习惯',
+        quality: qualityMatch?.[1] || '内在品质'
+    };
+
+    const hasHometown = Boolean(extracted.hometown);
+    const hasHabit = extracted.habit !== '那个习惯';
+    let classification = 'normal';
+
+    if (/^(跳过|略过|不想说|不想回答|不太想回答|暂时不想说)/.test(normalizedText)) {
+        classification = 'skip';
+    } else if (normalizedText.length < 3) {
+        classification = 'low_info';
+    } else if (!hasHometown && !hasHabit) {
+        classification = 'off_topic';
+    } else if (!hasHometown || !hasHabit) {
+        classification = 'partial';
+    }
+
+    return {
+        ...extracted,
+        classification,
+        rawText: normalizedText
+    };
+}
 
 export const module11Handlers = {
     onContinue_Module11() {
@@ -33,9 +71,6 @@ export const module11Handlers = {
             appendHint(this.chatMessages, '请在对话框中输入你的回答');
             this.enableInputForModule(this.chatMessages);
             this.step = 6;
-        } else if (this.step === 6) {
-            appendAiMessage(this.chatMessages, `针对习惯：“${this.participant.habit}”是一个非常棒的自我关怀方式，它能帮助我们与当下的生活建立一种舒缓的连接。针对品质：你提到了希望培养“${this.participant.quality}”，这真是一个深刻而重要的起点。这正是心理弹性的核心组成部分之一，我们的很多练习都会围绕它展开。`, true);
-            this.step = 7;
         } else if (this.step === 7) {
             appendAiMessage(this.chatMessages, '感谢你的分享！通过这个简单的介绍，我已经初步了解到你的家乡和你的爱好。那么我也分享一下，作为你的引导员，我喜欢阅读，这能让我更专注，也能让我更好地陪伴和倾听每一位参与者。', true);
             this.step = 8;
@@ -107,7 +142,44 @@ export const module11Handlers = {
             appendAiMessage(this.chatMessages, '最后，送给你今天的小小练习：\n在今晚睡前，花一分钟回想一下你的那个小习惯，并简单地体验它一会儿。同时，在心里对自己温柔地说：‘我在培养[' + this.participant.quality + ']的路上，开始了第一步。’\n祝你今天拥有属于自己的平静或快乐时刻。我们明天再见。', false);
             this.step = 24;
         }
-    }
+    },
 
-    // 模块1-2对话流程
+    async handleModule11UserMessage(text) {
+        if (this.step !== 6) return;
+
+        const parsedIntro = parseModule11Intro(text);
+        this.participant.name = parsedIntro.name;
+        this.participant.hometown = parsedIntro.hometown;
+        this.participant.habit = parsedIntro.habit;
+        this.participant.quality = parsedIntro.quality;
+        this.participant.introRawText = parsedIntro.rawText;
+        this.participant.introClassification = parsedIntro.classification;
+
+        const activeSessionId = this.dialogueSessionId;
+        disableInput(this.inputArea, this.userInput);
+
+        const response = await runAiHook({
+            hookId: 'module-1-1.intro-reply',
+            moduleId: '1-1',
+            step: 6,
+            userInput: text,
+            context: {
+                participant: {
+                    name: parsedIntro.name,
+                    hometown: parsedIntro.hometown,
+                    habit: parsedIntro.habit,
+                    quality: parsedIntro.quality
+                },
+                classification: parsedIntro.classification
+            },
+            fallbackText: `针对习惯：“${this.participant.habit}”是一个非常棒的自我关怀方式，它能帮助我们与当下的生活建立一种舒缓的连接。针对品质：你提到了希望培养“${this.participant.quality}”，这真是一个深刻而重要的起点。这正是心理弹性的核心组成部分之一，我们的很多练习都会围绕它展开。`
+        });
+
+        if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '1-1') {
+            return;
+        }
+
+        appendAiMessage(this.chatMessages, response.replyText, true);
+        this.step = 7;
+    }
 };
