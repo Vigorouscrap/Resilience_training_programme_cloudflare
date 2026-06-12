@@ -10,6 +10,7 @@ import {
     isChatSessionActive,
     playManagedAudio
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 const module46ScenarioCardHtml = `
     <p class="scene-title"><strong>【情景呈现】</strong></p>
@@ -107,6 +108,44 @@ function getModule46ResponseFeedback(text) {
     }
 
     return '感谢你的回应。现在，我将基于认知解离的原则，为你分析你刚才的回应当中的亮点，并提供可能的优化思路。<br><br>例如如果参与者回应了： “我听到你现在非常绝望，觉得自己翻不了身了。我们可以把这个‘我完蛋了’的想法，看作是一个‘绝对化的灾难结论’。”<br><br>可以给出类似反馈以及原因：你准确完成了识别与共情，并给出了一个不错的描述性标签——“绝对化的灾难结论”。这个标签有效捕捉了想法中“完蛋了”和“没法活了”这种将现状判定为最终结局的特征。这里是一些优化建议与示范：我们可以尝试将事实与想法区分得更具体一些，并引入更温和的视角。比如可以这样说：事实是，你经历了一次重大的财务损失，这带来了巨大的痛苦和压力。而“我这辈子都翻不了身”这个想法，是一个在极度痛苦时很容易产生的、关于未来的“长期绝望预测”。我们的头脑在震惊中，常常会编制出关于整个未来的恐怖故事，但这不等于故事就是真的。很多人面对巨大损失时，头脑里都会先播放这部最糟糕的“电影”。<br><br>为什么这样优化？<br>具体化事实：把“事实”锚定在“财务损失”和“当前痛苦”上，而不是模糊的“情况”。<br>标签更具象：“长期绝望预测”比“结论”更动态，暗示这只是对未来的一种预测，而非定论。<br>正常化感受：指出这是“在震惊中很容易产生的”模式，减少当事人的羞耻感。<br>使用隐喻：再次使用“播放电影”的比喻，强化解离效果。';
+}
+
+function analyzeModule46SupporterResponse(text) {
+    const normalized = String(text || '').trim();
+
+    const hasEmpathy = /听到|理解|感到|感觉|焦虑|绝望|痛苦|压力|挫败|难受|辛苦/.test(normalized);
+    const hasLabeling = /标签|贴上|灾难|绝对化|预测|猜测|想法|念头|电影|故事/.test(normalized);
+    const hasFactDistinction = /事实|发生|已经|不等于|不代表|不是事实|只是想法/.test(normalized);
+    const hasNormalization = /很多人|很常见|正常|可以理解|难免/.test(normalized);
+    const hasActionShift = /现在可以|接下来可以|先做|先想|一步|下一步/.test(normalized);
+    const hasPrematureReassurance = /别多想|别想太多|没事的|你很好|肯定没事|放轻松|不要担心/.test(normalized);
+
+    const strengths = [];
+    if (hasEmpathy) strengths.push('empathy');
+    if (hasLabeling) strengths.push('labeling');
+    if (hasFactDistinction) strengths.push('fact_distinction');
+    if (hasNormalization) strengths.push('normalization');
+    if (hasActionShift) strengths.push('action_shift');
+
+    let classification = 'partial_support';
+    if (hasPrematureReassurance && strengths.length <= 1) {
+        classification = 'reassurance_heavy';
+    } else if (strengths.length >= 3) {
+        classification = 'skill_rich';
+    } else if (strengths.length === 0) {
+        classification = 'diffuse_support';
+    }
+
+    return {
+        classification,
+        hasEmpathy,
+        hasLabeling,
+        hasFactDistinction,
+        hasNormalization,
+        hasActionShift,
+        hasPrematureReassurance,
+        strengths
+    };
 }
 
 function unlockModule46InputAfterDelay(context, seconds) {
@@ -270,20 +309,38 @@ export const module46Handlers = {
         }
     },
 
-    handleModule46UserMessage(text) {
+    async handleModule46UserMessage(text) {
         if (this.step !== 18) return;
 
         this.module46State.supporterResponse = text;
         disableInput(this.inputArea, this.userInput);
 
-        const feedback = getModule46ResponseFeedback(text);
-        appendAiMessage(this.chatMessages, feedback, !isLowEffortResponse(text));
-
         if (isLowEffortResponse(text)) {
+            appendAiMessage(this.chatMessages, getModule46ResponseFeedback(text), false);
             this.enableInputForModule(this.chatMessages);
             return;
         }
 
+        const activeSessionId = this.dialogueSessionId;
+        const analysis = analyzeModule46SupporterResponse(text);
+        const response = await runAiHook({
+            hookId: 'module-4-6.supporter-response-feedback',
+            moduleId: '4-6',
+            step: 18,
+            userInput: text,
+            context: {
+                scenarioSummary: '当事人因投资亏损而陷入“我完蛋了、这辈子都翻不了身、没法活了”的灾难化想法。',
+                questionType: 'supporter_response_feedback',
+                ...analysis
+            },
+            fallbackText: getModule46ResponseFeedback(text)
+        });
+
+        if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '4-6') {
+            return;
+        }
+
+        appendAiMessage(this.chatMessages, response.replyText, true);
         this.step = 19;
     }
 };

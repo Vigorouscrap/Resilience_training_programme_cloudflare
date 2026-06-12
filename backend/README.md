@@ -20,7 +20,7 @@
 - 环境变量读取与敏感信息隔离
 - DeepSeek provider 抽象与实现
 - prompt registry
-- `1-1`、`1-3`、`2-2`、`3-2`、`4-2` 与 `4-4` 的 AI hook 配置
+- `1-1`、`1-3`、`2-2`、`3-2`、`4-2`、`4-4` 与 `4-6` 的 AI hook 配置
 - fallback 机制
 - 匿名 session 基础能力
 - 模块上下文整理基础能力
@@ -128,6 +128,8 @@ backend/
       │     │  │  # 4-2 “是否想跟着走”反馈的 hook 配置
       │     │  ├─ module-4-4.label-feedback.ts
       │     │  │  # 4-4 标签化练习反馈的 hook 配置：复用六个案例的统一标签反馈逻辑
+      │     │  ├─ module-4-6.supporter-response-feedback.ts
+      │     │  │  # 4-6 支持者回应分析的 hook 配置：先肯定已有优点，再补认知解离优化方向
       │     │
       │     └─ prompts/
       │        ├─ module-1-1.intro-reply/
@@ -181,6 +183,11 @@ backend/
       │           │  # 4-4 标签化反馈的系统 prompt
       │           └─ v1.user.md
       │              # 4-4 标签化反馈的用户模板 prompt
+      │        ├─ module-4-6.supporter-response-feedback/
+      │        │  ├─ v1.system.md
+      │        │  │  # 4-6 支持者回应分析的系统 prompt
+      │        │  └─ v1.user.md
+      │        │     # 4-6 支持者回应分析的用户模板 prompt
       │
       ├─ sessions/
       │  ├─ session.repository.ts
@@ -244,6 +251,12 @@ backend/
 - `backend/src/modules/ai/prompt-registry/hooks/module-4-4.label-feedback.ts`
 - `backend/src/modules/ai/prompt-registry/prompts/module-4-4.label-feedback/v1.system.md`
 - `backend/src/modules/ai/prompt-registry/prompts/module-4-4.label-feedback/v1.user.md`
+
+### 4-6 prompt 位置
+
+- `backend/src/modules/ai/prompt-registry/hooks/module-4-6.supporter-response-feedback.ts`
+- `backend/src/modules/ai/prompt-registry/prompts/module-4-6.supporter-response-feedback/v1.system.md`
+- `backend/src/modules/ai/prompt-registry/prompts/module-4-6.supporter-response-feedback/v1.user.md`
 
 ### 它们是如何工作的
 
