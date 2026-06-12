@@ -7,6 +7,7 @@
     appendAiMessageWithTimer,
     disableInput
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 export const module13Handlers = {
     onContinue_Module13() {
@@ -74,9 +75,8 @@ export const module13Handlers = {
             this.enableInputForModule(this.chatMessages);
             this.step = 11;
         } else if (this.step === 11) {
-            const bodyText = this.module13State.bodyText || '（没有特别明显的身体感觉）';
-            appendAiMessage(this.chatMessages, `你觉察到${bodyText}，这是身体对这件事的自然反应。`, true);
-            this.step = 12;
+            appendAiMessage(this.chatMessages, '当身体有这些感觉时，脑海里有没有浮现出一些小念头？', true);
+            this.step = 13;
         } else if (this.step === 12) {
             appendAiMessage(this.chatMessages, '当身体有这些感觉时，脑海里有没有浮现出一些小念头？', true);
             this.step = 13;
@@ -85,9 +85,8 @@ export const module13Handlers = {
             this.enableInputForModule(this.chatMessages);
             this.step = 14;
         } else if (this.step === 14) {
-            const thoughtText = this.module13State.thoughtText || '这些想法';
-            appendAiMessage(this.chatMessages, `有这些念头很正常。你已经开始看见${thoughtText}了。`, true);
-            this.step = 15;
+            appendAiMessage(this.chatMessages, '无论是什么念头，这都是我们此刻情绪感受的见证。', true);
+            this.step = 16;
         } else if (this.step === 15) {
             appendAiMessage(this.chatMessages, '无论是什么念头，这都是我们此刻情绪感受的见证。', true);
             this.step = 16;
@@ -110,7 +109,7 @@ export const module13Handlers = {
         }
     },
 
-    handleModule13DocxUserMessage(text) {
+    async handleModule13DocxUserMessage(text) {
         if (this.step === 7) {
             this.module13State.eventText = text;
             disableInput(this.inputArea, this.userInput);
@@ -118,11 +117,50 @@ export const module13Handlers = {
         } else if (this.step === 11) {
             this.module13State.bodyText = text;
             disableInput(this.inputArea, this.userInput);
-            this.onContinue();
+
+            const activeSessionId = this.dialogueSessionId;
+            const response = await runAiHook({
+                hookId: 'module-1-3.body-sensation-reflection',
+                moduleId: '1-3',
+                step: 11,
+                userInput: text,
+                context: {
+                    eventText: this.module13State.eventText || '',
+                    questionType: 'body_sensation'
+                },
+                fallbackText: '你已经注意到身体里的感觉，或暂时没有特别明显的变化，这都是身体在传递给你的信息。'
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '1-3') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, true);
+            this.step = 12;
         } else if (this.step === 14) {
             this.module13State.thoughtText = text;
             disableInput(this.inputArea, this.userInput);
-            this.onContinue();
+
+            const activeSessionId = this.dialogueSessionId;
+            const response = await runAiHook({
+                hookId: 'module-1-3.thought-reflection',
+                moduleId: '1-3',
+                step: 14,
+                userInput: text,
+                context: {
+                    eventText: this.module13State.eventText || '',
+                    bodyText: this.module13State.bodyText || '',
+                    questionType: 'thought_reflection'
+                },
+                fallbackText: '能看见这些小念头本身就很重要。很多人在这样的时刻都会有类似的想法，我们可以先不评判它。'
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '1-3') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, true);
+            this.step = 15;
         }
     }
 

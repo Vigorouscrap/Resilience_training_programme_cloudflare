@@ -140,11 +140,63 @@ backend/src/modules/ai/prompt-registry/
 ├─ index.ts
 ├─ hooks/
 │  ├─ module-1-1.intro-reply.ts
-│  └─ module-2-2.case-emotion-feedback.ts
+│  ├─ module-1-3.body-sensation-reflection.ts
+│  ├─ module-1-3.thought-reflection.ts
+│  ├─ module-2-2.case-emotion-feedback.ts
+│  ├─ module-3-2.positive-rumination-feedback.ts
+│  ├─ module-4-2.thought-train-reflection.ts
+│  ├─ module-4-2.boarding-impulse-reflection.ts
+│  ├─ module-4-4.label-feedback.ts
+│  ├─ module-4-6.supporter-response-feedback.ts
+│  └─ module-6-2.value-desire-insight.ts
 └─ prompts/
    ├─ module-1-1.intro-reply/
-   └─ module-2-2.case-emotion-feedback/
+   ├─ module-1-3.body-sensation-reflection/
+   ├─ module-1-3.thought-reflection/
+   ├─ module-2-2.case-emotion-feedback/
+   ├─ module-3-2.positive-rumination-feedback/
+   ├─ module-4-2.thought-train-reflection/
+   ├─ module-4-2.boarding-impulse-reflection/
+   ├─ module-4-4.label-feedback/
+   ├─ module-4-6.supporter-response-feedback/
+   └─ module-6-2.value-desire-insight/
 ```
+
+---
+
+## AI 接入范围总览
+
+以下清单基于 `original_info/20260605AI个性化回复及prompt.docx` 整理，作为后续接线顺序与验收基线。
+
+### 已完成试点
+
+- `1-1` 自我介绍后的个性化回应
+- `2-2` 案例情绪识别反馈
+
+### 待接入 AI 的节点
+
+- `1-3` 身体感觉回应
+- `1-3` 小念头回应
+- `3-2` 过度积极反刍反思反馈
+- `4-2` “想法火车”观察回应
+- `4-2` “是否想跟着火车走”回应
+- `4-4` 标签化练习反馈
+- `4-6` 支持者回应分析
+- `6-2` 渴望/在乎洞察反馈
+
+### 明确不使用 AI 的节点
+
+- Week 5 全部模块保持原样，不新增 AI 个性化回复
+- `6-6` 保持原样，不接入 AI 回复
+- `1-7 / 2-7 / 3-7 / 4-7 / 5-7 / 6-7` 第一部分冥想呼吸回顾
+  - 不再使用 AI
+  - 改为根据 `是/否` 三题组合映射到 8 条预设回复
+
+### 后续接线原则补充
+
+- 优先接入 `docx` 中已有明确 prompt 的节点
+- 对同一模块内多个 AI 节点，优先复用统一 hook 设计风格与上下文字段
+- 对“同 prompt、多题面”的场景优先做可复用 hook，而不是复制多套实现
 
 ---
 
@@ -152,9 +204,9 @@ backend/src/modules/ai/prompt-registry/
 
 当前处于：
 
-**阶段 4：验证与稳固**
+**阶段 5：其余 prompt 的结构化与批量接入**
 
-目标是明确本地测试方式、补齐协作者需要执行的操作，并在此基础上验证 `1-1` 与 `2-2` 的 AI hook 接线、fallback、文案边界和 UI 稳定性。
+目标是以 `1-1` 与 `2-2` 试点为模板，优先完成其它已明确 prompt 节点的结构化、注册、接线与回归验证；用户体系、数据保存、导出与正式部署排在其后。
 
 ---
 
@@ -344,7 +396,7 @@ http://127.0.0.1:8787
 ### 3A：模块 1-1
 
 - [x] 梳理 `1-1` 当前用户输入点与后续固定流程依赖
-- [ ] 定义 `module-1-1.intro-reply` hook
+- [x] 定义 `module-1-1.intro-reply` hook
 - [x] 设计 `1-1` 的输入分类策略
 - [x] 实现 `1-1` prompt 与输出校验
 - [x] 仅在指定节点替换为 AI 短回复
@@ -358,17 +410,80 @@ http://127.0.0.1:8787
 - [x] 仅替换“情绪识别反馈”这一节点
 - [x] 保持 `impactPrompt` 和后续固定流程不变
 
-## 阶段 4：验证与稳固
+## 阶段 4：试点验收与待接入清单固化
 
-- [ ] 验证 `1-1` 正常回答路径
+- [x] 验证 `1-1` 正常回答路径
 - [ ] 验证 `1-1` 答非所问路径
 - [ ] 验证 `1-1` 跳过路径
-- [ ] 验证 `2-2` 三个案例的正常路径
+- [x] 验证 `2-2` 基本联通路径
+- [x] 修复并验证 `2-2` AI 回复后的继续按钮节奏
 - [ ] 验证 API 失败 fallback 路径
 - [x] 验证前端未出现 UI 结构性改动（基于静态代码检查）
 - [x] 验证未误改其它模块固定文案（当前仅接线 `1-1` 与 `2-2`）
+- [x] 根据 `20260605AI个性化回复及prompt.docx` 固化全量待接入清单
 
-## 阶段 5：用户体系与数据能力
+## 阶段 5：其余 AI 节点的结构化与批量接入
+
+### 5A：模块 1-3
+
+- [x] 梳理 `1-3` 两个用户输入节点的原始流程与固定文案边界
+- [x] 定义 `module-1-3.body-sensation-reflection` hook
+- [x] 定义 `module-1-3.thought-reflection` hook
+- [x] 结构化重写 `1-3` 两个 prompt，并补充输出约束与 fallback
+- [x] 仅替换两个指定短回应节点，不改其它 `1-3` 文案与流程
+
+### 5B：模块 3-2
+
+- [ ] 梳理 `3-2` 当前输入节点、分类条件与后续固定流程依赖
+- [ ] 定义 `module-3-2.positive-rumination-feedback` hook
+- [ ] 将“识别出模式 / 不确定 / 分享具体经历”整理为结构化判别策略
+- [ ] 接入 AI 回复并保留固定后续流程
+
+### 5C：模块 4-2
+
+- [ ] 梳理 `4-2` 两个输入节点的上下文与边界
+- [ ] 定义 `module-4-2.thought-train-reflection` hook
+- [ ] 定义 `module-4-2.boarding-impulse-reflection` hook
+- [ ] 结构化重写两个 prompt，并为“无明显体验 / 不知道 / 无关输入”补充边界策略
+- [ ] 保持冥想音频、页面结构与后续固定文案不变
+
+### 5D：模块 4-4
+
+- [ ] 梳理 `4-4` 中所有复用同一类 prompt 的标签化题面
+- [ ] 定义可复用的 `module-4-4.label-feedback` hook
+- [ ] 设计“描述性标签 / 评判性标签 / 未按要求作答”三类判别策略
+- [ ] 仅替换标签反馈，不改题干、不改案例文本
+
+### 5E：模块 4-6
+
+- [ ] 梳理 `4-6` 支持者回应输入点与标准答案展示方式
+- [ ] 定义 `module-4-6.supporter-response-feedback` hook
+- [ ] 结构化重写 prompt，区分“肯定用户已有优点”与“追加标准示范”
+- [ ] 保持原模块其它教学内容与 UI 节奏不变
+
+### 5F：模块 6-2
+
+- [ ] 梳理 `6-2` 当前输入节点与后续固定流程
+- [ ] 定义 `module-6-2.value-desire-insight` hook
+- [ ] 结构化重写 prompt，约束为“肯定洞察 + 解释意义 + 温和开放式问题”
+- [ ] 控制输出长度与语气，避免说教
+
+### 5G：统一回归与治理
+
+- [x] 为新增 AI 节点补齐 fallback 文案（当前已补齐 `1-3`）
+- [x] 为新增 hook 补齐 prompt 版本登记（当前已补齐 `1-3`）
+- [ ] 对所有已接入模块做一次“不误改原文案 / 不破坏继续按钮节奏 / 不改 UI”的回归检查
+- [ ] 更新后端 hook 清单、prompt registry 索引与路线图状态
+
+## 阶段 6：非 AI 节点的规则化补全
+
+- [ ] 为 `1-7 / 2-7 / 3-7 / 4-7 / 5-7 / 6-7` 第一部分冥想呼吸回顾整理统一状态模型
+- [ ] 实现三题 `是/否` 组合到 8 条预设回复的映射
+- [ ] 复用统一逻辑，避免 6 个周回顾模块各自散写一套判断
+- [ ] 保持既有题干、按钮、流程与 UI 不变
+- [ ] 验证 8 种组合都能正确命中预设回复
+
+## 阶段 7：用户体系与数据能力
 
 - [ ] 设计用户表、会话表、模块运行表、AI 调用记录表
 - [ ] 接入用户登录能力
@@ -377,7 +492,7 @@ http://127.0.0.1:8787
 - [ ] 建立数据导出机制
 - [ ] 补充审计与日志字段
 
-## 阶段 6：正式部署与国内访问
+## 阶段 8：正式部署与国内访问
 
 - [ ] 确定正式后端部署平台
 - [ ] 确定正式数据库部署方案
@@ -392,11 +507,11 @@ http://127.0.0.1:8787
 
 当前最高优先级如下：
 
-1. 新增后端基础骨架
-2. 建立 prompt registry
-3. 建立 DeepSeek provider
-4. 只接入 `1-1` 和 `2-2`
-5. 确保不误改任何未授权的原有内容
+1. 以 `1-1` 与 `2-2` 为模板，完成其它已有 prompt 节点的结构化与接线
+2. 优先处理 `1-3`、`3-2`、`4-2`、`4-4`、`4-6`、`6-2`
+3. 完成 `x-7` 冥想呼吸回顾的非 AI 组合回复逻辑
+4. 对所有已接入点统一补齐 fallback、版本管理与回归验证
+5. 在 AI 覆盖完成后，再进入用户体系、数据保存、导出与正式部署
 
 ---
 
@@ -406,8 +521,8 @@ http://127.0.0.1:8787
 
 - 新增 `backend/` 及其内部文件
 - 新增前端服务层与配置层
-- 对 `module11.js` 做最小接线式改动
-- 对 `module22.js` 做最小接线式改动
+- 对 `module11.js`、`module13.js`、`module22.js`、`module32.js`、`module42.js`、`module44.js`、`module46.js`、`module62.js` 做最小接线式改动
+- 对 `module17.js`、`module27.js`、`module37.js`、`module47.js`、`module57.js`、`module67.js` 做非 AI 组合回复逻辑的最小改动
 - 对 `DialogueManager.js` 做必要但最小的异步接线改动
 - 新增文档
 
@@ -415,7 +530,7 @@ http://127.0.0.1:8787
 
 - 其它模块的原有对话文字
 - 现有页面 UI 样式与结构
-- 非 `1-1`、`2-2` 模块的业务行为
+- 未在 `docx` 中明确要求改造的模块业务行为
 
 ---
 
@@ -451,7 +566,7 @@ http://127.0.0.1:8787
 > 2. 不要擅自改变现有 module 分布、课程结构和现有 UI 设计。
 > 3. AI 只能在指定 hook 节点生成受控的个性化短回复，不得接管整段对话。
 > 4. prompt、模型调用、API key、上下文整理必须统一集中管理，不得散落在前端模块中。
-> 5. 当前阶段优先实现独立后端、DeepSeek provider、prompt registry，以及 `1-1`、`2-2` 两个模块的最小可用试点。
+> 5. 当前阶段优先完成 `20260605AI个性化回复及prompt.docx` 中剩余节点的结构化与接线，再做用户体系与数据能力。
 > 6. 所有改动优先新增文件和新增模块；对现有业务模块仅做最小接线式修改。
 > 7. 必须提供 fallback，保证 API 失败时仍能继续固定流程。
 > 8. 后端从一开始就按未来支持登录、用户隔离、数据保存与导出的正式方向设计，避免返工。
