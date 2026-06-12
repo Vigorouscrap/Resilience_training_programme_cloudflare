@@ -10,6 +10,7 @@ import {
     getChatSessionId,
     isChatSessionActive
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 function removeCurrentButtonGroup(chatMessages) {
     const currentBtnGroup = chatMessages.querySelector('.button-group');
@@ -110,6 +111,29 @@ function getDesireFeedback(text) {
     }
 
     return '你已经开始透过情绪，看到更深层的渴望了。无论你写下的是被理解、连接、归属、成长、健康，还是别的关键词，它们都在提醒你：压力和焦虑并不只是难受，它们也在提示你，什么对你而言真的很重要。';
+}
+
+function classifyModule62Desire(text) {
+    const normalized = String(text || '').trim();
+    const compact = normalized.replace(/\s+/g, '');
+
+    if (!compact || /不知道|不清楚|想不到|不会|随便/.test(compact)) {
+        return 'unclear';
+    }
+
+    if (/认可|肯定|被看见|成就|能力/.test(compact)) {
+        return 'recognition';
+    }
+
+    if (/平静|安全|安稳|稳定|安心|安宁/.test(compact)) {
+        return 'safety';
+    }
+
+    if (/理解|连接|归属|陪伴|爱|关系/.test(compact)) {
+        return 'connection';
+    }
+
+    return 'other_value';
 }
 
 export const module62Handlers = {
@@ -281,7 +305,7 @@ export const module62Handlers = {
         }
     },
 
-    handleModule62UserMessage(text) {
+    async handleModule62UserMessage(text) {
         if (this.step === 11) {
             this.module62State.eventText = text;
             disableInput(this.inputArea, this.userInput);
@@ -349,8 +373,31 @@ export const module62Handlers = {
         if (this.step === 32) {
             this.module62State.desireText = text;
             disableInput(this.inputArea, this.userInput);
-            this.step = 33;
-            this.onContinue_Module62();
+
+            const activeSessionId = this.dialogueSessionId;
+            const classification = classifyModule62Desire(text);
+            const response = await runAiHook({
+                hookId: 'module-6-2.value-desire-insight',
+                moduleId: '6-2',
+                step: 32,
+                userInput: text,
+                context: {
+                    classification,
+                    questionType: 'value_desire_insight',
+                    observerEventText: this.module62State.observerEventText || '',
+                    observerBodyText: this.module62State.observerBodyText || '',
+                    observerThoughtText: this.module62State.observerThoughtText || '',
+                    observerIntensity: this.module62State.observerIntensity || ''
+                },
+                fallbackText: getDesireFeedback(text)
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '6-2') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, true);
+            this.step = 34;
         }
     }
 };

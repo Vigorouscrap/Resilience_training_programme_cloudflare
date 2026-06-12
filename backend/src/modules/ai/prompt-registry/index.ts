@@ -8,6 +8,7 @@ import { module42BoardingImpulseReflectionHook } from './hooks/module-4-2.boardi
 import { module42ThoughtTrainReflectionHook } from './hooks/module-4-2.thought-train-reflection.js';
 import { module44LabelFeedbackHook } from './hooks/module-4-4.label-feedback.js';
 import { module46SupporterResponseFeedbackHook } from './hooks/module-4-6.supporter-response-feedback.js';
+import { module62ValueDesireInsightHook } from './hooks/module-6-2.value-desire-insight.js';
 
 const hooks = [
     module11IntroReplyHook,
@@ -18,7 +19,8 @@ const hooks = [
     module42ThoughtTrainReflectionHook,
     module42BoardingImpulseReflectionHook,
     module44LabelFeedbackHook,
-    module46SupporterResponseFeedbackHook
+    module46SupporterResponseFeedbackHook,
+    module62ValueDesireInsightHook
 ] satisfies HookDefinition[];
 
 export function getHookDefinition(hookId: string): HookDefinition {
