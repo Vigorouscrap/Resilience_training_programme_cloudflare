@@ -20,7 +20,7 @@
 - 环境变量读取与敏感信息隔离
 - DeepSeek provider 抽象与实现
 - prompt registry
-- `1-1`、`1-3`、`2-2` 与 `3-2` 的 AI hook 配置
+- `1-1`、`1-3`、`2-2`、`3-2` 与 `4-2` 的 AI hook 配置
 - fallback 机制
 - 匿名 session 基础能力
 - 模块上下文整理基础能力
@@ -120,8 +120,13 @@ backend/
       │     │  │  # 1-3 小念头节点的 hook 配置：短回应、输出上限、fallbackKey
       │     │  ├─ module-2-2.case-emotion-feedback.ts
       │     │  │  # 2-2 的 hook 配置：默认变体、三个案例 prompt 变体等
-      │     │  └─ module-3-2.positive-rumination-feedback.ts
-      │     │     # 3-2 反思反馈节点的 hook 配置：分类式短反馈、输出上限、fallbackKey
+      │     │  ├─ module-3-2.positive-rumination-feedback.ts
+      │     │  │  # 3-2 反思反馈节点的 hook 配置：分类式短反馈、输出上限、fallbackKey
+      │     │  ├─ module-4-2.thought-train-reflection.ts
+      │     │  │  # 4-2 “想法火车”观察反馈的 hook 配置
+      │     │  ├─ module-4-2.boarding-impulse-reflection.ts
+      │     │  │  # 4-2 “是否想跟着走”反馈的 hook 配置
+      │     │
       │     │
       │     └─ prompts/
       │        ├─ module-1-1.intro-reply/
@@ -157,6 +162,18 @@ backend/
       │           │  # 3-2 反思反馈的系统 prompt
       │           └─ v1.user.md
       │              # 3-2 反思反馈的用户模板 prompt
+      │
+      │        ├─ module-4-2.thought-train-reflection/
+      │        │  ├─ v1.system.md
+      │        │  │  # 4-2 “想法火车”观察反馈的系统 prompt
+      │        │  └─ v1.user.md
+      │        │     # 4-2 “想法火车”观察反馈的用户模板 prompt
+      │        │
+      │        └─ module-4-2.boarding-impulse-reflection/
+      │           ├─ v1.system.md
+      │           │  # 4-2 “是否想跟着走”反馈的系统 prompt
+      │           └─ v1.user.md
+      │              # 4-2 “是否想跟着走”反馈的用户模板 prompt
       │
       ├─ sessions/
       │  ├─ session.repository.ts
@@ -205,6 +222,15 @@ backend/
 - `backend/src/modules/ai/prompt-registry/hooks/module-3-2.positive-rumination-feedback.ts`
 - `backend/src/modules/ai/prompt-registry/prompts/module-3-2.positive-rumination-feedback/v1.system.md`
 - `backend/src/modules/ai/prompt-registry/prompts/module-3-2.positive-rumination-feedback/v1.user.md`
+
+### 4-2 prompt 位置
+
+- `backend/src/modules/ai/prompt-registry/hooks/module-4-2.thought-train-reflection.ts`
+- `backend/src/modules/ai/prompt-registry/prompts/module-4-2.thought-train-reflection/v1.system.md`
+- `backend/src/modules/ai/prompt-registry/prompts/module-4-2.thought-train-reflection/v1.user.md`
+- `backend/src/modules/ai/prompt-registry/hooks/module-4-2.boarding-impulse-reflection.ts`
+- `backend/src/modules/ai/prompt-registry/prompts/module-4-2.boarding-impulse-reflection/v1.system.md`
+- `backend/src/modules/ai/prompt-registry/prompts/module-4-2.boarding-impulse-reflection/v1.user.md`
 
 ### 它们是如何工作的
 

@@ -441,11 +441,11 @@ http://127.0.0.1:8787
 
 ### 5C：模块 4-2
 
-- [ ] 梳理 `4-2` 两个输入节点的上下文与边界
-- [ ] 定义 `module-4-2.thought-train-reflection` hook
-- [ ] 定义 `module-4-2.boarding-impulse-reflection` hook
-- [ ] 结构化重写两个 prompt，并为“无明显体验 / 不知道 / 无关输入”补充边界策略
-- [ ] 保持冥想音频、页面结构与后续固定文案不变
+- [x] 梳理 `4-2` 两个输入节点的上下文与边界
+- [x] 定义 `module-4-2.thought-train-reflection` hook
+- [x] 定义 `module-4-2.boarding-impulse-reflection` hook
+- [x] 结构化重写两个 prompt，并为“无明显体验 / 不知道 / 无关输入”补充边界策略
+- [x] 保持冥想音频、页面结构与后续固定文案不变
 
 ### 5D：模块 4-4
 
@@ -470,8 +470,8 @@ http://127.0.0.1:8787
 
 ### 5G：统一回归与治理
 
-- [x] 为新增 AI 节点补齐 fallback 文案（当前已补齐 `1-3`、`3-2`）
-- [x] 为新增 hook 补齐 prompt 版本登记（当前已补齐 `1-3`、`3-2`）
+- [x] 为新增 AI 节点补齐 fallback 文案（当前已补齐 `1-3`、`3-2`、`4-2`）
+- [x] 为新增 hook 补齐 prompt 版本登记（当前已补齐 `1-3`、`3-2`、`4-2`）
 - [ ] 对所有已接入模块做一次“不误改原文案 / 不破坏继续按钮节奏 / 不改 UI”的回归检查
 - [ ] 更新后端 hook 清单、prompt registry 索引与路线图状态
 

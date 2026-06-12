@@ -5,6 +5,7 @@ import {
     disableInput
 } from '../../ui.js';
 import { appendSpeechReplayCard } from './module5Shared.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 const module42TrainMeditationAudioPath = encodeURI('audio/module42&47/火车站台冥想.mp3');
 const module42TrainMeditationCardHtml = `
@@ -26,17 +27,44 @@ function isEmptyLike(text) {
     return ['没有', '没看到', '没什么', '不知道', '想不到', '不清楚'].includes(normalized);
 }
 
-function getModule42ObservedResponse(text) {
+function classifyModule42ObservedThoughts(text) {
     if (isEmptyLike(text)) {
-        return '没关系，可能第一次冥想还不太适应，可以想想你在听音频时，有没有某句话让你印象深刻？或者当时心里在想什么？';
+        return 'empty_like';
+    }
+
+    return 'described_trains';
+}
+
+function classifyModule42ImpulseThoughts(text) {
+    const normalized = String(text || '').trim();
+    const compact = normalized.replace(/\s+/g, '');
+
+    if (!compact || /不知道|不清楚|说不清|想不到|没注意|没有感觉|没什么感觉/.test(compact)) {
+        return 'uncertain';
+    }
+
+    if (/没有|没|不太会|不会|没有跟着|没有冲动|没想跟着/.test(compact)) {
+        return 'no_impulse';
+    }
+
+    return 'has_impulse';
+}
+
+function getModule42ObservedFallback(classification) {
+    if (classification === 'empty_like') {
+        return '没关系，可能第一次进行火车站台冥想还不太适应，可以想想你在听音频时，有没有某句话让你印象深刻？或者当时心里在想什么？';
     }
 
     return '感谢你的分享。很多人都会遇到类似的“担忧列车”，你能观察到它已经很了不起；第一次练习就能注意到这些细节，说明你的觉察力很强。';
 }
 
-function getModule42ImpulseResponse(text) {
-    if (isEmptyLike(text)) {
-        return '没关系，如果一时还说不清也不要紧。有冲动想上车是完全正常的，关键是最终选择留在站台观察。';
+function getModule42ImpulseFallback(classification) {
+    if (classification === 'uncertain') {
+        return '感谢你的分享。“说不清”本身也是一种真实的体验。有时候冲动很微弱，不容易捕捉。';
+    }
+
+    if (classification === 'no_impulse') {
+        return '感谢你的分享。即使没有感觉到明显的冲动，这也是完全正常的。关键是你能觉察到“火车”本身。';
     }
 
     return '感谢你的分享。有冲动想上车是完全正常的，关键是最终选择留在站台观察。';
@@ -115,11 +143,30 @@ export const module42Handlers = {
         }
     },
 
-    handleModule42UserMessage(text) {
+    async handleModule42UserMessage(text) {
         if (this.step === 5) {
             this.module42State.observedThoughts = text;
             disableInput(this.inputArea, this.userInput);
-            appendAiMessage(this.chatMessages, getModule42ObservedResponse(text), true);
+
+            const classification = classifyModule42ObservedThoughts(text);
+            const activeSessionId = this.dialogueSessionId;
+            const response = await runAiHook({
+                hookId: 'module-4-2.thought-train-reflection',
+                moduleId: '4-2',
+                step: 5,
+                userInput: text,
+                context: {
+                    classification,
+                    questionType: 'observed_thought_trains'
+                },
+                fallbackText: getModule42ObservedFallback(classification)
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '4-2') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, true);
             this.step = 6;
             return;
         }
@@ -127,7 +174,27 @@ export const module42Handlers = {
         if (this.step === 7) {
             this.module42State.impulseThoughts = text;
             disableInput(this.inputArea, this.userInput);
-            appendAiMessage(this.chatMessages, getModule42ImpulseResponse(text), true);
+
+            const classification = classifyModule42ImpulseThoughts(text);
+            const activeSessionId = this.dialogueSessionId;
+            const response = await runAiHook({
+                hookId: 'module-4-2.boarding-impulse-reflection',
+                moduleId: '4-2',
+                step: 7,
+                userInput: text,
+                context: {
+                    observedThoughts: this.module42State.observedThoughts || '',
+                    classification,
+                    questionType: 'boarding_impulse'
+                },
+                fallbackText: getModule42ImpulseFallback(classification)
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '4-2') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, true);
             this.step = 8;
             return;
         }
