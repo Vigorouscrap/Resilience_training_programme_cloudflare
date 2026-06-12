@@ -20,7 +20,7 @@
 - 环境变量读取与敏感信息隔离
 - DeepSeek provider 抽象与实现
 - prompt registry
-- `1-1` 与 `2-2` 的首批 AI hook 配置
+- `1-1`、`1-3` 与 `2-2` 的 AI hook 配置
 - fallback 机制
 - 匿名 session 基础能力
 - 模块上下文整理基础能力
@@ -37,6 +37,11 @@
 ---
 
 ## 文件树与职责
+
+说明：
+
+- 以下文件树聚焦 `backend/src` 与关键配置文件。
+- `node_modules/`、`dist/`、`.env.local` 等安装产物、构建产物和本地敏感文件不在此展开。
 
 ```text
 backend/
@@ -109,6 +114,10 @@ backend/
       │     ├─ hooks/
       │     │  ├─ module-1-1.intro-reply.ts
       │     │  │  # 1-1 的 hook 配置：model、version、fallbackKey、prompt 文件映射
+      │     │  ├─ module-1-3.body-sensation-reflection.ts
+      │     │  │  # 1-3 身体感觉节点的 hook 配置：短回应、输出上限、fallbackKey
+      │     │  ├─ module-1-3.thought-reflection.ts
+      │     │  │  # 1-3 小念头节点的 hook 配置：短回应、输出上限、fallbackKey
       │     │  └─ module-2-2.case-emotion-feedback.ts
       │     │     # 2-2 的 hook 配置：默认变体、三个案例 prompt 变体等
       │     │
@@ -118,6 +127,18 @@ backend/
       │        │  │  # 1-1 的系统 prompt
       │        │  └─ v1.user.md
       │        │     # 1-1 的用户模板 prompt（结构化上下文插槽）
+      │        │
+      │        ├─ module-1-3.body-sensation-reflection/
+      │        │  ├─ v1.system.md
+      │        │  │  # 1-3 身体感觉回应的系统 prompt
+      │        │  └─ v1.user.md
+      │        │     # 1-3 身体感觉回应的用户模板 prompt
+      │        │
+      │        ├─ module-1-3.thought-reflection/
+      │        │  ├─ v1.system.md
+      │        │  │  # 1-3 小念头回应的系统 prompt
+      │        │  └─ v1.user.md
+      │        │     # 1-3 小念头回应的用户模板 prompt
       │        │
       │        └─ module-2-2.case-emotion-feedback/
       │           ├─ zhangtian.v1.system.md
@@ -146,7 +167,7 @@ backend/
 
 ## prompt 现在是否已经写好
 
-是的，当前第一批结构化 prompt 已经写好了，并已经挂进 prompt registry。
+是的，当前已接入节点对应的结构化 prompt 都已经写好，并已经挂进 prompt registry。
 
 ### 1-1 prompt 位置
 
@@ -161,6 +182,15 @@ backend/
 - `backend/src/modules/ai/prompt-registry/prompts/module-2-2.case-emotion-feedback/xiaolin.v1.system.md`
 - `backend/src/modules/ai/prompt-registry/prompts/module-2-2.case-emotion-feedback/jiayi.v1.system.md`
 - `backend/src/modules/ai/prompt-registry/prompts/module-2-2.case-emotion-feedback/v1.user.md`
+
+### 1-3 prompt 位置
+
+- `backend/src/modules/ai/prompt-registry/hooks/module-1-3.body-sensation-reflection.ts`
+- `backend/src/modules/ai/prompt-registry/prompts/module-1-3.body-sensation-reflection/v1.system.md`
+- `backend/src/modules/ai/prompt-registry/prompts/module-1-3.body-sensation-reflection/v1.user.md`
+- `backend/src/modules/ai/prompt-registry/hooks/module-1-3.thought-reflection.ts`
+- `backend/src/modules/ai/prompt-registry/prompts/module-1-3.thought-reflection/v1.system.md`
+- `backend/src/modules/ai/prompt-registry/prompts/module-1-3.thought-reflection/v1.user.md`
 
 ### 它们是如何工作的
 
