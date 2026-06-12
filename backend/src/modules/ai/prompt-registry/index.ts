@@ -6,6 +6,7 @@ import { module22CaseEmotionFeedbackHook } from './hooks/module-2-2.case-emotion
 import { module32PositiveRuminationFeedbackHook } from './hooks/module-3-2.positive-rumination-feedback.js';
 import { module42BoardingImpulseReflectionHook } from './hooks/module-4-2.boarding-impulse-reflection.js';
 import { module42ThoughtTrainReflectionHook } from './hooks/module-4-2.thought-train-reflection.js';
+import { module44LabelFeedbackHook } from './hooks/module-4-4.label-feedback.js';
 
 const hooks = [
     module11IntroReplyHook,
@@ -14,7 +15,8 @@ const hooks = [
     module22CaseEmotionFeedbackHook,
     module32PositiveRuminationFeedbackHook,
     module42ThoughtTrainReflectionHook,
-    module42BoardingImpulseReflectionHook
+    module42BoardingImpulseReflectionHook,
+    module44LabelFeedbackHook
 ] satisfies HookDefinition[];
 
 export function getHookDefinition(hookId: string): HookDefinition {

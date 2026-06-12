@@ -9,6 +9,7 @@ import {
     getChatSessionId,
     isChatSessionActive
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 const module44QuizItems = [
     { text: '这是一个好想法', correct: '评判性标签' },
@@ -205,6 +206,29 @@ function getModule44CaseFeedback(answer) {
     return '感谢你的回答。给想法贴标签的时候，关键是描述想法的核心属性，而不评价它。你可以继续试着往“担忧未来”“绝对化预测”“自我批判”这类描述性方向去想。';
 }
 
+function classifyModule44LabelAnswer(answer) {
+    const normalized = String(answer || '').trim();
+    const compact = normalized.replace(/\s+/g, '');
+
+    if (!compact) {
+        return 'off_topic_or_unclear';
+    }
+
+    if (/不知道|不清楚|想不到|不会|随便|不太会|不明白|不知道怎么说/.test(compact)) {
+        return 'off_topic_or_unclear';
+    }
+
+    if (compact.length >= 20 || /因为|所以|就是|我觉得|它说明|这个意思|原因|应该|所以说/.test(normalized)) {
+        return 'off_topic_or_unclear';
+    }
+
+    if (/好想法|坏想法|正确|错误|积极|消极|负面|正面|糟糕|可怕|愚蠢|荒谬|悲观|乐观/.test(normalized)) {
+        return 'judgmental_label';
+    }
+
+    return 'descriptive_label';
+}
+
 export const module44Handlers = {
     onContinue_Module44() {
         if (this.step === 0) {
@@ -359,12 +383,34 @@ export const module44Handlers = {
         });
     },
 
-    handleModule44UserMessage(text) {
+    async handleModule44UserMessage(text) {
         if (this.step !== 15) return;
 
         this.module44State.caseAnswers.push(text);
         disableInput(this.inputArea, this.userInput);
-        appendAiMessage(this.chatMessages, getModule44CaseFeedback(text), false);
+
+        const caseIndex = this.module44State.caseIndex;
+        const activeSessionId = this.dialogueSessionId;
+        const classification = classifyModule44LabelAnswer(text);
+        const response = await runAiHook({
+            hookId: 'module-4-4.label-feedback',
+            moduleId: '4-4',
+            step: 15,
+            userInput: text,
+            context: {
+                caseIndex,
+                caseText: module44Cases[caseIndex] || '',
+                classification,
+                questionType: 'label_feedback'
+            },
+            fallbackText: getModule44CaseFeedback(text)
+        });
+
+        if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '4-4') {
+            return;
+        }
+
+        appendAiMessage(this.chatMessages, response.replyText, false);
 
         if (this.module44State.caseIndex < module44Cases.length - 1) {
             appendContinueButton(this.chatMessages);
