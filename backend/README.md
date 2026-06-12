@@ -20,7 +20,7 @@
 - 环境变量读取与敏感信息隔离
 - DeepSeek provider 抽象与实现
 - prompt registry
-- `1-1`、`1-3` 与 `2-2` 的 AI hook 配置
+- `1-1`、`1-3`、`2-2` 与 `3-2` 的 AI hook 配置
 - fallback 机制
 - 匿名 session 基础能力
 - 模块上下文整理基础能力
@@ -118,8 +118,10 @@ backend/
       │     │  │  # 1-3 身体感觉节点的 hook 配置：短回应、输出上限、fallbackKey
       │     │  ├─ module-1-3.thought-reflection.ts
       │     │  │  # 1-3 小念头节点的 hook 配置：短回应、输出上限、fallbackKey
-      │     │  └─ module-2-2.case-emotion-feedback.ts
-      │     │     # 2-2 的 hook 配置：默认变体、三个案例 prompt 变体等
+      │     │  ├─ module-2-2.case-emotion-feedback.ts
+      │     │  │  # 2-2 的 hook 配置：默认变体、三个案例 prompt 变体等
+      │     │  └─ module-3-2.positive-rumination-feedback.ts
+      │     │     # 3-2 反思反馈节点的 hook 配置：分类式短反馈、输出上限、fallbackKey
       │     │
       │     └─ prompts/
       │        ├─ module-1-1.intro-reply/
@@ -140,7 +142,7 @@ backend/
       │        │  └─ v1.user.md
       │        │     # 1-3 小念头回应的用户模板 prompt
       │        │
-      │        └─ module-2-2.case-emotion-feedback/
+      │        ├─ module-2-2.case-emotion-feedback/
       │           ├─ zhangtian.v1.system.md
       │           │  # 张天案例系统 prompt
       │           ├─ xiaolin.v1.system.md
@@ -149,6 +151,12 @@ backend/
       │           │  # 嘉怡案例系统 prompt
       │           └─ v1.user.md
       │              # 2-2 的用户模板 prompt（结构化上下文插槽）
+      │        │
+      │        └─ module-3-2.positive-rumination-feedback/
+      │           ├─ v1.system.md
+      │           │  # 3-2 反思反馈的系统 prompt
+      │           └─ v1.user.md
+      │              # 3-2 反思反馈的用户模板 prompt
       │
       ├─ sessions/
       │  ├─ session.repository.ts
@@ -191,6 +199,12 @@ backend/
 - `backend/src/modules/ai/prompt-registry/hooks/module-1-3.thought-reflection.ts`
 - `backend/src/modules/ai/prompt-registry/prompts/module-1-3.thought-reflection/v1.system.md`
 - `backend/src/modules/ai/prompt-registry/prompts/module-1-3.thought-reflection/v1.user.md`
+
+### 3-2 prompt 位置
+
+- `backend/src/modules/ai/prompt-registry/hooks/module-3-2.positive-rumination-feedback.ts`
+- `backend/src/modules/ai/prompt-registry/prompts/module-3-2.positive-rumination-feedback/v1.system.md`
+- `backend/src/modules/ai/prompt-registry/prompts/module-3-2.positive-rumination-feedback/v1.user.md`
 
 ### 它们是如何工作的
 

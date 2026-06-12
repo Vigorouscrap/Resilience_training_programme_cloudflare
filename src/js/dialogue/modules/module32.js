@@ -10,6 +10,7 @@ import {
     isChatSessionActive,
     playManagedAudio
 } from '../../ui.js';
+import { runAiHook } from '../aiHookRunner.js';
 
 const module32CaseText = '小李是公司的一名员工，被要求负责一个重要项目。他一方面了解到项目的难度，非常担心自己经验不足会搞砸，夜里经常失眠，反复想“万一项目失败，我可能就要被开除了”；另一方面，他又不断地强迫自己“别想这些没用的，我肯定能完成这个项目”，甚至不敢向同事或领导透露任何一丝疑虑。同时，小李本来期待做好这个项目能升职，但得知晋升机会已给了别人，心里失落又觉得追求晋升的念头很浮躁，真正强大的人不会在意这个，不该有这种想法。';
 
@@ -142,18 +143,31 @@ function startCardCountdown(chatMessages, seconds, readyText, buttonLabel, onCom
     });
 }
 
-function getModule32ReflectionFeedback(text) {
-    const normalized = text.replace(/\s+/g, '');
+function classifyModule32Reflection(text) {
+    const normalized = String(text || '').trim();
+    const compact = normalized.replace(/\s+/g, '');
 
-    if (!normalized || /不知道|不确定|想不起来|想不到|没想好|没有|没什么/.test(normalized)) {
-        return '不确定也没关系，我们可以一起探索';
+    if (!compact || /不知道|不确定|想不起来|想不到|没想好|没有|没什么|好像没有|不太清楚|说不上来/.test(compact)) {
+        return 'uncertain';
     }
 
-    if (/强迫自己|必须积极|不该|压抑|回避|总是|老是|习惯|我发现|我注意到/.test(text)) {
-        return '你能注意到这一点已经很了不起，这是改变的开始';
+    if (/强迫自己|逼自己|必须积极|必须开心|不该|压抑|压住|回避|假装没事|不能有负面|不允许自己|我发现|我注意到|我意识到/.test(normalized)) {
+        return 'recognized_pattern';
     }
 
-    return '谢谢你分享这个例子，那现在我们可以尝试在心中或小声说出四步法的每句话，试试看！';
+    return 'shared_example';
+}
+
+function getModule32ReflectionFallback(classification) {
+    if (classification === 'uncertain') {
+        return '不确定也没关系，这本来就不是一个需要标准答案的问题。很多人一开始都无法立刻看清自己的模式，我们可以一起慢慢探索。';
+    }
+
+    if (classification === 'recognized_pattern') {
+        return '你能注意到这一点已经很了不起，这恰恰是打破过度积极反刍的第一步，也是改变的开始。';
+    }
+
+    return '谢谢你愿意分享这个真实的例子，这说明你已经离自己的感受更近一步了。现在我们可以试着在心中或小声说出四步法的每一句话。';
 }
 
 export const module32Handlers = {
@@ -299,7 +313,7 @@ export const module32Handlers = {
         this.step = 9;
     },
 
-    handleModule32UserMessage(text) {
+    async handleModule32UserMessage(text) {
         if (this.step === 1) {
             this.module32State.recallAnswer = text;
             disableInput(this.inputArea, this.userInput);
@@ -311,7 +325,27 @@ export const module32Handlers = {
         if (this.step === 21) {
             this.module32State.reflectionAnswer = text;
             disableInput(this.inputArea, this.userInput);
-            appendAiMessage(this.chatMessages, getModule32ReflectionFeedback(text), true);
+
+            const classification = classifyModule32Reflection(text);
+            const activeSessionId = this.dialogueSessionId;
+            const response = await runAiHook({
+                hookId: 'module-3-2.positive-rumination-feedback',
+                moduleId: '3-2',
+                step: 21,
+                userInput: text,
+                context: {
+                    caseSummary: module32CaseText,
+                    classification,
+                    recallQuestion: '当时你是如何应对担忧/焦虑的？有没有强迫自己“必须积极”的时刻？是否压抑过某些“不被允许”的情绪？'
+                },
+                fallbackText: getModule32ReflectionFallback(classification)
+            });
+
+            if (this.dialogueSessionId !== activeSessionId || this.currentModule !== '3-2') {
+                return;
+            }
+
+            appendAiMessage(this.chatMessages, response.replyText, true);
             this.step = 22;
         }
     }
