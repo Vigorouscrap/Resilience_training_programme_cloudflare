@@ -295,7 +295,6 @@ function initApp() {
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             stopSpeech();
-            dialogueManager.invalidateAsyncCallbacks();
         }
     });
 

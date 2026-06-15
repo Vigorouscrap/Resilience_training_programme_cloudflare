@@ -5,10 +5,46 @@
 
 const revealStateKey = Symbol('dialogueRevealState');
 const waitStateKey = Symbol('dialogueWaitState');
+const longAudioWakeLockPathHints = [
+    'audio/冥想呼吸.mp3',
+    'audio/module42&47/火车站台冥想.mp3'
+];
+const longAudioWakeLockMinDurationSeconds = 45;
 
 function getTestingConfig() {
     const config = globalThis.__RESILIENCE_TESTING__;
     return config && typeof config === 'object' ? config : {};
+}
+
+function normalizeManagedAudioSrc(audioSrc) {
+    try {
+        return decodeURI(String(audioSrc || ''));
+    } catch (error) {
+        return String(audioSrc || '');
+    }
+}
+
+function shouldPreferWakeLockByPath(audioSrc) {
+    const normalizedSrc = normalizeManagedAudioSrc(audioSrc);
+    return longAudioWakeLockPathHints.some(pathHint => normalizedSrc.endsWith(pathHint));
+}
+
+function isLongManagedAudio(audioSrc, audioElement) {
+    if (shouldPreferWakeLockByPath(audioSrc)) return true;
+
+    const durationSeconds = Number(audioElement?.duration);
+    return Number.isFinite(durationSeconds) && durationSeconds >= longAudioWakeLockMinDurationSeconds;
+}
+
+async function requestScreenWakeLock() {
+    if (!globalThis.navigator?.wakeLock?.request) return null;
+    if (globalThis.document?.visibilityState !== 'visible') return null;
+
+    try {
+        return await globalThis.navigator.wakeLock.request('screen');
+    } catch (error) {
+        return null;
+    }
 }
 
 export function shouldSkipWaits() {
@@ -557,12 +593,55 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
         const sessionId = options.sessionId ?? getChatSessionId(root);
         const onEnded = typeof options.onEnded === 'function' ? options.onEnded : null;
         const synth = globalThis.speechSynthesis;
+        const pathPreferredWakeLock = shouldPreferWakeLockByPath(audioSrc);
+        let wakeLockSentinel = null;
+        let wakeLockVisibilityHandler = null;
 
         const cleanup = () => {
             if (audioElement?.parentNode) {
                 audioElement.parentNode.removeChild(audioElement);
             }
         };
+
+        const releaseWakeLock = async () => {
+            if (wakeLockVisibilityHandler) {
+                globalThis.document?.removeEventListener?.('visibilitychange', wakeLockVisibilityHandler);
+                wakeLockVisibilityHandler = null;
+            }
+
+            const activeSentinel = wakeLockSentinel;
+            wakeLockSentinel = null;
+            if (!activeSentinel) return;
+
+            try {
+                await activeSentinel.release();
+            } catch (error) {
+                // Ignore release failures after the browser auto-releases the wake lock.
+            }
+        };
+
+        const ensureWakeLock = async () => {
+            if (finished) return;
+            if (!isLongManagedAudio(audioSrc, audioElement)) return;
+            if (wakeLockSentinel && wakeLockSentinel.released !== true) return;
+
+            const nextSentinel = await requestScreenWakeLock();
+            if (!nextSentinel) return;
+
+            wakeLockSentinel = nextSentinel;
+            nextSentinel.addEventListener?.('release', () => {
+                if (wakeLockSentinel === nextSentinel) {
+                    wakeLockSentinel = null;
+                }
+            });
+        };
+
+        wakeLockVisibilityHandler = () => {
+            if (globalThis.document?.visibilityState !== 'visible') return;
+            if (finished || !audioElement || audioElement.paused) return;
+            ensureWakeLock();
+        };
+        globalThis.document?.addEventListener?.('visibilitychange', wakeLockVisibilityHandler);
 
         const controller = registerManagedWait(root, {
             type: 'audio',
@@ -590,6 +669,7 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
             if (skipControlHost.parentNode) {
                 skipControlHost.parentNode.removeChild(skipControlHost);
             }
+            releaseWakeLock();
             cleanup();
             if (!onEnded) return;
             if (sessionId && !isChatSessionActive(root, sessionId)) return;
@@ -598,6 +678,9 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
 
         audioElement.addEventListener('ended', finalize, { once: true });
         audioElement.addEventListener('error', finalize, { once: true });
+        audioElement.addEventListener('loadedmetadata', () => {
+            ensureWakeLock();
+        }, { once: true });
 
         root.appendChild(audioElement);
         if (skipControlHost.childElementCount > 0) {
@@ -618,6 +701,10 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
                 playResult.catch(() => {
                     finalize();
                 });
+            }
+
+            if (pathPreferredWakeLock) {
+                ensureWakeLock();
             }
         };
 
