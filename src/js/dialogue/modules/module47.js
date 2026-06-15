@@ -5,6 +5,7 @@ import {
     appendContinueButton
 } from '../../ui.js';
 import { appendSpeechReplayCard } from './module5Shared.js';
+import { getWeekReviewBreathSummary } from './weekReviewBreathSummary.js';
 
 const module47AllianceCardHtml = `
     <p><strong>想象一下，当遇到压力或遭遇挫折后，强烈的情绪和想法袭来：</strong></p>
@@ -74,8 +75,7 @@ export const module47Handlers = {
                 this.onContinue_Module47();
             });
         } else if (this.step === 7) {
-            const yesCount = this.module47State.breathAnswers.filter(answer => answer === '是').length;
-            appendAiMessage(this.chatMessages, yesCount >= 2 ? '你与呼吸的联结更自然了，这意味着呼吸本身已成为一个稳定的觉察对象，你可以更容易通过呼吸回到当下。' : '注意力跑走是正常的，能一次次把它带回来，本身就是很重要的练习。', false);
+            appendAiMessage(this.chatMessages, getWeekReviewBreathSummary(this.module47State.breathAnswers), false);
             appendSpecialCard(this.chatMessages, '<p><strong>第二步：认知解离回顾</strong></p>');
             appendAiMessage(this.chatMessages, '现在我们再次回顾一下认知解离。', true);
             this.step = 8;

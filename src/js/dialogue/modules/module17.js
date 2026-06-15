@@ -7,6 +7,7 @@
     disableInput
 } from '../../ui.js';
 import { appendSpeechReplayCard } from './module5Shared.js';
+import { getWeekReviewBreathSummary } from './weekReviewBreathSummary.js';
 
 const module17MeditationAudioPath = encodeURI('audio/冥想呼吸.mp3');
 const module17MeditationCardHtml = `
@@ -83,10 +84,7 @@ export const module17Handlers = {
                 this.onContinue_Module17Docx();
             });
         } else if (this.step === 15) {
-            const yesCount = this.module17State.breathAnswers.filter(a => a === '是').length;
-            const summary = yesCount >= 2
-                ? '你与呼吸的联结更自然了，这意味着呼吸本身已成为一个稳定的觉察对象，你可以更容易通过呼吸回到当下。'
-                : '注意力跑走是正常的，能一次次把它带回来，本身就是很重要的练习。';
+            const summary = getWeekReviewBreathSummary(this.module17State.breathAnswers);
             appendAiMessage(this.chatMessages, summary, false);
             appendSpecialCard(this.chatMessages, '<p><strong>第二步：情绪接收站回顾</strong></p>');
             appendAiMessage(this.chatMessages, '现在让我们回顾一下，这一周以来你遇到了什么压力或不自在的事？请你简单把它写到对话框中。', false);
