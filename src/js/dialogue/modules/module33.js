@@ -419,7 +419,7 @@ export const module33Handlers = {
             splitAfterCard: true,
             onEnded: () => {
                 appendAiMessage(this.chatMessages, round.prompt, false);
-                appendContinueButton(this.chatMessages);
+                appendContinueButton(this.chatMessages, 30);
             }
         });
     },
