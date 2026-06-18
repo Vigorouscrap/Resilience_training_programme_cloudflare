@@ -25,7 +25,7 @@ const REQUIRED_ENV_KEYS = [
 export interface AppEnv {
     nodeEnv: string;
     port: number;
-    corsOrigin: string;
+    corsOrigins: string[];
     aiProvider: string;
     deepseekBaseUrl: string;
     deepseekApiKey: string;
@@ -48,11 +48,23 @@ function parsePositiveInteger(value: string | undefined, fallbackValue: number):
     return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : fallbackValue;
 }
 
+function parseCorsOrigins(value: string | undefined): string[] {
+    const rawValue = String(value ?? '').trim();
+    if (!rawValue) {
+        return ['http://localhost:8000'];
+    }
+
+    return rawValue
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
 export function loadEnv(): AppEnv {
     return {
         nodeEnv: process.env.NODE_ENV?.trim() || 'development',
         port: parsePositiveInteger(process.env.PORT, 8787),
-        corsOrigin: process.env.CORS_ORIGIN?.trim() || 'http://localhost:8000',
+        corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN),
         aiProvider: requireEnv('AI_PROVIDER'),
         deepseekBaseUrl: requireEnv('DEEPSEEK_BASE_URL'),
         deepseekApiKey: requireEnv('DEEPSEEK_API_KEY'),

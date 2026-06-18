@@ -33,11 +33,24 @@ export async function createApp() {
         ok: true,
         app: runtime.appName,
         version: runtime.apiVersion,
-        provider: env.aiProvider
+        provider: env.aiProvider,
+        nodeEnv: env.nodeEnv,
+        uptimeSeconds: Math.floor(process.uptime()),
+        timestamp: new Date().toISOString()
     }));
 
     app.addHook('onRequest', async (request, reply) => {
-        reply.header('Access-Control-Allow-Origin', env.corsOrigin);
+        const requestOrigin = String(request.headers.origin || '').trim();
+        const allowsAllOrigins = env.corsOrigins.includes('*');
+        const matchedOrigin = requestOrigin && env.corsOrigins.includes(requestOrigin)
+            ? requestOrigin
+            : '';
+        const responseOrigin = allowsAllOrigins
+            ? '*'
+            : matchedOrigin || env.corsOrigins[0] || 'http://localhost:8000';
+
+        reply.header('Vary', 'Origin');
+        reply.header('Access-Control-Allow-Origin', responseOrigin);
         reply.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
         reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

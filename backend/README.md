@@ -46,7 +46,19 @@
 ```text
 backend/
 ├─ .env.example
-│  # 后端本地环境变量模板，不包含真实密钥
+│  # 后端本地/部署环境变量模板，不包含真实密钥；支持多个前端来源共用一个后端
+│
+├─ deploy/
+│  ├─ README.md
+│  │  # 腾讯云 Lighthouse / 阿里云 ECS 等轻量 Linux 云服务器部署说明
+│  ├─ lightweight-server.env.example
+│  │  # 轻量云服务器生产环境变量模板，不包含真实密钥
+│  ├─ nginx/
+│  │  └─ resilience-backend.conf.example
+│  │     # Nginx 反向代理示例配置
+│  └─ systemd/
+│     └─ resilience-backend.service.example
+│        # systemd 后端守护进程示例配置
 │
 ├─ package.json
 │  # 后端依赖、脚本命令
@@ -61,6 +73,12 @@ backend/
 │  └─ schema.prisma
 │     # Prisma 数据模型定义，覆盖用户、会话、模块运行、AI 调用事件、导出任务等
 │
+├─ scripts/
+│  ├─ copy-prompt-assets.mjs
+│  │  # 构建后把 prompt Markdown 资源复制到 dist，保证生产启动可读取 prompt
+│  └─ smoke-health.mjs
+│     # 生产构建健康检查脚本，验证 dist/app.js 与 /health 可用
+│
 └─ src/
    ├─ server.ts
    │  # 后端启动入口
@@ -70,7 +88,7 @@ backend/
    │
    ├─ config/
    │  ├─ env.ts
-   │  │  # 统一读取环境变量，校验必填项
+   │  │  # 统一读取环境变量，校验必填项，并把 CORS_ORIGIN 解析为多来源列表
    │  └─ runtime.ts
    │     # 运行时配置聚合
    │
@@ -383,8 +401,48 @@ python -m http.server 8000 --directory src
 - `SESSION_SECRET`
 - `DATABASE_URL`
 
+### 部署联调补充
+
+- `CORS_ORIGIN` 现在支持单个来源，也支持多个来源用英文逗号分隔。
+- 这意味着当前后端可以同时允许：
+  - 本地联调前端
+  - Vercel 预览前端
+  - 后续国内正式前端
+- 例如：
+
+```text
+CORS_ORIGIN=http://localhost:8000,https://your-vercel-site.vercel.app,https://your-cn-frontend.example.com
+```
+
 ### 当前阶段说明
 
 虽然当前阶段还没有真正执行数据库迁移，但环境变量校验会要求 `DATABASE_URL` 非空，所以当前先保留示例值即可，后面接数据库时再替换。
 
 ---
+
+## 轻量云服务器部署
+
+当前后端已补充面向腾讯云 Lighthouse、阿里云 ECS 等轻量 Linux 云服务器的 vendor-neutral 部署模板，详见：
+
+```text
+backend/deploy/README.md
+```
+
+推荐形态：
+
+- Node.js 运行 `dist/server.js`
+- systemd 负责进程守护和开机自启
+- Nginx 负责公网域名、HTTPS 与反向代理
+- 后端 `8787` 端口尽量只允许本机访问
+- 真实密钥只放在服务器 `.env` 或云平台 Secret 中
+
+当前阶段尚未完成真实公网部署；模板用于后续在具体云服务器上联调时减少返工。
+
+---
+
+## 修改记录
+
+- 2026-06-17：新增轻量云服务器部署模板与说明，覆盖腾讯云 Lighthouse / 阿里云 ECS 这类 Linux VM；补充 Nginx、systemd、生产环境变量示例，并为 `/health` 增加运行环境、运行时长和时间戳字段，便于公网健康检查。
+- 2026-06-17：修复生产构建缺少 prompt Markdown 资源的问题；`npm run build` 现在会在 TypeScript 编译后复制 prompt assets 到 `dist/`，确保 `node dist/server.js` 可在云服务器上正常启动。
+- 2026-06-17：将 `backend/deploy/README.md` 改为中文说明，并补充“现在用户需要提供什么”和“每次后端修改后如何测试”的本地/云端验收步骤。
+- 2026-06-17：新增 `npm run smoke:health` 与 `npm run verify:prod`，用于在部署前验证生产构建产物和 `/health` 响应结构，便于每轮后端修改后快速自测。
