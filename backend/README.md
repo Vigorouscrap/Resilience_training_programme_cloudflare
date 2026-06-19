@@ -25,6 +25,10 @@
 - 匿名 session 基础能力
 - 模块上下文整理基础能力
 - Prisma schema 基础定义
+- 腾讯云 Lighthouse 上的 HTTP 公网部署验证
+- systemd 后台服务与 Nginx 反向代理验证
+- `http://1.117.58.64/health` 与 `http://api.resilience-training.cloud/health` 健康检查
+- 公网 AI hook 到 DeepSeek 的真实调用验证
 
 当前后端还没有完成：
 
@@ -32,7 +36,8 @@
 - 用户登录
 - 数据导出业务
 - 全量模块 AI 化
-- 正式部署接入
+- HTTPS 域名接入
+- Vercel 前端通过 HTTPS 后端完成正式公网联调
 
 ---
 
@@ -446,3 +451,4 @@ backend/deploy/README.md
 - 2026-06-17：修复生产构建缺少 prompt Markdown 资源的问题；`npm run build` 现在会在 TypeScript 编译后复制 prompt assets 到 `dist/`，确保 `node dist/server.js` 可在云服务器上正常启动。
 - 2026-06-17：将 `backend/deploy/README.md` 改为中文说明，并补充“现在用户需要提供什么”和“每次后端修改后如何测试”的本地/云端验收步骤。
 - 2026-06-17：新增 `npm run smoke:health` 与 `npm run verify:prod`，用于在部署前验证生产构建产物和 `/health` 响应结构，便于每轮后端修改后快速自测。
+- 2026-06-19：记录腾讯云 Lighthouse 实际部署进展：后端已通过 systemd 常驻运行，Nginx 已提供 HTTP 公网反向代理，IP 与 `api.resilience-training.cloud` 的 `/health` 均已通过，公网 AI hook 已真实调用 DeepSeek；当前待完成 ICP/HTTPS 后再进行 Vercel 前端正式联调。

@@ -256,6 +256,27 @@ backend/src/modules/ai/prompt-registry/
 
 **阶段 7：公网完整访问与前后端联通**
 
+### 2026-06-19 当前进展快照
+
+当前已经完成“后端 HTTP 公网可访问与真实 AI 调用”：
+
+- 已购买并启用腾讯云 Lighthouse：中国大陆上海地域，Ubuntu 22.04 LTS。
+- 已在服务器安装 Node.js、Git、Nginx。
+- 已从 GitHub 拉取当前仓库并在服务器完成 `backend/` 构建。
+- 已配置服务器 `.env`，后端可读取 DeepSeek、SESSION_SECRET、DATABASE_URL 占位等运行变量。
+- 已用 systemd 托管 `node dist/server.js`，后端可常驻运行并开机自启。
+- 已用 Nginx 将公网 80 端口反向代理到本机 `127.0.0.1:8787`。
+- 已验证 `http://1.117.58.64/health` 返回 `ok: true`。
+- 已验证公网 AI hook `module-1-1.intro-reply` 可真实调用 DeepSeek，`fallbackUsed: false`。
+- 已注册 `resilience-training.cloud` 并添加 `api.resilience-training.cloud -> 1.117.58.64`。
+- 已验证 `http://api.resilience-training.cloud/health` 返回 `ok: true`。
+
+当前阻塞在“正式 HTTPS 域名后端”：
+
+- Vercel 前端是 HTTPS，不能稳定调用 HTTP 后端，否则会被浏览器 Mixed Content 策略拦截。
+- `certbot --nginx -d api.resilience-training.cloud` 当前被腾讯云/DNSPod webblock 页面拦截，推断与域名实名认证/ICP备案/大陆服务器域名访问限制相关。
+- 下一步应优先完成域名实名认证状态确认与 ICP 备案，再重新申请 HTTPS 证书。
+
 并且当前阶段按以下顺序推进：
 
 1. 先完成“通用公网完整闭环”：
@@ -562,12 +583,14 @@ http://127.0.0.1:8787
 ### 7A：通用公网完整闭环
 
 - [x] 选定一个公网后端部署形态用于承载当前 `backend/`（轻量 Linux 云服务器：腾讯云 Lighthouse / 阿里云 ECS 均可）
-- [ ] 将当前 Fastify 后端成功部署到公网，并验证 `/health` 与 `/api/v1/ai/hooks/*`
-- [ ] 配置后端公网环境变量（DeepSeek、CORS、SESSION_SECRET、DATABASE_URL 占位或真实值）
+- [x] 将当前 Fastify 后端成功部署到公网，并验证 `/health` 与 `/api/v1/ai/hooks/*`（HTTP/IP 与 HTTP 域名均已通过）
+- [ ] 配置后端公网环境变量（DeepSeek、CORS、SESSION_SECRET、DATABASE_URL 占位或真实值；当前 DeepSeek/SESSION/DATABASE 已可运行，CORS 需在 HTTPS 域名与正式前端域名确认后最终更新）
 - [x] 为前端提供稳定的公网 `apiBaseUrl` 注入方式
 - [ ] 完成“公网前端 + 公网后端 + DeepSeek”联调
 - [ ] 验证当前已接入 AI 的模块在线上环境可正常工作
 - [x] 保留本地联调方式，不因公网部署破坏现有开发流程
+- [ ] 完成 `api.resilience-training.cloud` 的 HTTPS 证书配置
+- [ ] 将前端 `apiBaseUrl` 指向 `https://api.resilience-training.cloud`
 
 ### 7B：部署治理与多环境准备
 
@@ -583,10 +606,10 @@ http://127.0.0.1:8787
 ## 阶段 8：国内可访问部署与双环境策略
 
 - [ ] 明确是否保留 Vercel 版本作为海外/测试前端
-- [ ] 明确国内正式前端部署平台与域名方案
+- [ ] 明确国内正式前端部署平台与域名方案（候选：EdgeOne Pages 或 COS + EdgeOne/CDN；域名根域名/`www` 留给前端，`api` 留给后端）
 - [ ] 先以“一套后端共用”作为首选预案进行验证
 - [ ] 如国内访问测试不稳定，再升级评估“海外/国内双后端”
-- [ ] 如使用中国大陆节点，评估并处理备案相关事项
+- [ ] 如使用中国大陆节点，评估并处理备案相关事项（当前已触发 HTTPS 证书申请被 webblock 拦截的问题，需继续完成域名实名认证/ICP备案）
 - [ ] 明确数据库最终部署地域（海外/国内）与访问策略
 - [ ] 完成“海外预览版 + 国内正式版”双环境的部署策略
 - [ ] 验证国内网络环境下前端、后端、模型调用链路可用
@@ -606,13 +629,78 @@ http://127.0.0.1:8787
 
 当前最高优先级如下：
 
-1. 先完成“当前前后端功能 + AI 节点”的公网完整访问版本
-2. 再完成可在中国大陆稳定访问的完整版本
-3. 在部署链路跑通后，再进入用户登录、隔离、数据库持久化、导出等正式能力
-4. 始终保持单一 API 契约，避免为不同部署平台分叉两套前后端业务逻辑
-5. 尽量保留同一仓库下的多环境部署能力，而不是复制出多套仓库
-6. 如无强制阻塞，不提前为国内部署复制第二套前端或第二个仓库
-7. 如无真实网络瓶颈证据，先验证“一个后端服务多个前端域名”的可行性，再决定是否拆双后端
+1. 先完成 `api.resilience-training.cloud` 的备案/HTTPS，使 Vercel 前端可通过 HTTPS 调用 Lighthouse 后端
+2. 完成“当前前后端功能 + AI 节点”的公网完整访问版本
+3. 再完成可在中国大陆稳定访问的完整版本
+4. 在部署链路跑通后，再进入用户登录、隔离、数据库持久化、导出等正式能力
+5. 始终保持单一 API 契约，避免为不同部署平台分叉两套前后端业务逻辑
+6. 尽量保留同一仓库下的多环境部署能力，而不是复制出多套仓库
+7. 如无强制阻塞，不提前为国内部署复制第二套前端或第二个仓库
+8. 如无真实网络瓶颈证据，先验证“一个后端服务多个前端域名”的可行性，再决定是否拆双后端
+
+---
+
+## 前后端职责与后续更新方式
+
+### 项目结构概览
+
+```mermaid
+flowchart LR
+    U["用户浏览器 / 后续微信小程序"] --> F["前端静态页面<br/>Vercel / 后续 EdgeOne 或 COS"]
+    F -->|"HTTPS API<br/>/api/v1/ai/hooks/*"| B["后端 Fastify API<br/>Lighthouse + systemd + Nginx"]
+    B -->|"Server-side API Key"| D["DeepSeek API"]
+    B --> P["Prompt Registry<br/>hooks + prompts"]
+    B --> S["Session / Module Context"]
+    B -. "阶段 9" .-> DB["PostgreSQL / SQLite<br/>用户数据与导出"]
+```
+
+### 前端负责
+
+- 展示固定页面、课程结构、模块入口与交互 UI。
+- 保留原有固定文案、按钮节奏、音频/图片/视频等静态资源。
+- 收集用户输入，并在指定 AI hook 节点调用后端 API。
+- 根据后端返回的 `replyText` 展示 AI 个性化短回复。
+- 后续用户体系中的登录页面、注册/验证码输入、用户状态展示、导出按钮等属于前端交互层。
+
+### 后端负责
+
+- 保存并保护 DeepSeek API Key、数据库连接串、SESSION_SECRET 等敏感信息。
+- 代理所有模型调用，前端不得直连 DeepSeek。
+- 管理 prompt registry、hook 白名单、fallback、输出长度与安全边界。
+- 维护 session、模块上下文、后续用户身份与权限。
+- 后续负责用户表、练习记录、AI 调用记录、导出任务等数据接口。
+- 在云服务器上通过 systemd 常驻运行，并由 Nginx 提供公网入口。
+
+### 后续从 GitHub 更新服务器的方式
+
+- 服务器当前代码来自 GitHub 仓库 `xiaoqisong12-lgtm/Resilience_training_programme.git`。
+- 如果后续本地开发了新功能并 push 到 GitHub，服务器需要进入仓库目录执行 `git pull`，然后重新安装/构建/重启后端。
+- 典型后端更新步骤：
+
+```bash
+cd /opt/resilience-training-programme
+git pull
+cd backend
+npm install
+npm run build
+sudo systemctl restart resilience-backend
+curl http://127.0.0.1:8787/health
+```
+
+- 如果只改了前端静态文件，Vercel/后续 EdgeOne 通常会自动从 GitHub 重新部署；Lighthouse 后端不一定需要重启。
+- 如果改了 `backend/` 代码、prompt、环境变量、数据库 schema 或 API 契约，就需要更新服务器后端并重启服务。
+- `.env` 不在 GitHub 中，`git pull` 不会覆盖服务器密钥；但如果新增环境变量，需要手动补充服务器 `.env`。
+
+### 等待备案期间建议
+
+- 不建议大规模改动课程 UI 或原有对话文案。
+- 可以并行设计阶段 9 的用户体系与数据架构，但建议先做 schema/API 设计与最小原型，不急于接入正式数据库。
+- 优先明确：
+  - 用户使用个人邀请码、匿名编号还是账号登录
+  - 需要保存哪些对话字段与时间戳
+  - 导出格式是 CSV、JSON 还是 Excel
+  - 小规模测试先用 Lighthouse 本机数据库，还是直接托管 PostgreSQL
+- 任何用户体系改动都应保持现有 AI hook 和固定课程流程可回退、可继续运行。
 
 ---
 
