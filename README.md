@@ -20,6 +20,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ## 更新记录
 
+- 2026-06-20：确认 Cloudflare Pages 前端可以通过 Worker 获得个性化回复，并将 `src/runtime-config.js` 默认 API 地址设置为当前 Worker。
 - 2026-06-20：根据线上 smoke test 结果，放宽 `module-6-2.value-desire-insight` 的 Worker 输出校验上限，减少该节点因模型回复略长而走 fallback 的概率。
 - 2026-06-20：完成 Cloudflare Worker 当前全部 10 个 AI hook 迁移，新增 `smoke:hooks` 一键验证脚本，并补充部署后验证说明。
 
@@ -64,7 +65,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 - [x] 在 Cloudflare Workers 配置 `DEEPSEEK_API_KEY` secret。
 - [x] 部署 Worker 并验证 `/health`。
 - [ ] 逐个验证 Worker 的全部 AI hook 是否都能返回 `fallbackUsed: false`。
-- [ ] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
+- [x] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
 - [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
 - [ ] 如果继续推进，补齐用户数据保存方案，例如 D1 / R2 / 外部数据库；当前未实现数据持久化。
 
@@ -126,7 +127,15 @@ https://your-project.pages.dev
 
 如果只看页面显示，这一步已经足够。
 
-如果要连接后端 AI，则前端需要配置 `apiBaseUrl`。
+当前实验仓库已经在 `src/runtime-config.js` 中默认配置 Worker 地址：
+
+```text
+https://resilience-ai-worker.1362758164.workers.dev
+```
+
+因此 Cloudflare Pages 部署完成后，直接打开页面也会默认连接 Cloudflare Worker 后端。
+
+如果要临时切换到其它后端，仍然可以用 URL 参数覆盖 `apiBaseUrl`。
 
 临时测试方式：
 
@@ -134,7 +143,7 @@ https://your-project.pages.dev
 https://your-project.pages.dev/?apiBaseUrl=https://your-worker.your-account.workers.dev
 ```
 
-长期建议：后续增加构建时生成 `src/runtime-config.js` 的脚本，通过环境变量注入 API 地址。
+长期建议：如果后续需要同时维护多个环境，例如 Cloudflare Worker、腾讯云正式后端、测试后端，再增加构建时生成 `src/runtime-config.js` 的脚本，通过环境变量注入 API 地址。
 
 ---
 
@@ -279,7 +288,6 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 2. 部署 `cloudflare-worker/`，验证 `/health`。
 3. 配置 Worker secret `DEEPSEEK_API_KEY`。
 4. 逐个验证全部 AI hook。
-5. 用 Pages URL 参数 `?apiBaseUrl=...` 指向 Worker，测试前端完整调用。
+5. 直接打开 Cloudflare Pages 地址测试前端完整调用；如需临时切换后端，可用 `?apiBaseUrl=...` 覆盖。
 6. 重点观察 `fallbackUsed`、输出长度和前端流程是否继续。
-
 
