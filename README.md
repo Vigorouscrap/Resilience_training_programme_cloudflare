@@ -18,6 +18,12 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ---
 
+## 更新记录
+
+- 2026-06-20：完成 Cloudflare Worker 当前全部 10 个 AI hook 迁移，新增 `smoke:hooks` 一键验证脚本，并补充部署后验证说明。
+
+---
+
 ## 当前仓库结构
 
 ```text
@@ -45,7 +51,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 - [x] 新增 `cloudflare-worker/` 作为 Cloudflare Workers 实验后端。
 - [x] Worker 暴露 `GET /health`。
 - [x] Worker 暴露 `POST /api/v1/ai/hooks/:hookId`。
-- [x] Worker 初版支持 `module-1-1.intro-reply`。
+- [x] Worker 已迁移当前正式后端中的全部 10 个 AI hook。
 - [x] Worker 支持 DeepSeek API 调用。
 - [x] Worker 支持 fallback，避免模型调用失败时前端流程卡住。
 - [x] Worker 支持 CORS 配置。
@@ -53,14 +59,26 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 待完成：
 
-- [ ] 在 Cloudflare Pages 部署前端 `src/`。
-- [ ] 在 Cloudflare Workers 配置 `DEEPSEEK_API_KEY` secret。
-- [ ] 部署 Worker 并验证 `/health`。
-- [ ] 验证 Worker 的 `module-1-1.intro-reply` hook。
+- [x] 在 Cloudflare Pages 部署前端 `src/`。
+- [x] 在 Cloudflare Workers 配置 `DEEPSEEK_API_KEY` secret。
+- [x] 部署 Worker 并验证 `/health`。
+- [ ] 逐个验证 Worker 的全部 AI hook 是否都能返回 `fallbackUsed: false`。
 - [ ] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
-- [ ] 逐步迁移其余 hook：`1-3`、`2-2`、`3-2`、`4-2`、`4-4`、`4-6`、`6-2`。
 - [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
 - [ ] 如果继续推进，补齐用户数据保存方案，例如 D1 / R2 / 外部数据库；当前未实现数据持久化。
+
+当前 Worker 已包含的 hook：
+
+- `module-1-1.intro-reply`
+- `module-1-3.body-sensation-reflection`
+- `module-1-3.thought-reflection`
+- `module-2-2.case-emotion-feedback`
+- `module-3-2.positive-rumination-feedback`
+- `module-4-2.thought-train-reflection`
+- `module-4-2.boarding-impulse-reflection`
+- `module-4-4.label-feedback`
+- `module-4-6.supporter-response-feedback`
+- `module-6-2.value-desire-insight`
 
 ---
 
@@ -134,6 +152,8 @@ npm install
 npm run check
 ```
 
+这个命令只检查代码能不能通过 TypeScript 编译，不会真正调用 DeepSeek。
+
 登录 Cloudflare：
 
 ```bash
@@ -166,7 +186,22 @@ npm run deploy
 curl https://your-worker.your-account.workers.dev/health
 ```
 
-验证 AI hook：
+部署后也可以一次性验证全部 hook：
+
+```bash
+WORKER_BASE_URL=https://your-worker.your-account.workers.dev npm run smoke:hooks
+```
+
+在 Windows PowerShell 中可以这样写：
+
+```powershell
+$env:WORKER_BASE_URL="https://your-worker.your-account.workers.dev"
+npm.cmd run smoke:hooks
+```
+
+这个命令会依次检查 `/health` 和全部 10 个 AI hook。默认要求每个 hook 都返回 `fallbackUsed: false`，这样才能确认 Worker 已经真实调用 DeepSeek，而不是只走了兜底文案。如果只是想确认路由结构是否通，可以临时设置 `ALLOW_FALLBACKS=1`。
+
+验证 AI hook，例如：
 
 ```bash
 curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module-1-1.intro-reply \
@@ -197,6 +232,22 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 }
 ```
 
+部署后建议按下面顺序逐个验证：
+
+```text
+1. /health 可以返回 ok: true，并在 hooks 字段里列出 10 个 hook
+2. module-1-1.intro-reply 可以返回 fallbackUsed: false
+3. module-1-3.body-sensation-reflection 可以返回 fallbackUsed: false
+4. module-1-3.thought-reflection 可以返回 fallbackUsed: false
+5. module-2-2.case-emotion-feedback 分别验证 zhangtian / xiaolin / jiayi 三个 variant
+6. module-3-2.positive-rumination-feedback 可以返回 fallbackUsed: false
+7. module-4-2.thought-train-reflection 可以返回 fallbackUsed: false
+8. module-4-2.boarding-impulse-reflection 可以返回 fallbackUsed: false
+9. module-4-4.label-feedback 可以返回 fallbackUsed: false
+10. module-4-6.supporter-response-feedback 可以返回包含 <br><br> 的两段式反馈
+11. module-6-2.value-desire-insight 可以返回 fallbackUsed: false
+```
+
 ---
 
 ## Cloudflare 实验线与正式线的区别
@@ -216,7 +267,7 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 - 不要把 DeepSeek API Key 写入前端或仓库。
 - Cloudflare Worker 必须保持和现有前端 API 契约兼容。
 - 前端课程文案、UI、模块流程仍遵守原路线图约束，不因 Cloudflare 实验线随意改写。
-- 先迁移少量 hook 做可行性验证，再决定是否迁移全部 hook。
+- 当前已经完成全部现有 AI hook 的 Worker 迁移，下一阶段重点是线上部署与逐个 hook 验证。
 - 如果 Worker 后端继续扩大，建议把 prompt 与 hook 配置从 `backend/` 抽成可复用共享包，避免双后端长期复制。
 
 ---
@@ -226,8 +277,9 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 1. 先在 Cloudflare Pages 部署前端 `src/`，确认页面可访问。
 2. 部署 `cloudflare-worker/`，验证 `/health`。
 3. 配置 Worker secret `DEEPSEEK_API_KEY`。
-4. 验证 `module-1-1.intro-reply`。
+4. 逐个验证全部 AI hook。
 5. 用 Pages URL 参数 `?apiBaseUrl=...` 指向 Worker，测试前端完整调用。
-6. 如果稳定，再迁移其它 AI hook。
+6. 重点观察 `fallbackUsed`、输出长度和前端流程是否继续。
+
 
 
