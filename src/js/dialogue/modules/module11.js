@@ -60,7 +60,7 @@ export const module11Handlers = {
             appendAiMessage(this.chatMessages, '我想邀请你用3句话来介绍一下自己。这就像一个简单的心灵罗盘，帮助我们定位起点。', true);
             this.step = 3;
         } else if (this.step === 3) {
-            appendSpecialCard(this.chatMessages, `<p>1：你的名字，或者你希望我如何称呼你。</p><p>2：你的家乡。可以写出它的名字并简单描述一下这个地方。</p><p>3：一个让你感到平静或快乐的小爱好。比如：听音乐、睡前读几页书、给植物浇水，甚至只是安静地发呆。</p>`);
+            appendSpecialCard(this.chatMessages, `<p>1. 你的名字，或者你希望我如何称呼你。</p><p>2. 你的家乡。可以写出它的名字并简单描述一下这个地方。</p><p>3. 一个让你感到平静或快乐的小爱好。比如：听音乐、睡前读几页书、给植物浇水，甚至只是安静地发呆。</p>`);
             appendContinueButton(this.chatMessages);
             this.step = 4;
         } else if (this.step === 4) {
@@ -78,13 +78,13 @@ export const module11Handlers = {
             appendAiMessage(this.chatMessages, '现在，我们可以进入到下一步：我想向你介绍我们将要共同经历的心理旅程。', true);
             this.step = 9;
         } else if (this.step === 9) {
-            appendAiMessage(this.chatMessages, '首先是心理弹性训练方法的概况。我们的训练结合了正念和接纳承诺疗法的理论基础，核心理念可以用三句话来概括：', true);
+            appendAiMessage(this.chatMessages, '首先是心理弹性训练方法的概况。我们的训练结合了冥想和接纳承诺疗法的理论基础，核心理念可以用三句话来概括：', true);
             this.step = 10;
         } else if (this.step === 10) {
             appendSpecialCard(this.chatMessages, `
-                <p>• 它不是教我们如何永远快乐、消除所有负面情绪——因为那既不现实，也会让我们与真实的生命体验产生对抗。</p>
-                <p>• 它的目标是，帮助我们培养一种能力：能够与各种内在体验（包括痛苦的情绪、挑战性的想法）和平共处，同时，依然可以清晰地朝着自己认为重要的方向和价值观去生活。</p>
-                <p>• 这种‘与体验共处，朝价值前行’的能力，能够让我们在压力面前，不仅能‘扛得住’，更能‘灵活适应’，并持续朝着自己的方向前进。</p>
+                <p>• 它不是教我们如何永远快乐、消除所有负面情绪，因为那既不现实，也会让我们与真实的生命体验产生对抗。</p>
+                <p>• 它的目标是，帮助我们培养一种能力，即能够与各种内在体验（包括痛苦的情绪）和平共处，同时依然可以清晰地朝着自己认为重要的方向和价值观去生活。</p>
+                <p>• 这种“与体验共处，朝价值前行”的能力，能够让我们在压力面前，不仅能扛得住，更能灵活适应，并持续朝着自己的方向前进。</p>
             `);
             appendContinueButton(this.chatMessages);
             this.step = 11;
@@ -93,10 +93,10 @@ export const module11Handlers = {
             this.step = 12;
         } else if (this.step === 12) {
             appendSpecialCard(this.chatMessages, `
-                <p>- 第1周，我们重点学习‘觉察’。初步认识并尝试看见情绪与思维。</p>
-                <p>- 第2、3周，我们学习“接纳”，像熟悉天气一样熟悉自己的情绪，像允许四季流转一样允许所有感受的存在。</p>
-                <p>- 第4、5周，我们进一步聚焦‘解离’并体验‘观察性自我’：学习将想法看作脑海中的字符，将情绪看作身体的天气，并看清这些体验背后你真正在乎的生活方向。</p>
-                <p>- 第6周，我们整合‘价值’并练习‘承诺行动’：带着全部的体验，朝着价值方向，迈出微小而坚定的步伐。</p>
+                <p><strong>• 第1周，重点学习“觉察”。</strong>初步认识并尝试看见情绪与思维。</p>
+                <p><strong>• 第2、3周，学习“接纳”，</strong>像熟悉天气一样熟悉自己的情绪，像允许四季流转一样允许所有感受的存在。</p>
+                <p><strong>• 第4、5周，进一步聚焦“解离”并体验“观察性自我”：</strong>学习将想法看作脑海中的字符，将情绪看作身体的天气，并看清这些体验背后你真正在乎的生活方向。</p>
+                <p><strong>• 第6周，整合“价值”并练习“承诺行动”：</strong>带着全部的体验，朝着价值方向，迈出微小而坚定的步伐。</p>
             `);
             appendContinueButton(this.chatMessages);
             this.step = 13;
@@ -112,35 +112,38 @@ export const module11Handlers = {
             appendAiMessage(this.chatMessages, '任何深入的探索，都需要一个安全、信任的空间。为了守护这个属于你的成长空间，我想和你确认几条重要的心灵安全准则：', true);
             this.step = 16;
         } else if (this.step === 16) {
-            appendSpecialCard(this.chatMessages, '<p>a. 保密原则：过程中我们分享的个人信息都是保密的，不对外传播。</p>');
+            appendSpecialCard(this.chatMessages, '<p>a. <strong>保密原则</strong>：过程中我们分享的个人信息都是保密的，不对外传播。</p>');
             appendContinueButton(this.chatMessages, 20);
             this.step = 17;
         } else if (this.step === 17) {
-            appendSpecialCard(this.chatMessages, '<p>b. 不评判原则：我们不对自己的感受和想法做好坏、对错的评判。</p>');
+            appendSpecialCard(this.chatMessages, '<p>b. <strong>不评判原则</strong>：我们不对自己的感受和想法做好坏、对错的评判。</p>');
             appendContinueButton(this.chatMessages, 20);
             this.step = 18;
         } else if (this.step === 18) {
-            appendSpecialCard(this.chatMessages, '<p>c. 自愿参与：你有权决定自己分享的深度和内容，你可以选择 ‘过’而不回答。</p>');
+            appendSpecialCard(this.chatMessages, '<p>c. <strong>自愿参与</strong>：你有权决定自己分享的深度和内容，你可以选择 ‘过’而不回答。</p>');
             appendContinueButton(this.chatMessages, 20);
             this.step = 19;
         } else if (this.step === 19) {
-            appendSpecialCard(this.chatMessages, '<p>d. 聚焦当下：我们尽量关注 ‘此时此地’的感受和体验。</p>');
+            appendSpecialCard(this.chatMessages, '<p>d. <strong>聚焦当下</strong>：我们尽量关注 ‘此时此地’的感受和体验。</p>');
             appendContinueButton(this.chatMessages, 20);
             this.step = 20;
         } else if (this.step === 20) {
-            appendSpecialCard(this.chatMessages, '<p>e. 营造环境：每次练习时请选择一个安静独立的、不被打扰的空间。</p>');
+            appendSpecialCard(this.chatMessages, '<p>e. <strong>营造环境</strong>：每次练习时请选择一个安静独立的、不被打扰的空间。</p>');
             appendContinueButton(this.chatMessages, 20);
             this.step = 21;
         } else if (this.step === 21) {
-            appendAiMessage(this.chatMessages, '介绍模块就到这里了。今天，我们共同完成了三件至关重要的事：\na我们建立了初步连接：认识了独特的你，以及你提到你喜欢的[' + this.participant.habit + ']与你的愿望[' + this.participant.quality + ']。\nb我们看清了旅程的目标：你了解了这是一段关于培养‘与体验共处、朝价值前行’能力的旅程，它科学、系统且充满关怀。\nc我们筑好了护栏：我们确认了共同维护一个安全、不评判的探索空间。', true);
+            appendAiMessage(this.chatMessages, '介绍模块就到这里了。今天，我们共同完成了三件至关重要的事：1）我们建立了初步连接，认识了独特的你；2）我们看清了旅程的目标，了解了这是一段关于培养“与体验共处、朝价值前行”能力的旅程，它科学、系统且充满关怀；3）我们筑好了护栏：确认了共同维护一个安全、不评判的探索空间。', true);
             appendContinueButton(this.chatMessages);
             this.step = 22;
         } else if (this.step === 22) {
-            appendAiMessage(this.chatMessages, '你已经为这段旅程打下了最坚实的地基——那就是你愿意探索的初心，和你已经拥有的自我关怀的微小火花（比如你的那个小习惯）。', true);
+            appendAiMessage(this.chatMessages, '你已经为这段旅程打下了最坚实的地基，那就是你愿意探索的初心，和你已经拥有的自我关怀方式（比如你的小爱好）。', true);
             this.step = 23;
         } else if (this.step === 23) {
-            appendAiMessage(this.chatMessages, '最后，送给你今天的小小练习：\n在今晚睡前，花一分钟回想一下你的那个小习惯，并简单地体验它一会儿。同时，在心里对自己温柔地说：‘我在培养[' + this.participant.quality + ']的路上，开始了第一步。’\n祝你今天拥有属于自己的平静或快乐时刻。我们明天再见。', false);
+            appendAiMessage(this.chatMessages, '<p>最后，送给你今天的小小练习：在今晚睡前，花一分钟回想一下你的那个小爱好，并简单地体验它一会儿。同时，在心里对自己温柔地说：<strong>“这一刻，我愿意停下来为自己做这件小事，回到让我安心的小小世界里，积攒更多面对未来的力量。”</strong></p>', true);
             this.step = 24;
+        }else if (this.step === 24) {
+            appendAiMessage(this.chatMessages, '<p>祝你今天拥有属于自己的平静或快乐时刻。我们明天再见。</p>', false);
+            this.step = 25;
         }
     },
 
