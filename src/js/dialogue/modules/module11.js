@@ -86,7 +86,7 @@ export const module11Handlers = {
                 <p>• 它的目标是，帮助我们培养一种能力，即能够与各种内在体验（包括痛苦的情绪）和平共处，同时依然可以清晰地朝着自己认为重要的方向和价值观去生活。</p>
                 <p>• 这种“与体验共处，朝价值前行”的能力，能够让我们在压力面前，不仅能扛得住，更能灵活适应，并持续朝着自己的方向前进。</p>
             `);
-            appendContinueButton(this.chatMessages);
+            appendContinueButton(this.chatMessages,60);
             this.step = 11;
         } else if (this.step === 11) {
             appendAiMessage(this.chatMessages, '我们的旅程将这样展开：进行为期6周的系统训练。这6周内的每一天我们都会进行一个模块的练习，这些模块通过案例故事、沉浸式体验、日常小练习等不同方式来展开。', true);
@@ -98,7 +98,7 @@ export const module11Handlers = {
                 <p><strong>• 第4、5周，进一步聚焦“解离”并体验“观察性自我”：</strong>学习将想法看作脑海中的字符，将情绪看作身体的天气，并看清这些体验背后你真正在乎的生活方向。</p>
                 <p><strong>• 第6周，整合“价值”并练习“承诺行动”：</strong>带着全部的体验，朝着价值方向，迈出微小而坚定的步伐。</p>
             `);
-            appendContinueButton(this.chatMessages);
+            appendContinueButton(this.chatMessages,60);
             this.step = 13;
         } else if (this.step === 13) {
             appendAiMessage(this.chatMessages, '卡片展示的内容中，可能有些词你会暂时不理解，不用担心，在接下来的训练中，我们会通过具体的练习和案例，慢慢地展开每一个概念。', true);
