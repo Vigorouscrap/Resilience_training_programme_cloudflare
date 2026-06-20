@@ -24,7 +24,7 @@ export const module15Handlers = {
             appendAiMessage(this.chatMessages, '今天，我们一起来做一个小实验。不是要分析想法，而是像科学家进行观察实验一样，亲自体验一次【想法如何影响我们的感受】。', true);
             this.step = 2;
         } else if (this.step === 2) {
-            appendAiMessage(this.chatMessages, '整个过程只需要10分钟左右，你可以完全按照自己的节奏来。如果你已经准备好，请在对话框中输入开始。', false);
+            appendAiMessage(this.chatMessages, '整个过程只需要几分钟，你可以完全按照自己的节奏来。如果你已经准备好，请在对话框中输入开始。', false);
             appendHint(this.chatMessages, '请在对话框中输入你的回答');
             this.enableInputForModule(this.chatMessages);
             this.step = 3;

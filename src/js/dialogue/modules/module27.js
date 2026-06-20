@@ -89,7 +89,7 @@ export const module27Handlers = {
         } else if (this.step === 1) {
             appendAiMessage(this.chatMessages, '今天，我们不做新的练习，而是一起看看这周的旅程带给了我们什么。', false);
             appendSpecialCard(this.chatMessages, '<p><strong>第一步：冥想呼吸回顾</strong></p>');
-            appendAiMessage(this.chatMessages, '让我们先从回到当下开始。就像前几次一样，我们先进行一个简短的正念呼吸练习。如果你已经准备好了就请点击下方按钮开始。', false);
+            appendAiMessage(this.chatMessages, '让我们先从回到当下开始。就像前几次一样，我们先进行一个简短冥想呼吸练习。如果你已经准备好了就请点击下方按钮开始。', false);
             appendButtonGroup(this.chatMessages, ['已准备好'], () => {
                 removeCurrentButtonGroup(this.chatMessages);
                 this.startModule27MeditationSequence();
@@ -104,7 +104,7 @@ export const module27Handlers = {
                 this.onContinue_Module27();
             });
         } else if (this.step === 4) {
-            appendAiMessage(this.chatMessages, '这一次的正念呼吸过程中，注意力是否依然容易飘走？', false);
+            appendAiMessage(this.chatMessages, '这一次的冥想呼吸过程中，注意力是否依然容易飘走？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], (answer) => {
                 removeCurrentButtonGroup(this.chatMessages);
                 this.module27State.breathAnswers.push(answer);
@@ -112,7 +112,7 @@ export const module27Handlers = {
                 this.onContinue_Module27();
             });
         } else if (this.step === 5) {
-            appendAiMessage(this.chatMessages, '这一次的正念呼吸过程中，呼吸的节奏是否有所不同？', false);
+            appendAiMessage(this.chatMessages, '这一次的冥想呼吸过程中，呼吸的节奏是否有所不同？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], (answer) => {
                 removeCurrentButtonGroup(this.chatMessages);
                 this.module27State.breathAnswers.push(answer);

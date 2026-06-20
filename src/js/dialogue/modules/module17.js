@@ -21,15 +21,15 @@ export const module17Handlers = {
     onContinue_Module17Docx() {
         if (this.step === 0) {
             appendAiMessage(this.chatMessages, '过去几天，我们一起完成了三种不同的内在探索：', false);
-            appendSpecialCard(this.chatMessages, '<p>正念呼吸 —— 练习“回到当下”</p><p>情绪接收站 —— 学习“看见”感受</p><p>牛奶实验 —— 体验“思维 ≠ 事实”</p>');
+            appendSpecialCard(this.chatMessages, '<p>冥想呼吸 —— 练习“回到当下”</p><p>情绪接收站 —— 学习“看见”感受</p><p>牛奶实验 —— 体验“思维 ≠ 事实”</p>');
             appendContinueButton(this.chatMessages);
             this.step = 1;
         } else if (this.step === 1) {
             appendAiMessage(this.chatMessages, '今天，我们不做新的练习，而是一起看看这周的旅程带给了我们什么。', true);
             this.step = 2;
         } else if (this.step === 2) {
-            appendSpecialCard(this.chatMessages, '<p><strong>第一步：正念呼吸回顾</strong></p>');
-            appendAiMessage(this.chatMessages, '让我们先从回到当下开始。就像前几次一样，我们先进行一个简短的正念呼吸练习。如果你已经准备好了就请点击下方按钮开始。', false);
+            appendSpecialCard(this.chatMessages, '<p><strong>第一步：冥想呼吸回顾</strong></p>');
+            appendAiMessage(this.chatMessages, '让我们先从回到当下开始。就像前几次一样，我们先进行一个简短的冥想呼吸练习。如果你已经准备好了就请点击下方按钮开始。', false);
             appendButtonGroup(this.chatMessages, ['已准备好'], () => {
                 // this.clearInteractiveControls();
                 const currentBtnGroup = this.chatMessages.querySelector('.button-group');
@@ -54,7 +54,7 @@ export const module17Handlers = {
                 }
             );
         } else if (this.step === 12) {
-            appendAiMessage(this.chatMessages, '那么现在，请与之前每一次你做的正念呼吸相比，这一次的正念呼吸是否感觉更自然一些、更容易进入状态？', false);
+            appendAiMessage(this.chatMessages, '那么现在，请与之前每一次你做的冥想呼吸相比，这一次的冥想呼吸是否感觉更自然一些、更容易进入状态？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], (answer) => {
                 // this.clearInteractiveControls();
                 const currentBtnGroup = this.chatMessages.querySelector('.button-group');
@@ -64,7 +64,7 @@ export const module17Handlers = {
                 this.onContinue_Module17Docx();
             });
         } else if (this.step === 13) {
-            appendAiMessage(this.chatMessages, '这一次的正念呼吸过程中，注意力是否依然容易飘走？', false);
+            appendAiMessage(this.chatMessages, '这一次的冥想呼吸过程中，注意力是否依然容易飘走？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], (answer) => {
                 // this.clearInteractiveControls();
                 const currentBtnGroup = this.chatMessages.querySelector('.button-group');
@@ -74,7 +74,7 @@ export const module17Handlers = {
                 this.onContinue_Module17Docx();
             });
         } else if (this.step === 14) {
-            appendAiMessage(this.chatMessages, '这一次的正念呼吸过程中，呼吸的节奏是否有所不同？', false);
+            appendAiMessage(this.chatMessages, '这一次的冥想呼吸过程中，呼吸的节奏是否有所不同？', false);
             appendButtonGroup(this.chatMessages, ['是', '否'], (answer) => {
                 // this.clearInteractiveControls();
                 const currentBtnGroup = this.chatMessages.querySelector('.button-group');
