@@ -1,774 +1,525 @@
-# 项目实施提示词与路线图
+# Cloudflare 实验线实施路线图
 
 ## 用途
 
-本文件用于后续每一轮协作时快速对齐目标、约束、当前阶段与待办事项，避免范围漂移、重复讨论或误改不该改动的内容。
-
-后续继续推进本项目时，应优先遵守本文件中的约束与阶段安排，并在完成事项后更新对应勾选状态。
-
----
-
-## 项目目标
-
-在现有心理弹性训练项目前端基础上，逐步扩展出可正式上线的完整系统，最终支持：
-
-- 前后端都部署到公网后的完整可用版本
-- 可在中国大陆稳定访问的完整版本
-- 局部节点接入 AI 个性化回复
-- 用户登录与身份区分
-- 多用户数据隔离
-- 每个用户的练习数据保存
-- 用户数据导出
-- 可在中国大陆稳定访问的正式部署方案
-
-AI 的职责是：
-
-- 只在指定节点生成受控的个性化短回复
-- 不接管整段对话流程
-- 不随意改写课程原有固定文案
-
----
-
-## 硬性约束
-
-### 绝对不能违反
-
-- 不得随意修改未明确提及的原有对话文字内容。
-- 不得擅自改变现有 module 的分布和整体课程结构。
-- 不得擅自改动现有 UI 设计和页面视觉表现。
-- 不得让模型自由接管整个对话流程。
-- 不得把 API key、数据库密码等敏感信息分散写入前端或业务模块中。
-
-### 修改原则
-
-- 优先新增文件和新增模块，而不是大面积重写旧文件。
-- 对现有模块只做最小接线式改动。
-- 所有 AI 能力必须有 fallback，API 失败时仍可回退到固定回复。
-- prompt 统一集中管理，不散落在各个模块代码中。
-- 后端从一开始就按“未来支持登录、导出、用户隔离”的正式架构设计。
-
----
-
-## 已确认的架构方向
-
-### 总体方向
-
-- 保留现有前端单页应用结构。
-- 新增独立后端目录 `backend/`。
-- 前端仍负责：
-  - 固定页面
-  - 固定课程流程
-  - 固定文案展示
-  - 用户输入采集
-- 后端负责：
-  - AI 调用代理
-  - prompt registry
-  - 会话与上下文整理
-  - 数据库存储
-  - 后续登录、导出、鉴权能力
-
-### 模型调用方向
-
-- 模型服务使用 `DeepSeek API`
-- 默认模型：`deepseek-v4-flash`
-- 模型调用只能发生在后端
-- 前端不得直连模型 API
-
-### 部署方向
-
-- 当前 Vercel 已可作为“静态前端公网预览版”
-- 但要实现完整 AI 交互，必须补齐“公网后端服务”
-- 前端与后端应支持分离部署，并通过统一 API 契约联通
-- 后端实现必须避免绑定 Vercel 专属能力
-- 后续正式部署目标应同时考虑：
-  - 海外/通用公网可用版本
-  - 中国大陆可稳定访问版本
-- 数据库、鉴权、导出能力应按后续正式环境可迁移的方式设计
-
-### 部署策略补充
-
-- 可以继续保留 Vercel 版本，它适合作为：
-  - 海外公网预览版
-  - 开发/测试环境
-- 当前默认不废弃 Vercel，也不单独复制一套前端仓库；优先在同一仓库内把“前端多环境部署 + 后端独立公网化”做通。
-- 如果未来要兼顾中国大陆访问，推荐采用“同一仓库、双前端部署、至少一个独立公网后端”的策略。
-- 正常情况下不需要新建第二个本地仓库或第二套前端代码。
-- 更推荐：
-  - 同一个前端代码库
-  - 不同部署平台各自注入不同运行时配置
-  - 同一个后端 API 契约
-- 是否共用一个后端：
-  - 技术上可以，一个后端可同时服务多个前端域名，只要 CORS、运行时 `apiBaseUrl` 和网络链路配置正确。
-  - 但如果目标是中国大陆稳定访问，后端与数据库最终通常也应迁移到更靠近目标用户、且更符合备案与网络环境要求的部署位置。
-- 数据库要求：
-  - 当前“仅 AI 个性化回复 + 固定流程”的公网演示版，可以暂时不依赖真实持久化数据库。
-  - 但一旦进入登录、用户隔离、数据保存、导出，就必须补齐正式数据库与持久化方案。
-
-### 轻量云服务器部署补充
-
-- 后续后端部署应优先兼容腾讯云 Lighthouse、阿里云 ECS 这类轻量 Linux 云服务器。
-- 当前默认部署形态为“Node.js 后端进程 + Nginx 反向代理 + systemd 守护 + 环境变量文件/平台 Secret”。
-- 后端不能绑定某一家云厂商的专属能力；模板和说明应保持 vendor-neutral，便于在腾讯云、阿里云或其它 Linux VM 间迁移。
-- 轻量云服务器公网部署时，建议：
-  - 对公网只开放 `80/443`，后端 `8787` 端口仅本机或内网访问。
-  - 使用 Nginx 处理域名、HTTPS 与反向代理。
-  - 使用 `CORS_ORIGIN` 显式列出本地、Vercel、国内正式前端等来源。
-  - 真实密钥只放在服务器环境变量或 `.env` 文件中，不写入仓库。
-  - 当前阶段 `DATABASE_URL` 可保留占位；进入用户体系与持久化阶段前再替换为真实 PostgreSQL。
-
-### 默认执行决策（如无新指示）
-
-- 保留当前 Vercel 静态前端，作为现阶段的海外/通用公网预览入口。
-- 不新建第二套前端代码，也不拆成第二个仓库；继续基于当前仓库推进。
-- 当前优先新增“独立公网后端部署”，而不是先重做前端框架或先做用户系统。
-- 前端与后端继续维持统一 API 契约；未来无论是 Vercel 版前端还是国内版前端，都调用同一套接口协议。
-- 当前阶段先支持“一个前端代码库 + 一个公网后端 + DeepSeek”跑通完整闭环。
-- 进入中国大陆正式可访问阶段时，再根据真实网络测试结果决定：
-  - 是否继续共用同一个后端
-  - 是否需要新增国内后端/数据库
-  - 是否需要正式域名、备案与国内云资源
-- 在用户体系阶段开始前，不强制要求真实生产数据库先上线，但部署设计必须保留平滑接入 PostgreSQL 的能力。
-
-### 数据库方向
-
-- 优先使用 `PostgreSQL`
-- 原因：
-  - 更适合结构化数据与 JSON 上下文混合存储
-  - 更适合 AI 调用事件、prompt 版本、导出任务等后续复杂查询
-
----
-
-## AI 设计原则
-
-### 允许 AI 做的事
-
-- 在指定 hook 节点根据最小必要上下文生成一段短回复
-- 根据结构化上下文理解当前问题和当前用户输入
-- 在预设范围内进行温和、非评判、有限长度的个性化表达
-
-### 不允许 AI 做的事
-
-- 改写整个模块原文
-- 推进未授权的后续流程
-- 新增课程概念
-- 修改固定案例内容
-- 生成超长咨询式输出
-- 对用户作诊断、说教或过度建议
-
-### 上下文策略
-
-- 不把整段聊天历史原样发给模型
-- 只发送最小必要上下文
-- 优先发送结构化摘要，而不是全部原始文本
-
-最小必要上下文通常包括：
-
-- `moduleId`
-- `hookId`
-- 当前步骤 `step`
-- 当前问题类型
-- 当前用户输入
-- 必要的已提取字段
-- 当前案例 ID 或模块状态摘要
-- 该节点专属 prompt 与限制条件
-
----
-
-## prompt registry 设计原则
-
-- prompt 独立于前端模块逻辑
-- prompt 集中存放于后端目录
-- 每个 AI 节点有独立 `hookId`
-- 每个 prompt 有版本号
-- 每次 AI 调用记录所使用的 prompt 版本
-- prompt 文本与行为配置分离
-
-建议结构：
+本文件只服务于当前 Cloudflare 实验仓库：
 
 ```text
-backend/src/modules/ai/prompt-registry/
-├─ index.ts
-├─ hooks/
-│  ├─ module-1-1.intro-reply.ts
-│  ├─ module-1-3.body-sensation-reflection.ts
-│  ├─ module-1-3.thought-reflection.ts
-│  ├─ module-2-2.case-emotion-feedback.ts
-│  ├─ module-3-2.positive-rumination-feedback.ts
-│  ├─ module-4-2.thought-train-reflection.ts
-│  ├─ module-4-2.boarding-impulse-reflection.ts
-│  ├─ module-4-4.label-feedback.ts
-│  ├─ module-4-6.supporter-response-feedback.ts
-│  └─ module-6-2.value-desire-insight.ts
-└─ prompts/
-   ├─ module-1-1.intro-reply/
-   ├─ module-1-3.body-sensation-reflection/
-   ├─ module-1-3.thought-reflection/
-   ├─ module-2-2.case-emotion-feedback/
-   ├─ module-3-2.positive-rumination-feedback/
-   ├─ module-4-2.thought-train-reflection/
-   ├─ module-4-2.boarding-impulse-reflection/
-   ├─ module-4-4.label-feedback/
-   ├─ module-4-6.supporter-response-feedback/
-   └─ module-6-2.value-desire-insight/
+E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_experiment\Resilience_training_programme_cloudflare
 ```
 
----
+它用于记录 Cloudflare Pages + Cloudflare Workers 路线的当前阶段、已完成内容、后续用户体系与数据能力设计，以及未来是否可以通过 PR 合回原仓库。
 
-## AI 接入范围总览
-
-以下清单基于 `original_info/20260605AI个性化回复及prompt.docx` 整理，作为后续接线顺序与验收基线。
-
-### 已完成试点
-
-- `1-1` 自我介绍后的个性化回应
-- `2-2` 案例情绪识别反馈
-
-### 待接入 AI 的节点
-
-- `1-3` 身体感觉回应
-- `1-3` 小念头回应
-- `3-2` 过度积极反刍反思反馈
-- `4-2` “想法火车”观察回应
-- `4-2` “是否想跟着火车走”回应
-- `4-4` 标签化练习反馈
-- `4-6` 支持者回应分析
-- `6-2` 渴望/在乎洞察反馈
-
-### 明确不使用 AI 的节点
-
-- Week 5 全部模块保持原样，不新增 AI 个性化回复
-- `6-6` 保持原样，不接入 AI 回复
-- `1-7 / 2-7 / 3-7 / 4-7 / 5-7 / 6-7` 第一部分冥想呼吸回顾
-  - 不再使用 AI
-  - 改为根据 `是/否` 三题组合映射到 8 条预设回复
-
-### 后续接线原则补充
-
-- 优先接入 `docx` 中已有明确 prompt 的节点
-- 对同一模块内多个 AI 节点，优先复用统一 hook 设计风格与上下文字段
-- 对“同 prompt、多题面”的场景优先做可复用 hook，而不是复制多套实现
-
----
-
-## 当前实施阶段
-
-当前处于：
-
-**阶段 7：公网完整访问与前后端联通**
-
-### 2026-06-19 当前进展快照
-
-当前已经完成“后端 HTTP 公网可访问与真实 AI 调用”：
-
-- 已购买并启用腾讯云 Lighthouse：中国大陆上海地域，Ubuntu 22.04 LTS。
-- 已在服务器安装 Node.js、Git、Nginx。
-- 已从 GitHub 拉取当前仓库并在服务器完成 `backend/` 构建。
-- 已配置服务器 `.env`，后端可读取 DeepSeek、SESSION_SECRET、DATABASE_URL 占位等运行变量。
-- 已用 systemd 托管 `node dist/server.js`，后端可常驻运行并开机自启。
-- 已用 Nginx 将公网 80 端口反向代理到本机 `127.0.0.1:8787`。
-- 已验证 `http://1.117.58.64/health` 返回 `ok: true`。
-- 已验证公网 AI hook `module-1-1.intro-reply` 可真实调用 DeepSeek，`fallbackUsed: false`。
-- 已注册 `resilience-training.cloud` 并添加 `api.resilience-training.cloud -> 1.117.58.64`。
-- 已验证 `http://api.resilience-training.cloud/health` 返回 `ok: true`。
-
-当前阻塞在“正式 HTTPS 域名后端”：
-
-- Vercel 前端是 HTTPS，不能稳定调用 HTTP 后端，否则会被浏览器 Mixed Content 策略拦截。
-- `certbot --nginx -d api.resilience-training.cloud` 当前被腾讯云/DNSPod webblock 页面拦截，推断与域名实名认证/ICP备案/大陆服务器域名访问限制相关。
-- 下一步应优先完成域名实名认证状态确认与 ICP 备案，再重新申请 HTTPS 证书。
-
-并且当前阶段按以下顺序推进：
-
-1. 先完成“通用公网完整闭环”：
-   - 现有静态前端可公网打开
-   - 独立后端可公网访问
-   - 前端可稳定指向后端
-   - 已接入的 AI 节点可真实调用 DeepSeek
-2. 再完成“部署治理与多环境准备”：
-   - 保留 Vercel 预览环境
-   - 为未来国内前端部署预留运行时配置注入方式
-   - 为多域名前端访问同一后端预留 CORS 与环境变量策略
-3. 然后进入“国内可访问版本”
-4. 最后再进入“用户体系、数据库持久化与导出能力”
-
-也就是说，当前默认优先级固定为：
-
-**公网完整实现访问现在前后端功能 ≥ 国内公网完整实现访问现在的前后端功能 ≥ 实现用户隔离和数据库接入等功能**
-
----
-
-## 协作者需要做的事
-
-在我继续推进开发的同时，你这边通常只需要做以下事情：
-
-1. 在需要本地联调后端时，进入 `backend/` 执行依赖安装。
-2. 在 `backend/` 下创建本地环境变量文件。
-3. 把真实的 DeepSeek API key 只写入本地环境变量文件，不要写入代码。
-4. 在需要验证前后端联通时，同时启动前端静态服务和后端服务。
-5. 按我给出的测试路径实际操作页面，并把异常现象反馈给我。
-6. 在进入公网联调阶段后，提供：
-   - 一个前端公网地址
-   - 一个后端公网地址
-   - 对应平台上的环境变量配置情况
-7. 在进入国内可访问阶段后，确认：
-   - 是否保留 Vercel 版本作为海外/测试前端
-   - 是否新增国内部署平台作为正式前端
-   - 后端是否继续共用，还是拆成国内正式后端
-
-如果当前只是代码推进、还没进入实际联调，你不需要提前做数据库或云端部署。
-
----
-
-## 本地测试与运行方式
-
-### 前端如何运行
-
-前端仍然可以继续使用你现在的方式运行，这个方式是正确的：
-
-```bash
-python -m http.server 8000 --directory src
-```
-
-默认访问地址：
+主项目原计划仍然保留：
 
 ```text
-http://127.0.0.1:8000
+前端：Vercel / 后续 EdgeOne Pages 或 COS + EdgeOne
+后端：腾讯云 Lighthouse + Nginx + systemd
+正式 API：api.resilience-training.cloud
 ```
 
-### 后端如何运行
-
-第一次本地联调时，需要新开一个终端窗口，在项目根目录下进入：
-
-```bash
-cd backend
-```
-
-然后执行：
-
-```bash
-npm install
-npm run dev
-```
-
-默认后端地址：
-
-```text
-http://127.0.0.1:8787
-```
-
-### 目前你需要创建的本地文件
-
-你需要在 `backend/` 下创建：
-
-```text
-.env.local
-```
-
-可以从：
-
-```text
-backend/.env.example
-```
-
-复制得到。
-
-### 目前最少需要填写的内容
-
-- `DEEPSEEK_API_KEY`
-- `SESSION_SECRET`
-
-当前阶段虽然还没有真正连数据库执行迁移，但环境变量校验会读取 `DATABASE_URL`，所以此字段也需要保留一个非空值。现阶段可以先沿用示例值，后续接数据库时再换成真实连接串。
-
-### 当前本地联调的推荐顺序
-
-1. 在 `backend/` 中准备 `.env.local`
-2. 在 `backend/` 中执行 `npm install`
-3. 启动后端 `npm run dev`
-4. 在项目根目录执行前端静态服务
-5. 打开 `http://127.0.0.1:8000`
-6. 进入 `1-1` 与 `2-2` 检查 AI 回复是否正常返回
-
-### 如果后端不在默认地址
-
-当前前端在本地开发时默认会访问：
-
-```text
-http://127.0.0.1:8787
-```
-
-如果后端部署在别的地址，可以通过页面 URL 传入：
-
-```text
-?apiBaseUrl=https://你的后端地址
-```
+本路线图不替代主项目正式路线，而是为 Cloudflare 方案提供一条可快速验证、可迁移、可回退的实验线。
 
 ---
 
-## 密钥安全与 GitHub 风险
+## 更新记录
 
-### 是否有风险
-
-如果把真实 API key 写进代码文件、提交到 GitHub，确实有风险。风险包括：
-
-- 密钥泄露
-- 额度被盗刷
-- 后续不得不紧急更换密钥
-
-### 当前如何规避
-
-正确做法是：
-
-- 真实密钥只写入本地 `.env.local`
-- `.env.local` 不提交到 GitHub
-- 仓库里只保留 `.env.example` 这种占位模板
-
-当前仓库的 `.gitignore` 已经忽略：
-
-- `.env`
-- `.env.local`
-- `.env.*.local`
-
-因此只要你不要手动强制提交这些文件，正常 `push` 不会把真实密钥传到远程仓库。
-
-### 其他团队通常怎么做
-
-常见做法是：
-
-- 本地开发用 `.env.local`
-- CI/CD 用平台环境变量或 Secret Manager
-- 仓库里只放 `.env.example`
-- 一旦怀疑泄露，立即在服务平台轮换 key
-
-### 如果已经误传了怎么办
-
-如果真实 key 曾经进入 Git 历史或远程仓库：
-
-1. 立即去服务平台重置或轮换 key
-2. 停止继续使用旧 key
-3. 再处理 Git 历史清理问题
-
-优先级永远是先换 key，而不是先修 Git。
+- 2026-06-20：建立 Cloudflare 实验线专用路线图，确认当前 Cloudflare 闭环已跑通，并将下一阶段定义为“阶段 9A：用户体系与数据能力最小原型”。
 
 ---
 
-## 分阶段实施清单
+## 当前结论
 
-## 阶段 0：方案固化与执行基线
+可以先在 Cloudflare 线推进用户体系与数据能力，但建议按“最小原型 + 可迁移 API 契约”的方式做。
 
-- [x] 梳理现有前端结构、模块分布、对话逻辑与 AI 插入点
-- [x] 从用户提供文档中提取 AI 个性化回复需求
-- [x] 确认不允许随意改动现有对话文字和 UI
-- [x] 确认采用“固定流程 + 局部 AI hook + 独立后端”的方向
-- [x] 确认模型服务采用 DeepSeek，默认 `deepseek-v4-flash`
-- [x] 确认优先数据库方向为 PostgreSQL
-- [x] 新增本路线图文档，作为后续执行基线
+原因：
 
-## 阶段 1：后端骨架与统一配置
+- Cloudflare Pages 前端已可公网访问。
+- Cloudflare Worker 后端已可公网 HTTPS 访问。
+- Worker 已配置 DeepSeek secret。
+- 当前 10 个 AI hook 已通过线上 smoke test，且全部返回 `fallbackUsed: false`。
+- 前端已确认能通过 Worker 获得个性化回复。
+- 浏览器不再受腾讯云 HTTP 后端 Mixed Content 问题影响。
 
-- [x] 新增 `backend/` 目录
-- [x] 初始化后端基础运行环境
-- [x] 建立后端配置读取层
-- [x] 建立环境变量与敏感信息管理方式
-- [x] 建立统一 AI provider 抽象
-- [x] 建立 DeepSeek provider 实现
-- [x] 建立 prompt registry 基础结构
-- [x] 建立 fallback 回复机制
-- [x] 建立匿名 session 基础能力
-- [x] 建立模块上下文整理能力
-- [x] 建立基础数据库 schema
-- [x] 编写后端基础说明文档
+但需要注意：
 
-## 阶段 2：前端与后端接线
-
-- [x] 新增前端 API client
-- [x] 新增前端 AI hook 调用封装
-- [x] 新增前端运行时 API 配置
-- [x] 在不破坏现有流程的前提下接入后端 AI 调用
-- [x] 保证 AI 调用失败时可回退到固定文案
-
-## 阶段 3：首批 AI 节点试点
-
-### 3A：模块 1-1
-
-- [x] 梳理 `1-1` 当前用户输入点与后续固定流程依赖
-- [x] 定义 `module-1-1.intro-reply` hook
-- [x] 设计 `1-1` 的输入分类策略
-- [x] 实现 `1-1` prompt 与输出校验
-- [x] 仅在指定节点替换为 AI 短回复
-- [x] 保持其余 `1-1` 固定文案不变
-
-### 3B：模块 2-2
-
-- [x] 梳理 `2-2` 当前案例选择与情绪输入流程
-- [x] 定义 `module-2-2.case-emotion-feedback` hook
-- [x] 为张天、晓琳、嘉怡分别建立 prompt 变体
-- [x] 仅替换“情绪识别反馈”这一节点
-- [x] 保持 `impactPrompt` 和后续固定流程不变
-
-## 阶段 4：试点验收与待接入清单固化
-
-- [x] 验证 `1-1` 正常回答路径
-- [ ] 验证 `1-1` 答非所问路径
-- [ ] 验证 `1-1` 跳过路径
-- [x] 验证 `2-2` 基本联通路径
-- [x] 修复并验证 `2-2` AI 回复后的继续按钮节奏
-- [ ] 验证 API 失败 fallback 路径
-- [x] 验证前端未出现 UI 结构性改动（基于静态代码检查）
-- [x] 验证未误改其它模块固定文案（当前仅接线 `1-1` 与 `2-2`）
-- [x] 根据 `20260605AI个性化回复及prompt.docx` 固化全量待接入清单
-
-## 阶段 5：其余 AI 节点的结构化与批量接入
-
-### 5A：模块 1-3
-
-- [x] 梳理 `1-3` 两个用户输入节点的原始流程与固定文案边界
-- [x] 定义 `module-1-3.body-sensation-reflection` hook
-- [x] 定义 `module-1-3.thought-reflection` hook
-- [x] 结构化重写 `1-3` 两个 prompt，并补充输出约束与 fallback
-- [x] 仅替换两个指定短回应节点，不改其它 `1-3` 文案与流程
-
-### 5B：模块 3-2
-
-- [x] 梳理 `3-2` 当前输入节点、分类条件与后续固定流程依赖
-- [x] 定义 `module-3-2.positive-rumination-feedback` hook
-- [x] 将“识别出模式 / 不确定 / 分享具体经历”整理为结构化判别策略
-- [x] 接入 AI 回复并保留固定后续流程
-
-### 5C：模块 4-2
-
-- [x] 梳理 `4-2` 两个输入节点的上下文与边界
-- [x] 定义 `module-4-2.thought-train-reflection` hook
-- [x] 定义 `module-4-2.boarding-impulse-reflection` hook
-- [x] 结构化重写两个 prompt，并为“无明显体验 / 不知道 / 无关输入”补充边界策略
-- [x] 保持冥想音频、页面结构与后续固定文案不变
-
-### 5D：模块 4-4
-
-- [x] 梳理 `4-4` 中所有复用同一类 prompt 的标签化题面
-- [x] 定义可复用的 `module-4-4.label-feedback` hook
-- [x] 设计“描述性标签 / 评判性标签 / 未按要求作答”三类判别策略
-- [x] 仅替换标签反馈，不改题干、不改案例文本
-
-### 5E：模块 4-6
-
-- [x] 梳理 `4-6` 支持者回应输入点与标准答案展示方式
-- [x] 定义 `module-4-6.supporter-response-feedback` hook
-- [x] 结构化重写 prompt，区分“肯定用户已有优点”与“追加标准示范”
-- [x] 保持原模块其它教学内容与 UI 节奏不变
-
-### 5F：模块 6-2
-
-- [x] 梳理 `6-2` 当前输入节点与后续固定流程
-- [x] 定义 `module-6-2.value-desire-insight` hook
-- [x] 结构化重写 prompt，约束为“肯定洞察 + 解释意义 + 温和开放式问题”
-- [x] 控制输出长度与语气，避免说教
-
-### 5G：统一回归与治理
-
-- [x] 为新增 AI 节点补齐 fallback 文案（当前已补齐 `1-1`、`1-3`、`2-2`、`3-2`、`4-2`、`4-4`、`4-6`、`6-2`）
-- [x] 为新增 hook 补齐 prompt 版本登记（当前已补齐 `1-1`、`1-3`、`2-2`、`3-2`、`4-2`、`4-4`、`4-6`、`6-2`）
-- [x] 对所有已接入模块做一次“不误改原文案 / 不破坏继续按钮节奏 / 不改 UI”的回归检查
-- [x] 更新后端 hook 清单、prompt registry 索引与路线图状态
-
-## 阶段 6：非 AI 节点的规则化补全
-
-- [x] 为 `1-7 / 2-7 / 3-7 / 4-7 / 5-7 / 6-7` 第一部分冥想呼吸回顾整理统一状态模型
-- [x] 实现三题 `是/否` 组合到 8 条预设回复的映射
-- [x] 复用统一逻辑，避免 6 个周回顾模块各自散写一套判断
-- [x] 保持既有题干、按钮、流程与 UI 不变
-- [x] 验证 8 种组合都能正确命中预设回复
-
-## 阶段 7：公网完整访问与前后端联通
-
-### 7A：通用公网完整闭环
-
-- [x] 选定一个公网后端部署形态用于承载当前 `backend/`（轻量 Linux 云服务器：腾讯云 Lighthouse / 阿里云 ECS 均可）
-- [x] 将当前 Fastify 后端成功部署到公网，并验证 `/health` 与 `/api/v1/ai/hooks/*`（HTTP/IP 与 HTTP 域名均已通过）
-- [ ] 配置后端公网环境变量（DeepSeek、CORS、SESSION_SECRET、DATABASE_URL 占位或真实值；当前 DeepSeek/SESSION/DATABASE 已可运行，CORS 需在 HTTPS 域名与正式前端域名确认后最终更新）
-- [x] 为前端提供稳定的公网 `apiBaseUrl` 注入方式
-- [ ] 完成“公网前端 + 公网后端 + DeepSeek”联调
-- [ ] 验证当前已接入 AI 的模块在线上环境可正常工作
-- [x] 保留本地联调方式，不因公网部署破坏现有开发流程
-- [ ] 完成 `api.resilience-training.cloud` 的 HTTPS 证书配置
-- [ ] 将前端 `apiBaseUrl` 指向 `https://api.resilience-training.cloud`
-
-### 7B：部署治理与多环境准备
-
-- [x] 明确保留当前 Vercel 版本作为预览/测试前端
-- [x] 明确前端运行时配置注入方案可同时支持：
-  - 本地联调
-  - Vercel 预览环境
-  - 后续国内正式前端环境
-- [x] 明确后端允许的前端来源配置策略（至少支持本地 + Vercel）
-- [x] 明确环境变量分层策略（本地 / 预览 / 生产）
-- [x] 输出一份简洁的部署联调说明，避免后续重复口头同步
-
-## 阶段 8：国内可访问部署与双环境策略
-
-- [ ] 明确是否保留 Vercel 版本作为海外/测试前端
-- [ ] 明确国内正式前端部署平台与域名方案（候选：EdgeOne Pages 或 COS + EdgeOne/CDN；域名根域名/`www` 留给前端，`api` 留给后端）
-- [ ] 先以“一套后端共用”作为首选预案进行验证
-- [ ] 如国内访问测试不稳定，再升级评估“海外/国内双后端”
-- [ ] 如使用中国大陆节点，评估并处理备案相关事项（当前已触发 HTTPS 证书申请被 webblock 拦截的问题，需继续完成域名实名认证/ICP备案）
-- [ ] 明确数据库最终部署地域（海外/国内）与访问策略
-- [ ] 完成“海外预览版 + 国内正式版”双环境的部署策略
-- [ ] 验证国内网络环境下前端、后端、模型调用链路可用
-
-## 阶段 9：用户体系与数据能力
-
-- [ ] 设计用户表、会话表、模块运行表、AI 调用记录表
-- [ ] 接入用户登录能力
-- [ ] 实现多用户隔离
-- [ ] 建立用户练习数据保存能力
-- [ ] 建立数据导出机制
-- [ ] 补充审计与日志字段
+- Cloudflare Worker 不是传统 Node.js 长驻服务，不能和 `backend/` 的 Fastify 实现完全共用运行方式。
+- Cloudflare 数据能力更适合先用 D1 / KV / R2 等绑定。
+- 腾讯云正式后端未来更适合 Fastify + PostgreSQL。
+- 因此后端实现会不同，但前端调用的 API 契约应尽量保持一致。
 
 ---
 
-## 当前优先级
-
-当前最高优先级如下：
-
-1. 先完成 `api.resilience-training.cloud` 的备案/HTTPS，使 Vercel 前端可通过 HTTPS 调用 Lighthouse 后端
-2. 完成“当前前后端功能 + AI 节点”的公网完整访问版本
-3. 再完成可在中国大陆稳定访问的完整版本
-4. 在部署链路跑通后，再进入用户登录、隔离、数据库持久化、导出等正式能力
-5. 始终保持单一 API 契约，避免为不同部署平台分叉两套前后端业务逻辑
-6. 尽量保留同一仓库下的多环境部署能力，而不是复制出多套仓库
-7. 如无强制阻塞，不提前为国内部署复制第二套前端或第二个仓库
-8. 如无真实网络瓶颈证据，先验证“一个后端服务多个前端域名”的可行性，再决定是否拆双后端
-
----
-
-## 前后端职责与后续更新方式
-
-### 项目结构概览
+## 当前架构
 
 ```mermaid
 flowchart LR
-    U["用户浏览器 / 后续微信小程序"] --> F["前端静态页面<br/>Vercel / 后续 EdgeOne 或 COS"]
-    F -->|"HTTPS API<br/>/api/v1/ai/hooks/*"| B["后端 Fastify API<br/>Lighthouse + systemd + Nginx"]
-    B -->|"Server-side API Key"| D["DeepSeek API"]
-    B --> P["Prompt Registry<br/>hooks + prompts"]
-    B --> S["Session / Module Context"]
-    B -. "阶段 9" .-> DB["PostgreSQL / SQLite<br/>用户数据与导出"]
+    U["用户浏览器"] --> F["Cloudflare Pages<br/>src/ 静态前端"]
+    F -->|"HTTPS API"| W["Cloudflare Worker<br/>cloudflare-worker/"]
+    W -->|"Server-side Secret"| DS["DeepSeek API"]
+    W -. "阶段 9A" .-> D1["Cloudflare D1<br/>用户/练习/导出数据"]
 ```
 
-### 前端负责
+未来与正式线的对应关系：
 
-- 展示固定页面、课程结构、模块入口与交互 UI。
-- 保留原有固定文案、按钮节奏、音频/图片/视频等静态资源。
-- 收集用户输入，并在指定 AI hook 节点调用后端 API。
-- 根据后端返回的 `replyText` 展示 AI 个性化短回复。
-- 后续用户体系中的登录页面、注册/验证码输入、用户状态展示、导出按钮等属于前端交互层。
+```mermaid
+flowchart LR
+    F["同一套前端 src/"] --> API["统一 API 契约"]
+    API --> CW["Cloudflare Worker<br/>实验线"]
+    CW --> D1["Cloudflare D1 / KV / R2"]
+    API --> VM["腾讯云 Lighthouse<br/>Fastify 后端"]
+    VM --> PG["PostgreSQL<br/>正式数据方案"]
+```
 
-### 后端负责
+核心原则：
 
-- 保存并保护 DeepSeek API Key、数据库连接串、SESSION_SECRET 等敏感信息。
-- 代理所有模型调用，前端不得直连 DeepSeek。
-- 管理 prompt registry、hook 白名单、fallback、输出长度与安全边界。
-- 维护 session、模块上下文、后续用户身份与权限。
-- 后续负责用户表、练习记录、AI 调用记录、导出任务等数据接口。
-- 在云服务器上通过 systemd 常驻运行，并由 Nginx 提供公网入口。
+- 前端尽量只依赖统一 API，不依赖某个云平台。
+- Cloudflare Worker 和腾讯云 Fastify 后端可以分别实现同一套 API。
+- 用户体系与数据能力先在 Cloudflare 做最小可用验证，再决定是否合回主项目。
 
-### 后续从 GitHub 更新服务器的方式
+---
 
-- 服务器当前代码来自 GitHub 仓库 `xiaoqisong12-lgtm/Resilience_training_programme.git`。
-- 如果后续本地开发了新功能并 push 到 GitHub，服务器需要进入仓库目录执行 `git pull`，然后重新安装/构建/重启后端。
-- 典型后端更新步骤：
+## 已完成
+
+### Cloudflare 前端
+
+- [x] 使用 Cloudflare Pages 部署 `src/` 静态前端。
+- [x] Cloudflare Pages 地址已可访问。
+- [x] `src/runtime-config.js` 已默认指向当前 Worker 地址。
+- [x] 已确认无 URL 参数时，前端也可以通过 Worker 获得个性化回复。
+- [x] 仍保留 `?apiBaseUrl=...` 临时切换后端的能力。
+
+当前前端地址：
+
+```text
+https://resilience-training-programme-cloudflare.pages.dev/
+```
+
+### Cloudflare Worker 后端
+
+- [x] 新增 `cloudflare-worker/`，不直接改造原 `backend/`。
+- [x] 暴露 `GET /health`。
+- [x] 暴露 `POST /api/v1/ai/hooks/:hookId`。
+- [x] 支持 DeepSeek API 调用。
+- [x] 支持 CORS。
+- [x] 支持 fallback，避免模型调用失败时前端流程卡住。
+- [x] 已迁移当前全部 10 个 AI hook。
+- [x] 已新增 `npm run smoke:hooks` 一键线上验证脚本。
+- [x] 线上 smoke test 已通过，全部 hook 返回 `fallbackUsed: false`。
+
+当前 Worker 地址：
+
+```text
+https://resilience-ai-worker.1362758164.workers.dev
+```
+
+当前已迁移 hook：
+
+- `module-1-1.intro-reply`
+- `module-1-3.body-sensation-reflection`
+- `module-1-3.thought-reflection`
+- `module-2-2.case-emotion-feedback`
+- `module-3-2.positive-rumination-feedback`
+- `module-4-2.thought-train-reflection`
+- `module-4-2.boarding-impulse-reflection`
+- `module-4-4.label-feedback`
+- `module-4-6.supporter-response-feedback`
+- `module-6-2.value-desire-insight`
+
+---
+
+## 当前阶段
+
+当前处于：
+
+```text
+阶段 9A：Cloudflare 用户体系与数据能力最小原型
+```
+
+阶段 7/8 的 Cloudflare 版本已足够支撑阶段 9A：
+
+- [x] 公网前端可访问。
+- [x] 公网后端可访问。
+- [x] 前后端 HTTPS 联通。
+- [x] DeepSeek 真实调用通过。
+- [x] 当前 AI hook 线上验证通过。
+
+因此可以开始做用户与数据能力，但先不要做重型账号系统。
+
+---
+
+## 阶段 9A 目标
+
+阶段 9A 的目标不是一次性做完整 SaaS 用户系统，而是先支撑小规模研究使用：
+
+- 能区分不同参与者。
+- 能记录参与者每次练习的关键输入、模块、时间。
+- 能记录 AI 调用结果与是否 fallback。
+- 能按参与者导出数据。
+- 不破坏现有固定课程流程。
+- 不让前端接触任何密钥。
+- 后续可以迁移到腾讯云后端 + PostgreSQL。
+
+推荐身份方案：
+
+```text
+邀请码 / 参与者编号 > 账号密码注册
+```
+
+理由：
+
+- 更适合小规模研究。
+- 不需要邮箱、短信、找回密码。
+- 降低隐私和运维复杂度。
+- 足够实现多用户隔离和数据导出。
+
+---
+
+## 阶段 9A 数据设计草案
+
+优先记录“研究需要的数据”，避免过度复杂。
+
+### `participants`
+
+参与者表。
+
+建议字段：
+
+- `id`
+- `participant_code`
+- `display_label`
+- `status`
+- `created_at`
+- `last_seen_at`
+- `metadata_json`
+
+### `sessions`
+
+一次浏览器/训练会话。
+
+建议字段：
+
+- `id`
+- `participant_id`
+- `client_session_id`
+- `started_at`
+- `last_seen_at`
+- `user_agent`
+- `metadata_json`
+
+### `module_events`
+
+用户在课程中的关键操作与输入。
+
+建议字段：
+
+- `id`
+- `participant_id`
+- `session_id`
+- `module_id`
+- `event_type`
+- `step`
+- `user_input`
+- `choice_value`
+- `context_json`
+- `created_at`
+
+### `ai_call_events`
+
+AI hook 调用记录。
+
+建议字段：
+
+- `id`
+- `participant_id`
+- `session_id`
+- `module_id`
+- `hook_id`
+- `variant`
+- `user_input`
+- `reply_text`
+- `fallback_used`
+- `prompt_version`
+- `provider`
+- `model`
+- `metadata_json`
+- `created_at`
+
+### `exports`
+
+导出任务记录。
+
+建议字段：
+
+- `id`
+- `requested_by`
+- `format`
+- `filters_json`
+- `created_at`
+
+---
+
+## 阶段 9A API 契约草案
+
+这些 API 应尽量同时适配 Cloudflare Worker 和未来腾讯云 Fastify 后端。
+
+### 参与者开始或恢复
+
+```text
+POST /api/v1/participants/start
+```
+
+请求：
+
+```json
+{
+  "participantCode": "P001",
+  "clientSessionId": "browser-generated-session-id"
+}
+```
+
+返回：
+
+```json
+{
+  "participantId": "uuid-or-d1-id",
+  "participantCode": "P001",
+  "sessionId": "session-id"
+}
+```
+
+### 记录普通模块事件
+
+```text
+POST /api/v1/events
+```
+
+请求：
+
+```json
+{
+  "participantCode": "P001",
+  "sessionId": "session-id",
+  "moduleId": "1-1",
+  "eventType": "user_input",
+  "step": 1,
+  "userInput": "用户输入内容",
+  "context": {}
+}
+```
+
+### AI hook 保持现有接口
+
+```text
+POST /api/v1/ai/hooks/:hookId
+```
+
+现有接口继续保留，只扩展可选字段：
+
+```json
+{
+  "participantCode": "P001",
+  "sessionId": "session-id",
+  "moduleId": "1-1",
+  "step": 1,
+  "userInput": "用户输入内容",
+  "context": {}
+}
+```
+
+Worker 在返回 AI 回复的同时，可以把调用事件写入 `ai_call_events`。
+
+### 导出数据
+
+阶段 9A 先做简单导出。
+
+```text
+GET /api/v1/export?participantCode=P001&format=json
+```
+
+后续再扩展：
+
+- CSV
+- Excel
+- 按时间范围筛选
+- 按模块筛选
+- 管理员鉴权
+
+---
+
+## Cloudflare 实现建议
+
+阶段 9A 推荐使用：
+
+```text
+Cloudflare Worker + D1
+```
+
+原因：
+
+- D1 与 Worker 集成简单。
+- 适合小规模结构化数据。
+- 部署和验证速度快。
+- 对当前实验线成本低。
+
+暂不建议一开始就使用：
+
+- 完整账号密码注册
+- 复杂管理员后台
+- 多角色权限系统
+- R2 存储大量文件
+- 队列化导出任务
+
+除非后续研究规模明确扩大。
+
+---
+
+## 与腾讯云正式路线的差异
+
+| 项目 | Cloudflare 实验线 | 腾讯云正式线 |
+|---|---|---|
+| 前端 | Cloudflare Pages | EdgeOne Pages / COS + EdgeOne / Vercel |
+| 后端 | Cloudflare Worker | Fastify + Node.js + systemd |
+| 数据库 | D1 或外部数据库 | PostgreSQL 优先 |
+| 密钥 | Cloudflare Secrets | `.env` / 服务器环境变量 |
+| 运行模型 | Serverless request runtime | 长驻 Node 进程 |
+| 适合阶段 | 快速验证、小规模实验 | 正式可控部署、长期运维 |
+
+代码差异：
+
+- 前端大部分可以复用。
+- API client 可以复用。
+- 课程模块逻辑应尽量复用。
+- 后端业务逻辑可以共享设计，但 Worker 与 Fastify 的路由、数据库连接、环境变量读取方式会不同。
+- 数据 schema 应保持概念一致，但 D1/SQLite 与 PostgreSQL 的迁移语法可能不同。
+
+---
+
+## PR 合回原仓库策略
+
+可以从本 Cloudflare fork 向原仓库发 PR，但要拆分边界。
+
+适合合回的内容：
+
+- `src/` 中平台无关的前端改动。
+- 统一 API client。
+- 用户体系前端交互。
+- 参与者编号/匿名 session 的前端状态管理。
+- 平台无关的数据采集点。
+- 文档中关于 API 契约和数据模型的设计。
+- `cloudflare-worker/` 作为可选实验后端目录。
+
+需要谨慎合回的内容：
+
+- 写死当前 Worker 地址的 `src/runtime-config.js`。
+- Cloudflare 专属 D1 binding 配置。
+- 只适用于本账号的 `wrangler.toml` 名称、路由、项目名。
+- 与主项目正式腾讯云路线冲突的部署说明。
+
+合回建议：
+
+1. 先在 Cloudflare fork 中完成最小原型。
+2. 把平台无关前端改动整理成单独 PR。
+3. 把 `cloudflare-worker/` 作为可选实验后端单独 PR。
+4. 把 `runtime-config.js` 改回可由环境注入，避免原仓库默认指向个人 Worker。
+5. 主项目如要使用腾讯云后端，再按同一 API 契约在 `backend/` 中实现 PostgreSQL 版本。
+
+---
+
+## 当前允许改动范围
+
+阶段 9A 允许：
+
+- 新增 Cloudflare D1 schema / migrations。
+- 新增 Worker 数据访问层。
+- 新增参与者编号启动接口。
+- 扩展现有 AI hook 请求体的可选字段。
+- 新增事件记录接口。
+- 新增最小导出接口。
+- 在前端新增轻量参与者编号输入/保存逻辑。
+- 在前端关键节点记录模块事件。
+- 更新 README 与本路线图。
+
+阶段 9A 暂不主动改动：
+
+- 原有课程文案。
+- 现有 UI 视觉风格。
+- 现有模块分布。
+- 现有 AI hook 的基本返回结构。
+- 原 `backend/` 的腾讯云正式路线，除非明确要做双实现。
+
+---
+
+## 测试与验收
+
+每次改动后至少验证：
 
 ```bash
-cd /opt/resilience-training-programme
-git pull
-cd backend
-npm install
-npm run build
-sudo systemctl restart resilience-backend
-curl http://127.0.0.1:8787/health
+cd cloudflare-worker
+npm run check
 ```
 
-- 如果只改了前端静态文件，Vercel/后续 EdgeOne 通常会自动从 GitHub 重新部署；Lighthouse 后端不一定需要重启。
-- 如果改了 `backend/` 代码、prompt、环境变量、数据库 schema 或 API 契约，就需要更新服务器后端并重启服务。
-- `.env` 不在 GitHub 中，`git pull` 不会覆盖服务器密钥；但如果新增环境变量，需要手动补充服务器 `.env`。
+Worker 线上验证：
 
-### 等待备案期间建议
+```powershell
+npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
+```
 
-- 不建议大规模改动课程 UI 或原有对话文案。
-- 可以并行设计阶段 9 的用户体系与数据架构，但建议先做 schema/API 设计与最小原型，不急于接入正式数据库。
-- 优先明确：
-  - 用户使用个人邀请码、匿名编号还是账号登录
-  - 需要保存哪些对话字段与时间戳
-  - 导出格式是 CSV、JSON 还是 Excel
-  - 小规模测试先用 Lighthouse 本机数据库，还是直接托管 PostgreSQL
-- 任何用户体系改动都应保持现有 AI hook 和固定课程流程可回退、可继续运行。
+阶段 9A 增加后，还应验证：
 
----
-
-## 当前允许改动的范围
-
-当前阶段允许改动：
-
-- 新增 `backend/` 及其内部文件
-- 新增前端服务层与配置层
-- 新增或调整前端运行时 API 地址注入方式
-- 新增部署配置文件与环境区分配置
-- 对 `module11.js`、`module13.js`、`module22.js`、`module32.js`、`module42.js`、`module44.js`、`module46.js`、`module62.js` 做最小接线式改动
-- 对 `module17.js`、`module27.js`、`module37.js`、`module47.js`、`module57.js`、`module67.js` 做非 AI 组合回复逻辑的最小改动
-- 对 `DialogueManager.js` 做必要但最小的异步接线改动
-- 新增文档
-
-当前阶段不允许主动改动：
-
-- 其它模块的原有对话文字
-- 现有页面 UI 样式与结构
-- 未在 `docx` 中明确要求改造的模块业务行为
+- 输入参与者编号后能创建/恢复参与者。
+- 不同参与者编号的数据不会混在一起。
+- AI hook 调用后能写入 AI 调用记录。
+- 普通模块事件能写入事件表。
+- 导出接口能按参与者返回数据。
+- 未配置数据库或写入失败时，课程流程不能卡死。
 
 ---
 
-## 风险与防线
+## 下一步清单
 
-实施过程中必须持续检查以下风险：
+### 9A-1：设计与本地准备
 
-- AI 输出越界，开始改写固定流程
-- 用户输入导致 prompt 注入
-- API 失败导致流程卡住
-- 多用户上下文串线
-- prompt 版本失控
-- 前端 UI 因接线发生意外变化
-- 误改未提及的课程文案
+- [ ] 确认身份方案：默认采用参与者编号 / 邀请码。
+- [ ] 新增 D1 schema 草案。
+- [ ] 新增 Worker 数据访问层接口。
+- [ ] 明确数据字段是否包含完整原始输入、AI 回复、时间戳、模块编号。
 
-对应防线：
+### 9A-2：参与者与 session
 
-- 输出长度与结构校验
-- fallback 文案
-- session 隔离
-- hook 白名单
-- prompt registry 版本管理
-- 仅局部替换，不重写模块
+- [ ] 新增 `POST /api/v1/participants/start`。
+- [ ] 前端新增参与者编号输入或启动流程。
+- [ ] 前端保存 `participantCode` 与 `sessionId`。
+- [ ] 验证刷新页面后仍能恢复当前参与者上下文。
 
----
+### 9A-3：事件与 AI 调用记录
 
-## 后续每轮协作提示词
+- [ ] 新增 `POST /api/v1/events`。
+- [ ] AI hook 成功或 fallback 后写入 `ai_call_events`。
+- [ ] 选取 1-2 个模块先接入普通事件记录。
+- [ ] 验证不影响现有 AI 回复流程。
 
-后续继续推进本项目时，可直接参考以下工作提示词：
+### 9A-4：导出
 
-> 你正在为“心理弹性训练项目”实现正式可扩展架构。请严格遵守以下要求：
-> 1. 不要随意修改未明确提及的原有对话文字内容。
-> 2. 不要擅自改变现有 module 分布、课程结构和现有 UI 设计。
-> 3. AI 只能在指定 hook 节点生成受控的个性化短回复，不得接管整段对话。
-> 4. prompt、模型调用、API key、上下文整理必须统一集中管理，不得散落在前端模块中。
-> 5. 当前阶段优先保证“前后端都部署到公网后，现有功能可以完整访问和调用模型”，再推进国内可访问版本，最后再做用户体系与数据能力。
-> 6. 所有改动优先新增文件和新增模块；对现有业务模块仅做最小接线式修改。
-> 7. 必须提供 fallback，保证 API 失败时仍能继续固定流程。
-> 8. 后端从一开始就按未来支持登录、用户隔离、数据保存与导出的正式方向设计，同时部署方式应支持“同仓库、多环境、多前端域名”而不返工。
-> 9. 每完成一个阶段或子任务，更新路线图中的勾选状态，并说明本轮具体新增了什么、改了什么、验证了什么、未完成什么。
+- [ ] 新增最小 JSON 导出接口。
+- [ ] 后续再评估 CSV / Excel。
+- [ ] 验证可按参与者编号导出练习与 AI 调用数据。
+
+### 9A-5：PR 准备
+
+- [ ] 梳理哪些改动可合回原仓库。
+- [ ] 移除或参数化个人 Worker 地址。
+- [ ] 保持 Cloudflare 专属配置与平台无关逻辑分层。
 
 ---
 
-## 维护规则
+## 后续每轮协作提示
 
-- 每次开始较大改动前，先回看本文件。
-- 每完成一个明显阶段，更新对应勾选项。
-- 如果本轮新增了后端或前端的关键文件、目录、hook、prompt 或配置层结构，应同步更新对应文档中的文件树、模块清单或变更说明，避免文档落后于代码。
-- 对于适合长期复用的结构性变更，应优先补充到现有文档；对于短期排查信息，则直接在对话中说明，避免文档冗余。
-- 如果后续需求有变化，优先更新本文件，再继续开发。
+继续推进本 Cloudflare 实验线时，请遵守：
+
+1. 优先保持现有课程流程、文案和 UI 不变。
+2. 前端只调用统一 API，不直接接触 DeepSeek 或数据库。
+3. Worker 中所有密钥使用 Cloudflare Secret，不写入仓库。
+4. 数据能力先以参与者编号和最小事件记录为主，不急于做完整账号系统。
+5. 后端实现可以使用 Cloudflare 专属能力，但 API 契约要为腾讯云 Fastify + PostgreSQL 预留迁移空间。
+6. 每完成一个阶段或子任务，更新本路线图与 README。

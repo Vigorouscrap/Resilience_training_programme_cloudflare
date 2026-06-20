@@ -20,6 +20,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ## 更新记录
 
+- 2026-06-20：新增 Cloudflare 实验线专用 `docs/IMPLEMENTATION_ROADMAP.md`，将下一阶段明确为阶段 9A 用户体系与数据能力最小原型。
 - 2026-06-20：确认 Cloudflare Pages 前端可以通过 Worker 获得个性化回复，并将 `src/runtime-config.js` 默认 API 地址设置为当前 Worker。
 - 2026-06-20：根据线上 smoke test 结果，放宽 `module-6-2.value-desire-insight` 的 Worker 输出校验上限，减少该节点因模型回复略长而走 fallback 的概率。
 - 2026-06-20：完成 Cloudflare Worker 当前全部 10 个 AI hook 迁移，新增 `smoke:hooks` 一键验证脚本，并补充部署后验证说明。
@@ -64,10 +65,10 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 - [x] 在 Cloudflare Pages 部署前端 `src/`。
 - [x] 在 Cloudflare Workers 配置 `DEEPSEEK_API_KEY` secret。
 - [x] 部署 Worker 并验证 `/health`。
-- [ ] 逐个验证 Worker 的全部 AI hook 是否都能返回 `fallbackUsed: false`。
+- [x] 逐个验证 Worker 的全部 AI hook 是否都能返回 `fallbackUsed: false`。
 - [x] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
 - [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
-- [ ] 如果继续推进，补齐用户数据保存方案，例如 D1 / R2 / 外部数据库；当前未实现数据持久化。
+- [ ] 推进阶段 9A：使用参与者编号 / 邀请码 + D1 草案实现最小用户数据保存与导出原型。
 
 当前 Worker 已包含的 hook：
 
@@ -277,17 +278,18 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 - 不要把 DeepSeek API Key 写入前端或仓库。
 - Cloudflare Worker 必须保持和现有前端 API 契约兼容。
 - 前端课程文案、UI、模块流程仍遵守原路线图约束，不因 Cloudflare 实验线随意改写。
-- 当前已经完成全部现有 AI hook 的 Worker 迁移，下一阶段重点是线上部署与逐个 hook 验证。
+- 当前已经完成全部现有 AI hook 的 Worker 迁移、线上部署与逐个 hook 验证。
+- 下一阶段是阶段 9A：用户体系与数据能力最小原型，优先采用参与者编号 / 邀请码，而不是完整账号密码注册。
 - 如果 Worker 后端继续扩大，建议把 prompt 与 hook 配置从 `backend/` 抽成可复用共享包，避免双后端长期复制。
+- 详见 `docs/IMPLEMENTATION_ROADMAP.md`。
 
 ---
 
 ## 下一步建议
 
-1. 先在 Cloudflare Pages 部署前端 `src/`，确认页面可访问。
-2. 部署 `cloudflare-worker/`，验证 `/health`。
-3. 配置 Worker secret `DEEPSEEK_API_KEY`。
-4. 逐个验证全部 AI hook。
-5. 直接打开 Cloudflare Pages 地址测试前端完整调用；如需临时切换后端，可用 `?apiBaseUrl=...` 覆盖。
-6. 重点观察 `fallbackUsed`、输出长度和前端流程是否继续。
-
+1. 确认阶段 9A 身份方案：默认采用参与者编号 / 邀请码。
+2. 新增 Cloudflare D1 schema 草案。
+3. 新增 `POST /api/v1/participants/start`，让前端能创建或恢复参与者 session。
+4. 新增最小事件记录接口，先记录少量关键模块输入。
+5. 扩展 AI hook 写入调用记录，但必须保证写入失败不影响现有课程流程。
+6. 新增最小 JSON 导出接口，先按参与者编号导出。
