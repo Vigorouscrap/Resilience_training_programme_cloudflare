@@ -20,6 +20,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ## 更新记录
 
+- 2026-06-20：根据线上 smoke test 结果，放宽 `module-6-2.value-desire-insight` 的 Worker 输出校验上限，减少该节点因模型回复略长而走 fallback 的概率。
 - 2026-06-20：完成 Cloudflare Worker 当前全部 10 个 AI hook 迁移，新增 `smoke:hooks` 一键验证脚本，并补充部署后验证说明。
 
 ---
@@ -280,6 +281,5 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 4. 逐个验证全部 AI hook。
 5. 用 Pages URL 参数 `?apiBaseUrl=...` 指向 Worker，测试前端完整调用。
 6. 重点观察 `fallbackUsed`、输出长度和前端流程是否继续。
-
 
 

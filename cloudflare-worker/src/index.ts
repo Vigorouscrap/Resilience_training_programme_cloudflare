@@ -100,7 +100,7 @@ const hooks: Record<string, HookDefinition> = {
         provider: 'deepseek',
         model: 'deepseek-v4-flash',
         temperature: 0.2,
-        maxOutputChars: 100,
+        maxOutputChars: 160,
         fallbackKey: 'module13_body_sensation_default',
         defaultVariant: 'default',
         userPromptTemplate: USER_PROMPT_TEMPLATE,
@@ -375,7 +375,7 @@ const hooks: Record<string, HookDefinition> = {
 - 要用具体的方式肯定用户捕捉到的渴望。
 - 然后简要解释这种渴望与当事人痛苦之间的联系。
 - 最后用一个温和的开放式问题，邀请用户基于这份渴望，思考下一步可以做的一件小事。
-- 输出不超过100字。
+- 尽量控制在 60 到 90 个汉字，不要写长。
 - 语气温暖、沉稳、不评判。
 - 避免说教。
 - 不要输出标题。
