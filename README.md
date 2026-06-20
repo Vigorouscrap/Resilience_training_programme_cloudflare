@@ -1,218 +1,233 @@
-# 心理弹性训练程序
+﻿# 心理弹性训练程序 - Cloudflare 实验仓库
 
-基于正念和接纳承诺疗法（ACT）的个人成长计划。这是一个为期6周的系统训练项目，帮助参与者培养"与体验共处、朝价值前行"的心理弹性能力。
+本仓库是 `Resilience_training_programme` 的 Cloudflare 实验线，用来验证：
 
-访问链接：
-https://resilience-training-programme-two.vercel.app
+- 前端是否可以用 Cloudflare Pages 免费部署。
+- 后端是否可以用 Cloudflare Workers 做一个轻量 AI API 代理。
+- 在不影响原项目“多前端 + 腾讯云 Lighthouse 后端”正式路线的前提下，评估 Cloudflare 作为备用/实验部署方案的可行性。
 
-本地测试：
-python -m http.server 8000 --directory src
---bind 0.0.0.0  允许外部访问（局域网手机端访问）
+原正式路线仍建议保留：
 
-快捷测试入口示例：（请将`module`和`fast`参数替换为实际值）
-http://127.0.0.1:8000/?module=3-2&fast=1
-ps：如果没有更改，可以ctrl+shift+R刷新网页缓存，重新测试
-
-## 🌱 项目介绍
-
-本项目提供了一个交互式的心理弹性训练平台，结合以下核心理念：
-
-- **觉察**（第1周）：初步认识并尝试看见情绪与思维
-- **接纳**（第2-3周）：像允许四季流转一样允许所有感受的存在
-- **解离**（第4-5周）：学习将想法和情绪看作观察对象，而非事实
-- **价值与承诺**（第6周）：带着全部的体验，朝着价值方向迈出坚定的步伐
-
-## 📁 项目结构
-
-```
-resilience-programme-app/
-├── src/
-│   ├── index.html              # 主HTML文件
-│   ├── css/
-│   │   └── styles.css          # 所有样式文件
-│   ├── js/
-│   │   ├── main.js             # 主应用程序入口
-│   │   ├── data.js             # 数据配置和常量
-│   │   ├── pages.js            # 页面管理模块
-│   │   ├── timer.js            # 计时器管理
-│   │   ├── ui.js               # UI组件和元素操作
-│   │   └── dialogue.js         # 对话逻辑和流程管理
-│   └── images/
-│       └── University_of_Hong_Kong-Logo.wine.png
-├── docs/
-│   ├── ARCHITECTURE.md         # 架构文档
-│   ├── MODULES.md              # 模块说明
-│   └── DEVELOPMENT.md          # 开发指南
-├── package.json                # 项目配置
-└── README.md                   # 本文件
+```text
+前端：Vercel / 后续 EdgeOne Pages 或 COS + EdgeOne
+后端：腾讯云 Lighthouse + Nginx + systemd
+正式 API：api.resilience-training.cloud
 ```
 
-## 🚀 快速开始
-
-### 前置要求
-- 现代浏览器（Chrome、Firefox、Safari等）
-- Python 3.x（用于本地服务器）或任何静态文件服务器
-
-### 安装步骤
-
-1. 克隆项目
-```bash
-git clone https://github.com/your-username/resilience-programme.git
-cd resilience-programme-app
-```
-
-2. 启动本地服务器
-```bash
-npm start
-# 或
-python -m http.server 8000 --directory src
-# 或
-http-server ./src -p 8000
-
-```
-
-
-3. 打开浏览器访问
-```
-http://localhost:8000
-```
-
-## 📚 功能模块
-
-### 1. 主页面（Home Page）
-- 展示6周的训练模块
-- 可视化周期界面设计
-- 直观的导航结构
-
-### 2. 每日练习页面（Daily Page）
-- 显示每周的7个子模块
-- 卡片式设计，易于浏览
-- 支持顺序解锁提示
-
-### 3. 练习页面（Practice Page）
-- 交互式对话界面
-- 实时计时功能
-- 支持多种练习类型
-
-### 4. 对话系统
-- 智能引导对话
-- 用户输入处理
-- 动态反馈和进度跟踪
-
-## 🛠 技术栈
-
-- **前端框架**：原生 JavaScript (ES6 模块化)
-- **样式**：CSS3（Flexbox、Grid、渐变效果）
-- **架构**：模块化设计，易于维护和扩展
-- **兼容性**：支持现代浏览器
-
-## 📖 使用指南
-
-### 用户流程
-
-1. **选择周期**：点击主页的任一周方块
-2. **选择模块**：在日常练习页选择具体模块
-3. **进入练习**：开始与AI引导员互动
-4. **完成练习**：根据引导完成各项练习任务
-5. **进度跟踪**：通过计时器跟踪练习时长
-
-### 练习类型
-
-- **对话式练习**：通过对话了解自己
-- **冥想练习**：引导式呼吸和冥想
-- **反思练习**：结构化的自我反思
-- **体验练习**：实践性的心理活动
-
-## 🔧 开发指南
-
-### 项目模块说明
-
-#### `main.js` - 应用入口
-- 初始化应用
-- 绑定DOM事件
-- 协调各模块间的通信
-
-#### `pages.js` - 页面管理
-- 管理页面切换逻辑
-- 显示/隐藏页面
-- 计时器控制
-
-#### `dialogue.js` - 对话逻辑
-- 管理多个模块的对话流程
-- 处理用户输入
-- 生成动态内容
-
-#### `ui.js` - UI组件库
-- 创建消息气泡
-- 生成按钮和卡片
-- 管理输入框
-
-#### `timer.js` - 计时器
-- 启动/停止计时
-- 时间格式化
-
-#### `data.js` - 数据和常量
-- 模块名称和标题
-- 状态描述
-- 对话文本
-
-### 扩展指南
-
-#### 添加新模块
-
-1. 在 `data.js` 中添加模块数据
-2. 在 `dialogue.js` 中创建对应的对话流程方法
-3. 在 `main.js` 中绑定事件处理
-
-#### 修改样式
-
-- 所有样式集中在 `src/css/styles.css`
-- 使用CSS变量便于统一管理颜色和尺寸
-- 支持响应式设计
-
-#### 添加新功能
-
-1. 在对应的模块文件中实现功能
-2. 在 `main.js` 中初始化和绑定事件
-3. 为新功能添加相关的样式
-
-## 🎨 设计特点
-
-- **柔和配色**：蓝色系为主，传递平静和信任
-- **玻璃形态效果**：现代化的毛玻璃设计
-- **平滑动画**：所有交互都有过渡效果
-- **无障碍设计**：考虑键盘导航和屏幕阅读器
-
-## 📱 浏览器支持
-
-- Chrome/Chromium 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-## 🤝 贡献指南
-
-欢迎提交问题和拉取请求！
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开拉取请求
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
-## 👥 关于
-
-由香港大学研究团队开发，致力于推进心理健康教育和个人成长。
-
-## 📧 联系方式
-
-如有疑问或建议，请联系项目维护者。
+Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线。
 
 ---
 
-**更新时间**：2026年
-**版本**：1.0.0
+## 当前仓库结构
+
+```text
+.
+├─ src/
+│  └─ 现有静态前端代码，可直接部署到 Cloudflare Pages
+├─ backend/
+│  └─ 原 Node.js + Fastify 后端，适合腾讯云 Lighthouse / ECS，不建议直接部署到 Workers
+├─ cloudflare-worker/
+│  ├─ src/index.ts
+│  │  # Cloudflare Workers 实验后端，兼容现有 /health 和 /api/v1/ai/hooks/:hookId
+│  ├─ package.json
+│  ├─ tsconfig.json
+│  └─ wrangler.toml
+└─ docs/
+```
+
+---
+
+## 当前完成状态
+
+已完成：
+
+- [x] 保留原 `backend/`，不破坏腾讯云后端路线。
+- [x] 新增 `cloudflare-worker/` 作为 Cloudflare Workers 实验后端。
+- [x] Worker 暴露 `GET /health`。
+- [x] Worker 暴露 `POST /api/v1/ai/hooks/:hookId`。
+- [x] Worker 初版支持 `module-1-1.intro-reply`。
+- [x] Worker 支持 DeepSeek API 调用。
+- [x] Worker 支持 fallback，避免模型调用失败时前端流程卡住。
+- [x] Worker 支持 CORS 配置。
+- [x] npm run check 已通过本地 TypeScript 校验。
+
+待完成：
+
+- [ ] 在 Cloudflare Pages 部署前端 `src/`。
+- [ ] 在 Cloudflare Workers 配置 `DEEPSEEK_API_KEY` secret。
+- [ ] 部署 Worker 并验证 `/health`。
+- [ ] 验证 Worker 的 `module-1-1.intro-reply` hook。
+- [ ] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
+- [ ] 逐步迁移其余 hook：`1-3`、`2-2`、`3-2`、`4-2`、`4-4`、`4-6`、`6-2`。
+- [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
+- [ ] 如果继续推进，补齐用户数据保存方案，例如 D1 / R2 / 外部数据库；当前未实现数据持久化。
+
+---
+
+## 为什么新增 `cloudflare-worker/` 而不是直接改 `backend/`
+
+原 `backend/` 使用：
+
+```text
+Node.js + Fastify + systemd + Nginx
+```
+
+它适合部署在腾讯云 Lighthouse、阿里云 ECS 或其它 Linux VM 上。
+
+Cloudflare Workers 是 serverless runtime，不是传统 Node.js 长驻进程环境。虽然都能写 TypeScript，但运行模型、部署方式、环境变量、文件读取和包兼容性都不同。
+
+因此本仓库采用双后端结构：
+
+```text
+backend/              正式 VM 后端路线
+cloudflare-worker/    Cloudflare 实验后端路线
+```
+
+这样可以实验 Cloudflare，而不污染原正式后端。
+
+---
+
+## Cloudflare Pages 前端部署
+
+如果只是部署静态前端页面，代码不需要改。
+
+Cloudflare Pages 配置：
+
+```text
+Framework preset: None
+Build command: 留空
+Build output directory: src
+```
+
+部署后会得到类似：
+
+```text
+https://your-project.pages.dev
+```
+
+如果只看页面显示，这一步已经足够。
+
+如果要连接后端 AI，则前端需要配置 `apiBaseUrl`。
+
+临时测试方式：
+
+```text
+https://your-project.pages.dev/?apiBaseUrl=https://your-worker.your-account.workers.dev
+```
+
+长期建议：后续增加构建时生成 `src/runtime-config.js` 的脚本，通过环境变量注入 API 地址。
+
+---
+
+## Cloudflare Worker 后端部署
+
+进入 Worker 目录：
+
+```bash
+cd cloudflare-worker
+npm install
+```
+
+本地类型检查：
+
+```bash
+npm run check
+```
+
+登录 Cloudflare：
+
+```bash
+npx wrangler login
+```
+
+配置 DeepSeek API Key。
+
+注意：不要把真实 key 写入代码或 GitHub。
+
+```bash
+npx wrangler secret put DEEPSEEK_API_KEY
+```
+
+可选配置前端来源，编辑 `wrangler.toml`：
+
+```toml
+CORS_ORIGIN = "https://your-project.pages.dev,https://resilience-training-programme-two.vercel.app"
+```
+
+部署：
+
+```bash
+npm run deploy
+```
+
+验证健康检查：
+
+```bash
+curl https://your-worker.your-account.workers.dev/health
+```
+
+验证 AI hook：
+
+```bash
+curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module-1-1.intro-reply \
+  -H "Content-Type: application/json" \
+  -d '{"moduleId":"1-1","step":1,"userInput":"我最近压力有点大，希望能更好地调整自己。","context":{"source":"cloudflare-worker-smoke-test"}}'
+```
+
+成功时应返回：
+
+```json
+{
+  "moduleId": "1-1",
+  "hookId": "module-1-1.intro-reply",
+  "replyText": "...",
+  "fallbackUsed": false,
+  "provider": "deepseek",
+  "metadata": {
+    "runtime": "cloudflare-worker"
+  }
+}
+```
+
+如果 DeepSeek 调用失败，接口仍会返回 fallback，并标记：
+
+```json
+{
+  "fallbackUsed": true
+}
+```
+
+---
+
+## Cloudflare 实验线与正式线的区别
+
+| 项目 | Cloudflare 实验线 | 腾讯云正式线 |
+|---|---|---|
+| 前端 | Cloudflare Pages | Vercel / EdgeOne Pages / COS + EdgeOne |
+| 后端 | Cloudflare Workers | Lighthouse + Fastify + Nginx + systemd |
+| 优点 | 部署快、免费额度友好、适合实验 | 更贴近国内正式访问、后端能力完整 |
+| 风险 | 国内网络稳定性不确定，Worker 后端需重构 | 需要域名、HTTPS、ICP备案 |
+| 当前定位 | 实验/备用入口 | 正式路线 |
+
+---
+
+## 后续开发原则
+
+- 不要把 DeepSeek API Key 写入前端或仓库。
+- Cloudflare Worker 必须保持和现有前端 API 契约兼容。
+- 前端课程文案、UI、模块流程仍遵守原路线图约束，不因 Cloudflare 实验线随意改写。
+- 先迁移少量 hook 做可行性验证，再决定是否迁移全部 hook。
+- 如果 Worker 后端继续扩大，建议把 prompt 与 hook 配置从 `backend/` 抽成可复用共享包，避免双后端长期复制。
+
+---
+
+## 下一步建议
+
+1. 先在 Cloudflare Pages 部署前端 `src/`，确认页面可访问。
+2. 部署 `cloudflare-worker/`，验证 `/health`。
+3. 配置 Worker secret `DEEPSEEK_API_KEY`。
+4. 验证 `module-1-1.intro-reply`。
+5. 用 Pages URL 参数 `?apiBaseUrl=...` 指向 Worker，测试前端完整调用。
+6. 如果稳定，再迁移其它 AI hook。
+
+
