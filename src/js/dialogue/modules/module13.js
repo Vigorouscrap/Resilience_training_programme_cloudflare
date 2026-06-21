@@ -48,20 +48,22 @@ export const module13Handlers = {
             appendAiMessage(this.chatMessages, '现在，请你在下方的输入框中，简单写下一件近期让你觉得有压力的事。', true);
             this.step = 4;
         } else if (this.step === 4) {
-            appendAiMessage(this.chatMessages, '不需要写太多细节，简单描述即可。（例如：“最近晚上总睡不好”、“与同事有些摩擦相处不大愉快”）', true);
+            appendAiMessage(this.chatMessages, '不需要写太多细节，简单描述即可。（例如：“最近晚上总睡不好，半夜醒来很多次”、“与同事有些摩擦相处不大愉快”）', true);
             this.step = 5;
         } else if (this.step === 5) {
             appendAiMessage(this.chatMessages, '请放心，所有的对话记录都将完全匿名化处理，不会保存任何身份信息，请放心真实地表达。', true);
             this.step = 6;
         } else if (this.step === 6) {
-            appendAiMessage(this.chatMessages, '你有4分钟的时间思考和输入。不用着急，慢慢来。写的时候不必强迫自己回忆不愉快或不好的事，跟着自己的感觉来就好。', false);
-            appendHint(this.chatMessages, '如果暂时没有想法，也可以先停一停，想到什么再写。');
-            this.enableInputForModule(this.chatMessages);
-            this.step = 7;
+            appendAiMessageWithTimer(this.chatMessages, '你有充足的时间思考和输入。不用着急，慢慢来。写的时候不必强迫自己回忆不愉快或不好的事，跟着自己的感觉来就好。（计时结束后将开放输入框）', 180000, () => {
+                appendHint(this.chatMessages, '如果暂时没有想法，也可以先停一停，想到什么再写。');
+                this.enableInputForModule(this.chatMessages);
+                this.step = 7;
+            });
+            disableInput(this.inputArea, this.userInput);
         } else if (this.step === 7) {
             const eventText = this.module13State.eventText || '（未填写具体事件）';
-            appendAiMessage(this.chatMessages, '感谢你的分享。接下来，我将你刚才描述的内容转化为一个匿名的“情绪卡片”。', false);
-            appendSpecialCard(this.chatMessages, `<p><strong>匿名情绪卡片</strong></p><p>${this.escapeHtml(eventText)}</p>`);
+            appendAiMessage(this.chatMessages, '感谢你的分享。接下来，我将你刚才描述的内容转化为一张卡片。', false);
+            appendSpecialCard(this.chatMessages, `<p><strong>情绪卡片</strong></p><p>${this.escapeHtml(eventText)}</p>`);
             appendContinueButton(this.chatMessages);
             this.step = 8;
         } else if (this.step === 8) {
@@ -111,6 +113,23 @@ export const module13Handlers = {
 
     async handleModule13DocxUserMessage(text) {
         if (this.step === 7) {
+            const normalizedText = String(text || '').trim();
+            const contentLength = normalizedText.replace(/\s+/g, '').length;
+            const onlyPunctuationOrDigits = /^[\p{P}\p{S}\d\s]+$/u.test(normalizedText);
+            const hasRepeatedChar = /(.)\1{5,}/.test(normalizedText);
+
+            if (contentLength < 5) {
+                appendAiMessage(this.chatMessages, '内容有点简略哦，请再次思考并输入吧。', false);
+                this.enableInputForModule(this.chatMessages);
+                return;
+            }
+
+            if (onlyPunctuationOrDigits || hasRepeatedChar) {
+                appendAiMessage(this.chatMessages, '检测到无效内容，请使用完整的句子描述。', false);
+                this.enableInputForModule(this.chatMessages);
+                return;
+            }
+
             this.module13State.eventText = text;
             disableInput(this.inputArea, this.userInput);
             this.onContinue();
