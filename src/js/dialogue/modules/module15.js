@@ -4,7 +4,9 @@ import {
     appendContinueButton,
     appendHint,
     appendAiMessageWithTimer,
-    playManagedAudio
+    playManagedAudio,
+    disableInput,
+    appendButtonGroup
 } from '../../ui.js';
 
 const module15MilkExperienceAudioPath = encodeURI('audio/module15/1-5牛奶牛奶体验.mp3');
@@ -42,6 +44,46 @@ export const module15Handlers = {
         } else if (this.step === 6) {
             appendAiMessage(this.chatMessages, '体验结束。现在，请回顾一下刚才的过程。随着每一次的重复，你是否有注意到任何微小的变化？', true);
             this.step = 7;
+        }else if (this.step === 7) {
+            appendAiMessage(this.chatMessages, '例如身体上，喉咙或嘴巴的感觉？胃部的感觉？', true);
+            this.step = 8;
+        }else if (this.step === 8) {
+            appendAiMessage(this.chatMessages, '例如心理上，是否短暂地觉得“好像真的有点想喝了”？或者产生了“牛奶好像挺香”的画面？或者冒出了“我该去喝一杯吗？”的想法？', true);
+            this.step = 9;
+        } else if (this.step === 9) {
+            appendAiMessage(this.chatMessages, '请根据你的感受选择选项。请记住，没有标准答案。', false);
+            appendButtonGroup(this.chatMessages, ['身体有感觉', '心理有感觉', '没有任何感觉'], (choice) => {
+                const removeCurrentButtonGroup = (chatMessages) => {
+                    const currentBtnGroup = chatMessages.querySelector('.button-group');
+                    if (currentBtnGroup) currentBtnGroup.remove();
+                };
+
+                removeCurrentButtonGroup(this.chatMessages);
+
+                if (/^(身体有感觉|心理有感觉)/.test(choice)) {
+                    appendAiMessage(this.chatMessages, '感谢你的观察。你亲身验证了一个心理现象：仅仅在脑海中重复一个想法（我想喝牛奶），我们的身体或心理就可能产生相应的反应（如嘴里的感觉、想喝的冲动）。但这和“我身体此刻真的需要牛奶或者营养”这个事实，是两回事。想法可以引发真实的感受，但想法本身不是事实。', true);
+                    appendAiMessage(this.chatMessages, '生活中也是如此。当例如“我可能会失败”这个想法出现时，它引发的焦虑感非常真实。但这个想法不等于失败的事实。关键的一步，就是学会在想法产生时，对自己说：我注意到我有一个“可能会失败”的想法。', true);
+                    appendAiMessage(this.chatMessages, '这样，我们就从“被想法控制”，变成了“观察想法”。', true);
+                } else if (/^没有任何感觉/.test(choice)) {
+                    appendAiMessage(this.chatMessages, '感谢你的分享。你的体验同样重要，它说明了：即使同一个想法反复出现，我们每个人与它的距离也可以是不一样的。你能平静地观察它，而不被它带动，这本身就是一种心理能力，即觉察而不卷入。', true);
+                    appendAiMessage(this.chatMessages, '在生活中，当例如“我可能做不好”的想法出现时，如果你能像现在这样，注意到它，但不自动相信它就是事实，从而将想法从事实中分离出来看待，便已经迈出了第一步。', true);
+                }
+
+                // 分支合并内容
+                appendAiMessage(this.chatMessages, '今天的练习就像一个显微镜，让我们放慢速度，亲眼看到想法如何运作。', false);
+                appendAiMessage(this.chatMessages, '这个过程，不是要消灭任何担忧、消极的想法，而是培养一种新的关系：从“我是我的想法”，转变为“我有一个想法”。', false);
+                appendAiMessage(this.chatMessages, '当你在被某个反复出现的想法困扰时，可以回想今天这个牛奶体验练习。提醒自己：这只是一个正在我脑海里播放的想法频道，我可以选择换台，或者只是听着，但不一定要相信它的所有广告。', false);
+                appendAiMessage(this.chatMessages, '今天你完成了一次练习：想法可以产生感觉，但想法不等于事实。因此要观察想法，而非成为想法。', false);
+                appendAiMessage(this.chatMessages, '为了帮助你将来更好地将这项技能应用于生活，这里有一个日常练习锦囊：生活中，每当你感觉被某个想法困住时，尝试在它前面加上一句：“我注意到我正在想…” 这个简单的句式，能帮你与想法拉开距离，重获主动权。', false);
+                appendContinueButton(this.chatMessages);
+                try {
+                    disableInput(this.inputArea, this.userInput);
+                } catch (e) {
+                    // ignore
+                }
+
+                this.step = 10;
+            });
         }
     },
 
