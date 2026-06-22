@@ -4,6 +4,7 @@
     DEEPSEEK_MODEL?: string;
     DEEPSEEK_TIMEOUT_MS?: string;
     CORS_ORIGIN?: string;
+    DB?: D1Database;
 }
 
 interface AiHookRequestBody {

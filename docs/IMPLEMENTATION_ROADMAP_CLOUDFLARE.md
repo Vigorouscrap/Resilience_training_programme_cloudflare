@@ -24,6 +24,7 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 
 ## 更新记录
 
+- 2026-06-22：完成阶段 9A-1，本地新增 D1 schema 草案、Worker 数据访问层接口与 D1 binding 占位说明；当前尚未要求用户创建 D1 数据库。
 - 2026-06-20：建立 Cloudflare 实验线专用路线图，确认当前 Cloudflare 闭环已跑通，并将下一阶段定义为“阶段 9A：用户体系与数据能力最小原型”。
 
 ---
@@ -480,10 +481,16 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 
 ### 9A-1：设计与本地准备
 
-- [ ] 确认身份方案：默认采用参与者编号 / 邀请码。
-- [ ] 新增 D1 schema 草案。
-- [ ] 新增 Worker 数据访问层接口。
-- [ ] 明确数据字段是否包含完整原始输入、AI 回复、时间戳、模块编号。
+- [x] 确认身份方案：默认采用参与者编号 / 邀请码。
+- [x] 新增 D1 schema 草案：`cloudflare-worker/migrations/0001_research_data.sql`。
+- [x] 新增 Worker 数据访问层接口：`cloudflare-worker/src/data/research-repository.ts`。
+- [x] 明确数据字段包含参与者编号、session、模块编号、步骤、用户输入、AI 回复、fallback 状态和时间戳。
+
+9A-1 说明：
+
+- D1 schema 已覆盖 `participants`、`sessions`、`module_events`、`ai_call_events`、`exports`。
+- Worker 数据访问层提供 D1 与 no-op 双模式：未绑定 D1 时不阻断现有 AI 流程，绑定 D1 后可写入数据。
+- 当前只完成本地设计和类型接口，尚未启用线上 D1 写入。
 
 ### 9A-2：参与者与 session
 

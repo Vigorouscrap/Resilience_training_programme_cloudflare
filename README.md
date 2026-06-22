@@ -20,7 +20,8 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ## 更新记录
 
-- 2026-06-20：新增 Cloudflare 实验线专用 `docs/IMPLEMENTATION_ROADMAP.md`，将下一阶段明确为阶段 9A 用户体系与数据能力最小原型。
+- 2026-06-22：推进阶段 9A-1，新增 Cloudflare D1 研究数据 schema 草案与 Worker 数据访问层接口，暂不改变现有前端流程。
+- 2026-06-20：新增 Cloudflare 实验线专用 `docs/IMPLEMENTATION_ROADMAP_CLOUDFLARE.md`，将下一阶段明确为阶段 9A 用户体系与数据能力最小原型。
 - 2026-06-20：确认 Cloudflare Pages 前端可以通过 Worker 获得个性化回复，并将 `src/runtime-config.js` 默认 API 地址设置为当前 Worker。
 - 2026-06-20：根据线上 smoke test 结果，放宽 `module-6-2.value-desire-insight` 的 Worker 输出校验上限，减少该节点因模型回复略长而走 fallback 的概率。
 - 2026-06-20：完成 Cloudflare Worker 当前全部 10 个 AI hook 迁移，新增 `smoke:hooks` 一键验证脚本，并补充部署后验证说明。
@@ -36,8 +37,12 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 ├─ backend/
 │  └─ 原 Node.js + Fastify 后端，适合腾讯云 Lighthouse / ECS，不建议直接部署到 Workers
 ├─ cloudflare-worker/
+│  ├─ migrations/
+│  │  └─ 0001_research_data.sql
 │  ├─ src/index.ts
 │  │  # Cloudflare Workers 实验后端，兼容现有 /health 和 /api/v1/ai/hooks/:hookId
+│  ├─ src/data/research-repository.ts
+│  │  # 阶段 9A 数据访问层接口，支持 D1 / no-op 双模式
 │  ├─ package.json
 │  ├─ tsconfig.json
 │  └─ wrangler.toml
@@ -68,7 +73,8 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 - [x] 逐个验证 Worker 的全部 AI hook 是否都能返回 `fallbackUsed: false`。
 - [x] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
 - [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
-- [ ] 推进阶段 9A：使用参与者编号 / 邀请码 + D1 草案实现最小用户数据保存与导出原型。
+- [x] 阶段 9A-1：确认参与者编号 / 邀请码方案，新增 D1 schema 草案与 Worker 数据访问层接口。
+- [ ] 阶段 9A-2：新增 `POST /api/v1/participants/start` 并接入前端参与者 session。
 
 当前 Worker 已包含的 hook：
 
@@ -281,15 +287,15 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 - 当前已经完成全部现有 AI hook 的 Worker 迁移、线上部署与逐个 hook 验证。
 - 下一阶段是阶段 9A：用户体系与数据能力最小原型，优先采用参与者编号 / 邀请码，而不是完整账号密码注册。
 - 如果 Worker 后端继续扩大，建议把 prompt 与 hook 配置从 `backend/` 抽成可复用共享包，避免双后端长期复制。
-- 详见 `docs/IMPLEMENTATION_ROADMAP.md`。
+- 详见 `docs/IMPLEMENTATION_ROADMAP_CLOUDFLARE.md`。
 
 ---
 
 ## 下一步建议
 
-1. 确认阶段 9A 身份方案：默认采用参与者编号 / 邀请码。
-2. 新增 Cloudflare D1 schema 草案。
-3. 新增 `POST /api/v1/participants/start`，让前端能创建或恢复参与者 session。
-4. 新增最小事件记录接口，先记录少量关键模块输入。
-5. 扩展 AI hook 写入调用记录，但必须保证写入失败不影响现有课程流程。
-6. 新增最小 JSON 导出接口，先按参与者编号导出。
+1. 在 Cloudflare 后台或 Wrangler 创建 D1 数据库。
+2. 将 D1 的 `database_id` 填入 `cloudflare-worker/wrangler.toml` 的占位块。
+3. 应用 `cloudflare-worker/migrations/0001_research_data.sql`。
+4. 新增 `POST /api/v1/participants/start`，让前端能创建或恢复参与者 session。
+5. 新增最小事件记录接口，先记录少量关键模块输入。
+6. 扩展 AI hook 写入调用记录，但必须保证写入失败不影响现有课程流程。

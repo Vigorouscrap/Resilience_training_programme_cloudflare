@@ -8,3 +8,13 @@ DEEPSEEK_MODEL = "deepseek-v4-flash"
 # Comma-separated frontend origins allowed to call this Worker.
 # Example: "https://your-project.pages.dev,https://resilience-training-programme-two.vercel.app"
 CORS_ORIGIN = "*"
+
+# Stage 9A data prototype:
+# 1. Create a D1 database in Cloudflare.
+# 2. Replace database_name/database_id below with values from `wrangler d1 create`.
+# 3. Uncomment this block before applying migrations or deploying data APIs.
+#
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "resilience_research"
+# database_id = "replace-with-cloudflare-d1-database-id"
