@@ -1,4 +1,6 @@
-﻿export interface Env {
+﻿import { createResearchDataRepository } from './data/research-repository.js';
+
+export interface Env {
     DEEPSEEK_API_KEY: string;
     DEEPSEEK_BASE_URL?: string;
     DEEPSEEK_MODEL?: string;
@@ -16,6 +18,11 @@ interface AiHookRequestBody {
     context?: Record<string, unknown>;
 }
 
+interface ParticipantStartRequestBody {
+    participantCode?: string;
+    clientSessionId?: string;
+    metadata?: Record<string, unknown>;
+}
 interface HookVariant {
     key: string;
     systemPrompt: string;
@@ -544,6 +551,66 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
     }, 200, corsHeaders);
 }
 
+function validateParticipantCode(value: string): { ok: boolean; normalizedValue: string; error?: string } {
+    const normalizedValue = value.trim().toUpperCase();
+    if (!normalizedValue) {
+        return { ok: false, normalizedValue, error: 'Missing required field: participantCode' };
+    }
+    if (normalizedValue.length < 2 || normalizedValue.length > 64) {
+        return { ok: false, normalizedValue, error: 'participantCode must be 2-64 characters long.' };
+    }
+    if (!/^[A-Z0-9_-]+$/.test(normalizedValue)) {
+        return { ok: false, normalizedValue, error: 'participantCode can only contain letters, numbers, underscores, and hyphens.' };
+    }
+    return { ok: true, normalizedValue };
+}
+
+async function handleParticipantStartRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
+    let body: ParticipantStartRequestBody;
+    try {
+        body = await request.json();
+    } catch {
+        return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders);
+    }
+
+    const validation = validateParticipantCode(String(body.participantCode || ''));
+    if (!validation.ok) {
+        return jsonResponse({ error: validation.error }, 400, corsHeaders);
+    }
+
+    const input = {
+        participantCode: validation.normalizedValue,
+        clientSessionId: String(body.clientSessionId || '').trim() || undefined,
+        userAgent: request.headers.get('User-Agent') || '',
+        metadata: body.metadata
+    };
+
+    try {
+        const repository = createResearchDataRepository(env.DB);
+        const result = await repository.startParticipantSession(input);
+        return jsonResponse({
+            ...result,
+            metadata: {
+                runtime: 'cloudflare-worker',
+                storage: result.persisted ? 'd1' : 'memory-noop'
+            }
+        }, 200, corsHeaders);
+    } catch (error) {
+        console.warn('Participant session persistence failed', error instanceof Error ? error.message : error);
+
+        const fallbackRepository = createResearchDataRepository(undefined);
+        const result = await fallbackRepository.startParticipantSession(input);
+        return jsonResponse({
+            ...result,
+            metadata: {
+                runtime: 'cloudflare-worker',
+                storage: 'memory-noop',
+                warning: 'Persistence is unavailable; returned a non-persisted session.'
+            }
+        }, 200, corsHeaders);
+    }
+}
+
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         const corsHeaders = buildCorsHeaders(request, env);
@@ -566,6 +633,9 @@ export default {
             }, 200, corsHeaders);
         }
 
+        if (request.method === 'POST' && url.pathname === '/api/v1/participants/start') {
+            return handleParticipantStartRequest(request, env, corsHeaders);
+        }
         const hookMatch = url.pathname.match(/^\/api\/v1\/ai\/hooks\/([^/]+)$/);
         if (request.method === 'POST' && hookMatch) {
             return handleHookRequest(request, env, decodeURIComponent(hookMatch[1]), corsHeaders);
@@ -574,3 +644,5 @@ export default {
         return jsonResponse({ error: 'Not found.' }, 404, corsHeaders);
     }
 };
+
+

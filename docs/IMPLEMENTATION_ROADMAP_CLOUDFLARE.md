@@ -24,6 +24,7 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 
 ## 更新记录
 
+- 2026-06-22：推进阶段 9A-2，新增 `POST /api/v1/participants/start` 后端接口和 `smoke:participant` 验证脚本；前端参与者编号输入仍待接入。
 - 2026-06-22：完成阶段 9A-1，本地新增 D1 schema 草案、Worker 数据访问层接口与 D1 binding 占位说明；当前尚未要求用户创建 D1 数据库。
 - 2026-06-20：建立 Cloudflare 实验线专用路线图，确认当前 Cloudflare 闭环已跑通，并将下一阶段定义为“阶段 9A：用户体系与数据能力最小原型”。
 
@@ -494,10 +495,18 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 
 ### 9A-2：参与者与 session
 
-- [ ] 新增 `POST /api/v1/participants/start`。
+- [x] 新增 `POST /api/v1/participants/start`。
+- [x] 新增 `npm run smoke:participant` 验证脚本。
 - [ ] 前端新增参与者编号输入或启动流程。
 - [ ] 前端保存 `participantCode` 与 `sessionId`。
 - [ ] 验证刷新页面后仍能恢复当前参与者上下文。
+
+9A-2 后端接口说明：
+
+- 请求体包含 `participantCode`、可选 `clientSessionId` 和 `metadata`。
+- 未绑定 D1 时返回 `persisted: false`，用于证明接口形状可用但未真实入库。
+- 绑定并迁移 D1 后返回 `persisted: true`，用于证明数据已写入 Cloudflare D1。
+- 参与者编号会统一转成大写，并限制为字母、数字、下划线和短横线。
 
 ### 9A-3：事件与 AI 调用记录
 

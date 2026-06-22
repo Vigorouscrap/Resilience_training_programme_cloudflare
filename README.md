@@ -20,6 +20,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ## 更新记录
 
+- 2026-06-22：推进阶段 9A-2，新增 `POST /api/v1/participants/start` 参与者 session 接口与 `smoke:participant` 验证脚本；前端参与者输入尚未接入。
 - 2026-06-22：推进阶段 9A-1，新增 Cloudflare D1 研究数据 schema 草案与 Worker 数据访问层接口，暂不改变现有前端流程。
 - 2026-06-20：新增 Cloudflare 实验线专用 `docs/IMPLEMENTATION_ROADMAP_CLOUDFLARE.md`，将下一阶段明确为阶段 9A 用户体系与数据能力最小原型。
 - 2026-06-20：确认 Cloudflare Pages 前端可以通过 Worker 获得个性化回复，并将 `src/runtime-config.js` 默认 API 地址设置为当前 Worker。
@@ -74,7 +75,8 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 - [x] 将 Cloudflare Pages 前端的 `apiBaseUrl` 指向 Worker 地址。
 - [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
 - [x] 阶段 9A-1：确认参与者编号 / 邀请码方案，新增 D1 schema 草案与 Worker 数据访问层接口。
-- [ ] 阶段 9A-2：新增 `POST /api/v1/participants/start` 并接入前端参与者 session。
+- [x] 阶段 9A-2 后端部分：新增 `POST /api/v1/participants/start`。
+- [ ] 阶段 9A-2 前端部分：接入参与者编号输入与 session 保存。
 
 当前 Worker 已包含的 hook：
 
@@ -218,6 +220,20 @@ npm.cmd run smoke:hooks
 
 这个命令会依次检查 `/health` 和全部 10 个 AI hook。默认要求每个 hook 都返回 `fallbackUsed: false`，这样才能确认 Worker 已经真实调用 DeepSeek，而不是只走了兜底文案。如果只是想确认路由结构是否通，可以临时设置 `ALLOW_FALLBACKS=1`。
 
+阶段 9A-2 参与者 session 接口验证：
+
+```bash
+WORKER_BASE_URL=https://your-worker.your-account.workers.dev npm run smoke:participant
+```
+
+在 Windows PowerShell 中可以这样写：
+
+```powershell
+npm.cmd run smoke:participant -- https://your-worker.your-account.workers.dev P001 smoke-session-001
+```
+
+如果尚未绑定 D1，预期返回 `persisted: false` 与 `metadata.storage: "memory-noop"`，表示接口可用但没有真实入库。如果已绑定并迁移 D1，预期返回 `persisted: true` 与 `metadata.storage: "d1"`。
+
 验证 AI hook，例如：
 
 ```bash
@@ -296,6 +312,6 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 1. 在 Cloudflare 后台或 Wrangler 创建 D1 数据库。
 2. 将 D1 的 `database_id` 填入 `cloudflare-worker/wrangler.toml` 的占位块。
 3. 应用 `cloudflare-worker/migrations/0001_research_data.sql`。
-4. 新增 `POST /api/v1/participants/start`，让前端能创建或恢复参与者 session。
-5. 新增最小事件记录接口，先记录少量关键模块输入。
-6. 扩展 AI hook 写入调用记录，但必须保证写入失败不影响现有课程流程。
+4. 部署 Worker 后运行 `smoke:participant` 验证参与者 session 接口。
+5. 接入前端参与者编号输入与 session 保存。
+6. 新增最小事件记录接口，先记录少量关键模块输入。

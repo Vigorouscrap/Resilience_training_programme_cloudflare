@@ -7,7 +7,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "check": "tsc --noEmit",
-    "smoke:hooks": "node scripts/smoke-hooks.mjs"
+    "smoke:hooks": "node scripts/smoke-hooks.mjs",
+    "smoke:participant": "node scripts/smoke-participant.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250620.0",
