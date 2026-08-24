@@ -8,6 +8,7 @@ export interface Env {
     CORS_ORIGIN?: string;
     TESTER_PARTICIPANT_CODES?: string;
     ADMIN_PARTICIPANT_CODES?: string;
+    REQUIRE_PERSISTENCE?: string;
     DB?: D1Database;
 }
 
@@ -638,6 +639,10 @@ async function handleParticipantStartRequest(request: Request, env: Env, corsHea
         }, 200, corsHeaders);
     } catch (error) {
         console.warn('Participant session persistence failed', error instanceof Error ? error.message : error);
+        const persistenceRequired = String(env.REQUIRE_PERSISTENCE || '').toLowerCase() === 'true';
+        if (env.DB || persistenceRequired) {
+            return jsonResponse({ error: 'Research data storage is unavailable.' }, 503, corsHeaders);
+        }
 
         const fallbackRepository = createResearchDataRepository(undefined);
         const result = await fallbackRepository.startParticipantSession(input);

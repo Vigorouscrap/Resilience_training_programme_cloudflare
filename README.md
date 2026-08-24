@@ -236,7 +236,7 @@ WORKER_BASE_URL=https://your-worker.your-account.workers.dev npm run smoke:parti
 npm.cmd run smoke:participant -- https://your-worker.your-account.workers.dev P001 sxq smoke-session-001
 ```
 
-如果尚未绑定 D1，预期返回 `persisted: false` 与 `metadata.storage: "memory-noop"`，表示接口可用但没有真实入库。如果已绑定并迁移 D1，预期返回 `persisted: true` 与 `metadata.storage: "d1"`。
+线上研究环境已绑定 D1，预期返回 persisted: true 与 metadata.storage: "d1"；本地未绑定 D1 时才允许用于接口形状测试的 memory-noop。
 
 参与者编号说明：
 
@@ -247,6 +247,11 @@ npm.cmd run smoke:participant -- https://your-worker.your-account.workers.dev P0
 - 测试账号或高权限账号不由前端自己声明，而是在 cloudflare-worker/wrangler.toml 的 TESTER_PARTICIPANT_CODES / ADMIN_PARTICIPANT_CODES 中配置。
 - 普通参与者当前仍按 unlockStartAt 逐日解锁；tester/admin 会在接口返回的 access.canAccessAllModules 中显示可访问全部模块。基于完成状态、次日 00:00 解锁将在 9A-3 实现。
 
+免预录入的取舍：
+
+- 优点：首次使用即可创建，不需要研究人员提前维护名单，部署和招募流程更简单。
+- 风险：输错编号或姓名会产生另一条身份；知道他人信息的人可以冒用；后续需要管理员合并或纠错。
+- 当前接受原因：研究参与者第二次登录时如果看不到历史进度，通常可以发现输入有误；正式研究前仍应保留数据审计和人工纠错能力。
 阶段 9A-1 前端和 Worker 验证：
 
 1. 打开前端首页，应先看到登录浮层，未登录时不能进入任何周或模块。
@@ -330,7 +335,7 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 ## 下一步建议
 
 1. 在 Cloudflare 后台或 Wrangler 创建 D1 数据库。
-2. 将 D1 的 `database_id` 填入 `cloudflare-worker/wrangler.toml` 的占位块。
+2. 当前实验库已绑定到 cloudflare-worker/wrangler.toml；如新建环境，只需替换 database_name 和 database_id。
 3. 应用 `cloudflare-worker/migrations/0001_research_data.sql`。
 4. 部署 Worker 后运行 `smoke:participant` 验证参与者 session 接口。
 5. 部署 Pages 后手动验证研究编号输入、刷新恢复和逐日解锁展示。

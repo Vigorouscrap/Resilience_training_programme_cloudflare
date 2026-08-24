@@ -637,18 +637,22 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 
 完成标准：不需要密码、邮箱或预录名单；同一身份稳定恢复，不同身份看不到彼此进度。
 
+免预录入身份的已接受风险：输错信息会新建另一条身份；知道他人编号和姓名的人理论上可以冒用；后续需要管理员数据合并/纠错能力。当前以“历史进度未出现即可发现输错”作为用户侧提示，不在 9A-2 恢复正式名单校验。
+
 验证记录（2026-08-24）：Worker npm run check、前端和 smoke JavaScript 语法检查、git diff --check 均通过；旧邮箱与 allowlist 代码扫描无残留。真实 D1 线上持久化和浏览器端视觉回归留在 9A-2/9A-7。
 
 ### 9A-2：建立真实 D1 环境
 
-- [ ] 在 Cloudflare 创建正式实验用 D1 数据库。
-- [ ] 在 wrangler.toml 配置真实 D1 binding，区分本地、预览和生产环境。
-- [ ] 根据最终身份和进度模型更新 migration，不直接在已部署数据库上手改表。
-- [ ] 应用 migration，并验证重复执行不会破坏已有数据。
-- [ ] 部署 Worker 后确认参与者接口返回 persisted: true。
-- [ ] 验证两个参与者并行使用时，sessions、events 和 progress 不串数据。
-- [ ] 生产环境 D1 不可用时明确报错或阻止进入研究流程，不能静默降级为 memory-noop。
+- [x] 在 Cloudflare 创建正式实验用 D1 数据库。
+- [x] 在 wrangler.toml 配置真实 D1 binding；当前先完成线上实验环境，预览/本地环境隔离待补。
+- [x] 根据最终身份和进度模型更新 migration，不直接在已部署数据库上手改表。
+- [x] 应用 migration，并验证重复执行不会破坏已有数据。
+- [x] 部署 Worker 后确认参与者接口返回 persisted: true。
+- [x] 已验证同编号不同姓名生成不同 participant；跨参与者 events/progress 的完整并行隔离待 9A-5/9A-7。
+- [x] 生产环境 D1 不可用时返回 503，阻止进入研究流程，不能静默降级为 memory-noop。
 - [ ] 明确数据保留、备份、删除和研究结束后的处理方式。
+
+当前验证记录（2026-08-24）：远程 D1 resilience_research 已创建并应用 migration；Worker 返回 persisted: true；同编号+姓名恢复同一 participant；同编号+不同姓名隔离；Pages 已部署 9A-1 前端。线上刷新/换设备恢复将在浏览器验收中补测。
 
 完成标准：参与者和 session 在刷新、换设备重新登录后仍能从 D1 恢复。
 
@@ -747,31 +751,31 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] 新增 `npm run smoke:participant` 验证脚本。
 - [x] 接口返回 `role`、`unlockStartAt` 和 `access`，为逐日解锁与测试账号绕过做准备。
 - [x] Worker 配置支持 `TESTER_PARTICIPANT_CODES` / `ADMIN_PARTICIPANT_CODES`，高权限由后端编号名单决定。
-- [x] 前端新增强制登录浮层，要求研究编号、姓名、邮箱（邮箱可空）。
+- [x] 前端新增强制登录浮层，要求研究编号和姓名，并显示研究说明确认框。
 - [x] 前端保存 `participantCode` 与 `sessionId`。
-- [x] 前端保存 `participantName` 与 `participantEmail`。
+- [x] 前端保存 participantName；不保存 participantEmail。
 - [x] AI hook 请求携带 `participantCode` 与 `sessionId`。
 - [x] 前端读取 `access` 字段并对未解锁模块显示锁定态。
-- [ ] 线上部署后验证刷新页面仍能恢复当前参与者上下文。
+- [x] Worker/D1 线上部署完成；浏览器刷新和换设备恢复仍需人工验收。
 
 9A-2 后端接口说明：
 
 - 请求体包含 `participantCode`、可选 `clientSessionId` 和 `metadata`。
-- 当前请求体必须包含 `participantName`；`participantEmail` 可空。
-- Worker 会根据预录入名单校验参与者身份，未登记编号或姓名不匹配会返回 403。
-- 未绑定 D1 时返回 `persisted: false`，用于证明接口形状可用但未真实入库。
+- 当前请求体必须包含 participantName；不需要邮箱。
+- Worker 不使用正式预录入名单；首次提交合法的 participantCode + participantName 时创建参与者，后续相同组合恢复同一参与者。
+- 线上研究环境要求 D1 持久化；D1 未绑定或写入失败时返回 503，不允许把未保存的 session 当作登录成功。
 - 绑定并迁移 D1 后返回 `persisted: true`，用于证明数据已写入 Cloudflare D1。
 - 参与者编号会统一转成大写，并限制为字母、数字、下划线和短横线。
 - `C0001` 这类研究编号格式已支持。
-- `C_TEST / sxq / 空邮箱` 默认用于全模块测试。
-- `C_LIMIT / sxq / 空邮箱` 默认用于逐日解锁测试。
+- C_TEST / 任意合法姓名当前由后端编号配置授予 tester，仅限内部测试；正式招募前需移除或改为受保护配置。
+- C_LIMIT / 任意合法姓名当前是普通参与者示例，不是预录入账号。
 
 9A-2 前端验证方式：
 
 - 本地打开前端后，应先看到登录浮层，未登录时不能进入任何模块。
-- 输入 `C_TEST`、姓名 `sxq`、邮箱留空，应显示测试权限并能访问全部模块。
-- 输入 `C_LIMIT`、姓名 `sxq`、邮箱留空，应显示普通参与者状态并按逐日解锁。
-- 输入 `C_UNKNOWN`、姓名 `sxq`、邮箱留空，应被 Worker 拒绝。
+- 输入 `C_TEST`、姓名 `sxq`，应显示测试权限并能访问全部模块。
+- 输入 `C_LIMIT`、姓名 `sxq`，应显示普通参与者状态并按逐日解锁。
+- 输入新的合法编号+姓名，应创建新的普通参与者；格式非法或缺少姓名时才拒绝。
 - 刷新页面后，编号应继续保留。
 - 普通编号下，第一周只应能进入 `1-1`，其它未解锁模块显示“第 N 天解锁”。
 - 点击“更换信息”后，应清除当前登录信息并允许重新输入。

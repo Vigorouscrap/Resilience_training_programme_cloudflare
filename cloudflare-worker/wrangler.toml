@@ -10,12 +10,9 @@ CORS_ORIGIN = "*"
 # 测试/管理员参与者编号由后端配置决定，前端请求不能自称高权限。
 TESTER_PARTICIPANT_CODES = "C_TEST"
 ADMIN_PARTICIPANT_CODES = ""
-# 阶段 9A 数据原型：
-# 1. 在 Cloudflare 创建 D1 数据库。
-# 2. 用 `wrangler d1 create` 返回的值替换下面的 database_name/database_id。
-# 3. 应用 migration 或部署真实数据 API 前，取消下面区块的注释。
-#
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "resilience_research"
-# database_id = "replace-with-cloudflare-d1-database-id"
+REQUIRE_PERSISTENCE = "true"
+# D1 持久化是生产研究流程的必要条件；未成功写入时 Worker 返回 503。
+[[d1_databases]]
+binding = "DB"
+database_name = "resilience_research"
+database_id = "7cf6d80e-0dfa-4e64-9f92-d45714868194"
