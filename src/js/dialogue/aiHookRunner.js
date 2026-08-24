@@ -1,15 +1,5 @@
 import { requestAiReply } from '../services/aiReplyClient.js';
-
-const SESSION_STORAGE_KEY = '__resilience_ai_session_id__';
-
-function getOrCreateSessionId() {
-    const storedValue = globalThis.sessionStorage?.getItem(SESSION_STORAGE_KEY);
-    if (storedValue) return storedValue;
-
-    const nextValue = `web_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    globalThis.sessionStorage?.setItem(SESSION_STORAGE_KEY, nextValue);
-    return nextValue;
-}
+import { getOrCreateClientSessionId, getParticipantSession } from '../services/participantSession.js';
 
 export async function runAiHook({
     hookId,
@@ -20,10 +10,13 @@ export async function runAiHook({
     context = {},
     fallbackText
 }) {
-    const sessionId = getOrCreateSessionId();
+    const participantSession = getParticipantSession();
+    const sessionId = participantSession?.sessionId || getOrCreateClientSessionId();
+    const participantCode = participantSession?.participantCode;
 
     try {
         return await requestAiReply(hookId, {
+            participantCode,
             sessionId,
             moduleId,
             step,

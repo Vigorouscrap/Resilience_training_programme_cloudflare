@@ -1,4 +1,4 @@
-﻿import { createResearchDataRepository } from './data/research-repository.js';
+import { createResearchDataRepository } from './data/research-repository.js';
 
 export interface Env {
     DEEPSEEK_API_KEY: string;
@@ -6,6 +6,8 @@ export interface Env {
     DEEPSEEK_MODEL?: string;
     DEEPSEEK_TIMEOUT_MS?: string;
     CORS_ORIGIN?: string;
+    TESTER_PARTICIPANT_CODES?: string;
+    ADMIN_PARTICIPANT_CODES?: string;
     DB?: D1Database;
 }
 
@@ -21,6 +23,7 @@ interface AiHookRequestBody {
 interface ParticipantStartRequestBody {
     participantCode?: string;
     clientSessionId?: string;
+    participantName?: string;
     metadata?: Record<string, unknown>;
 }
 interface HookVariant {
@@ -565,6 +568,28 @@ function validateParticipantCode(value: string): { ok: boolean; normalizedValue:
     return { ok: true, normalizedValue };
 }
 
+function parseParticipantCodeList(value: string | undefined): string[] {
+    return String(value || '')
+        .split(',')
+        .map((item) => item.trim().toUpperCase())
+        .filter(Boolean);
+}
+
+function normalizeParticipantName(value: string): string {
+    return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function validateParticipantName(value: string): { ok: boolean; normalizedValue: string; displayValue: string; error?: string } {
+    const displayValue = value.trim().replace(/\s+/g, ' ');
+    const normalizedValue = normalizeParticipantName(displayValue);
+    if (!normalizedValue) {
+        return { ok: false, normalizedValue, displayValue, error: 'Missing required field: participantName' };
+    }
+    if (displayValue.length > 80) {
+        return { ok: false, normalizedValue, displayValue, error: 'participantName must be 80 characters or fewer.' };
+    }
+    return { ok: true, normalizedValue, displayValue };
+}
 async function handleParticipantStartRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
     let body: ParticipantStartRequestBody;
     try {
@@ -578,18 +603,34 @@ async function handleParticipantStartRequest(request: Request, env: Env, corsHea
         return jsonResponse({ error: validation.error }, 400, corsHeaders);
     }
 
+    const nameValidation = validateParticipantName(String(body.participantName || ''));
+    if (!nameValidation.ok) {
+        return jsonResponse({ error: nameValidation.error }, 400, corsHeaders);
+    }
+
+    const participantName = nameValidation.displayValue;
+
     const input = {
         participantCode: validation.normalizedValue,
+        participantName,
         clientSessionId: String(body.clientSessionId || '').trim() || undefined,
         userAgent: request.headers.get('User-Agent') || '',
-        metadata: body.metadata
+        testerParticipantCodes: parseParticipantCodeList(env.TESTER_PARTICIPANT_CODES),
+        adminParticipantCodes: parseParticipantCodeList(env.ADMIN_PARTICIPANT_CODES),
+        metadata: {
+            ...(body.metadata || {}),
+            participantName,
+            verification: {
+                source: 'code-name-entry'
+            }
+        }
     };
-
     try {
         const repository = createResearchDataRepository(env.DB);
         const result = await repository.startParticipantSession(input);
         return jsonResponse({
             ...result,
+            participantName,
             metadata: {
                 runtime: 'cloudflare-worker',
                 storage: result.persisted ? 'd1' : 'memory-noop'
@@ -602,6 +643,7 @@ async function handleParticipantStartRequest(request: Request, env: Env, corsHea
         const result = await fallbackRepository.startParticipantSession(input);
         return jsonResponse({
             ...result,
+            participantName,
             metadata: {
                 runtime: 'cloudflare-worker',
                 storage: 'memory-noop',

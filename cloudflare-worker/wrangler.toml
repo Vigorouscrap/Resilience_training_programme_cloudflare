@@ -1,18 +1,19 @@
-﻿name = "resilience-ai-worker"
+name = "resilience-ai-worker"
 main = "src/index.ts"
 compatibility_date = "2025-06-01"
 
 [vars]
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-v4-flash"
-# Comma-separated frontend origins allowed to call this Worker.
-# Example: "https://your-project.pages.dev,https://resilience-training-programme-two.vercel.app"
+# 允许调用 Worker 的前端来源，多个地址用英文逗号分隔。
 CORS_ORIGIN = "*"
-
-# Stage 9A data prototype:
-# 1. Create a D1 database in Cloudflare.
-# 2. Replace database_name/database_id below with values from `wrangler d1 create`.
-# 3. Uncomment this block before applying migrations or deploying data APIs.
+# 测试/管理员参与者编号由后端配置决定，前端请求不能自称高权限。
+TESTER_PARTICIPANT_CODES = "C_TEST"
+ADMIN_PARTICIPANT_CODES = ""
+# 阶段 9A 数据原型：
+# 1. 在 Cloudflare 创建 D1 数据库。
+# 2. 用 `wrangler d1 create` 返回的值替换下面的 database_name/database_id。
+# 3. 应用 migration 或部署真实数据 API 前，取消下面区块的注释。
 #
 # [[d1_databases]]
 # binding = "DB"

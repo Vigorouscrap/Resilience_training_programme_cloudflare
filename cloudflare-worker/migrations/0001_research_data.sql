@@ -2,17 +2,27 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS participants (
     id TEXT PRIMARY KEY,
-    participant_code TEXT NOT NULL UNIQUE,
+    participant_code TEXT NOT NULL,
     display_label TEXT NOT NULL,
+    participant_name TEXT NOT NULL DEFAULT '',
+    participant_name_normalized TEXT NOT NULL DEFAULT '',
+    account_email TEXT NOT NULL DEFAULT '',
+    account_phone TEXT NOT NULL DEFAULT '',
+    role TEXT NOT NULL DEFAULT 'participant',
+    unlock_start_at TEXT,
     status TEXT NOT NULL DEFAULT 'active',
     created_at TEXT NOT NULL,
     last_seen_at TEXT NOT NULL,
     metadata_json TEXT NOT NULL DEFAULT '{}',
+    CHECK (role IN ('participant', 'tester', 'admin')),
     CHECK (status IN ('active', 'paused', 'archived'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_participants_code
     ON participants (participant_code);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_participants_identity
+    ON participants (participant_code, participant_name_normalized);
 
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
@@ -20,6 +30,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     client_session_id TEXT NOT NULL,
     started_at TEXT NOT NULL,
     last_seen_at TEXT NOT NULL,
+    ended_at TEXT,
+    duration_seconds INTEGER,
     user_agent TEXT NOT NULL DEFAULT '',
     metadata_json TEXT NOT NULL DEFAULT '{}',
     FOREIGN KEY (participant_id) REFERENCES participants (id) ON DELETE CASCADE,
@@ -49,6 +61,32 @@ CREATE INDEX IF NOT EXISTS idx_module_events_participant_time
 
 CREATE INDEX IF NOT EXISTS idx_module_events_session_module
     ON module_events (session_id, module_id, created_at);
+
+CREATE TABLE IF NOT EXISTS conversation_messages (
+    id TEXT PRIMARY KEY,
+    participant_id TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    module_id TEXT NOT NULL,
+    hook_id TEXT NOT NULL DEFAULT '',
+    message_role TEXT NOT NULL,
+    message_text TEXT NOT NULL,
+    source TEXT NOT NULL,
+    step TEXT,
+    sequence_index INTEGER,
+    duration_ms INTEGER,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (participant_id) REFERENCES participants (id) ON DELETE CASCADE,
+    FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE,
+    CHECK (message_role IN ('system_script', 'user', 'ai', 'ui_event')),
+    CHECK (source IN ('fixed_script', 'user_input', 'ai_hook', 'button_choice', 'module_event'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_participant_time
+    ON conversation_messages (participant_id, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_session_sequence
+    ON conversation_messages (session_id, module_id, sequence_index, created_at);
 
 CREATE TABLE IF NOT EXISTS ai_call_events (
     id TEXT PRIMARY KEY,

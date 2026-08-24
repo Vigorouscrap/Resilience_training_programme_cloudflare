@@ -15,7 +15,11 @@
                     <img src="images/University_of_Hong_Kong-Logo.wine.png" alt="心理弹性" class="header-icon">
                     <span class="header-title-text">心  理  弹  性  训  练</span>
                 </h1>
-                <p>点击每周对应方块，开启今日练习</p>
+                <p>验证研究身份后，开启今日练习</p>
+            </div>
+            <div class="participant-session-chip" id="participantSessionChip" hidden>
+                <span id="participantSessionStatus">尚未登录</span>
+                <button type="button" id="participantResetBtn">更换信息</button>
             </div>
             <div class="grid" id="weekGrid">
                 <div class="week-tile week-1" data-week="1"><span class="week-icon">🌱</span><span class="week-title">第一周</span></div>
@@ -26,6 +30,36 @@
                 <div class="week-tile week-6" data-week="6"><span class="week-icon">🌟</span><span class="week-title">第六周</span></div>
             </div>
             <div class="footer-note">⏳ 请按顺序完成每日练习模块，后续模块依次解锁</div>
+        </div>
+    </div>
+
+    <div class="participant-gate active" id="participantGate" aria-labelledby="participantGateTitle" role="dialog" aria-modal="true">
+        <div class="participant-card">
+            <div class="participant-card-copy">
+                <p class="participant-kicker">研究参与者验证</p>
+                <h2 id="participantGateTitle">请先确认你的参与信息</h2>
+                <p>请输入研究编号和姓名。首次进入会建立练习记录，再次使用相同信息可继续之前的进度。</p>
+            </div>
+            <form class="participant-form" id="participantForm">
+                <label for="participantCodeInput">研究编号</label>
+                <input type="text" id="participantCodeInput" placeholder="例如 C0001" autocomplete="off" inputmode="latin" maxlength="64">
+                <label for="participantNameInput">姓名</label>
+                <input type="text" id="participantNameInput" placeholder="请输入姓名" autocomplete="name" maxlength="80">
+                <div class="participant-notice" aria-labelledby="participantNoticeTitle">
+                    <h3 id="participantNoticeTitle">开始前请确认</h3>
+                    <ul>
+                        <li>请尽量在安静、私密的环境中完成练习。</li>
+                        <li>练习包含音频，请先调整设备音量。</li>
+                        <li>平台会记录练习时间、选择和输入内容，用于本研究分析。</li>
+                    </ul>
+                </div>
+                <label class="participant-consent" for="participantConsentInput">
+                    <input type="checkbox" id="participantConsentInput">
+                    <span>我已阅读并知悉以上说明</span>
+                </label>
+                <p class="participant-form-note" id="participantFormNote" role="status" aria-live="polite">未完成确认前，练习模块不会开放，也不会保存研究数据。</p>
+                <button type="submit" id="participantStartBtn">确认并进入练习</button>
+            </form>
         </div>
     </div>
 

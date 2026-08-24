@@ -1,4 +1,4 @@
-﻿# 心理弹性训练程序 - Cloudflare 实验仓库
+# 心理弹性训练程序 - Cloudflare 实验仓库
 
 本仓库是 `Resilience_training_programme` 的 Cloudflare 实验线，用来验证：
 
@@ -20,6 +20,9 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 
 ## 更新记录
 
+- 2026-06-22：将参与者入口从首页编号条调整为强制登录浮层，要求输入研究编号、姓名、邮箱（邮箱可空）；Worker 默认只允许测试账号 `C_TEST/sxq` 与 `C_LIMIT/sxq`，其中 `C_TEST` 全模块解锁，`C_LIMIT` 用于逐日解锁测试。
+- 2026-06-22：完成阶段 9A-2 前端最小接入：首页新增研究编号输入/保存/恢复；AI hook 请求会携带 `participantCode` 与后端 `sessionId`；前端开始读取 `access` 字段展示逐日解锁状态。
+- 2026-06-22：补充阶段 9A 研究数据地基：参与者编号支持 `C0001` 等字母+数字格式；预留邮箱/手机号绑定、逐日解锁、tester/admin 全模块访问、完整对话 transcript 与后续 CSV/Excel 导出字段。
 - 2026-06-22：推进阶段 9A-2，新增 `POST /api/v1/participants/start` 参与者 session 接口与 `smoke:participant` 验证脚本；前端参与者输入尚未接入。
 - 2026-06-22：推进阶段 9A-1，新增 Cloudflare D1 研究数据 schema 草案与 Worker 数据访问层接口，暂不改变现有前端流程。
 - 2026-06-20：新增 Cloudflare 实验线专用 `docs/IMPLEMENTATION_ROADMAP_CLOUDFLARE.md`，将下一阶段明确为阶段 9A 用户体系与数据能力最小原型。
@@ -43,7 +46,7 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 │  ├─ src/index.ts
 │  │  # Cloudflare Workers 实验后端，兼容现有 /health 和 /api/v1/ai/hooks/:hookId
 │  ├─ src/data/research-repository.ts
-│  │  # 阶段 9A 数据访问层接口，支持 D1 / no-op 双模式
+│  │  # 阶段 9A 数据访问层接口，支持 D1 / no-op、参与者角色和解锁摘要
 │  ├─ package.json
 │  ├─ tsconfig.json
 │  └─ wrangler.toml
@@ -76,7 +79,8 @@ Cloudflare 实验线用于快速验证，不直接替代正式国内部署路线
 - [ ] 评估 Cloudflare Workers 在中国大陆网络环境下的稳定性。
 - [x] 阶段 9A-1：确认参与者编号 / 邀请码方案，新增 D1 schema 草案与 Worker 数据访问层接口。
 - [x] 阶段 9A-2 后端部分：新增 `POST /api/v1/participants/start`。
-- [ ] 阶段 9A-2 前端部分：接入参与者编号输入与 session 保存。
+- [x] 阶段 9A 研究数据补充：预留账号绑定、逐日解锁、测试账号、完整对话导出结构。
+- [x] 阶段 9A-2 前端部分：接入参与者编号输入、session 保存与逐日解锁展示。
 
 当前 Worker 已包含的 hook：
 
@@ -229,11 +233,27 @@ WORKER_BASE_URL=https://your-worker.your-account.workers.dev npm run smoke:parti
 在 Windows PowerShell 中可以这样写：
 
 ```powershell
-npm.cmd run smoke:participant -- https://your-worker.your-account.workers.dev P001 smoke-session-001
+npm.cmd run smoke:participant -- https://your-worker.your-account.workers.dev P001 sxq smoke-session-001
 ```
 
 如果尚未绑定 D1，预期返回 `persisted: false` 与 `metadata.storage: "memory-noop"`，表示接口可用但没有真实入库。如果已绑定并迁移 D1，预期返回 `persisted: true` 与 `metadata.storage: "d1"`。
 
+参与者编号说明：
+
+- Cloudflare D1 是数据库名称，不是参与者编号。
+- C0001、P001、TEST 这类字母+数字编号都支持，Worker 会自动转成大写。
+- 当前登录浮层只要求输入研究编号和姓名；首次使用创建身份，相同组合再次输入时恢复历史进度。
+- 登录前会显示安静环境、音频音量和研究数据记录提示；勾选确认后才能进入练习。
+- 测试账号或高权限账号不由前端自己声明，而是在 cloudflare-worker/wrangler.toml 的 TESTER_PARTICIPANT_CODES / ADMIN_PARTICIPANT_CODES 中配置。
+- 普通参与者当前仍按 unlockStartAt 逐日解锁；tester/admin 会在接口返回的 access.canAccessAllModules 中显示可访问全部模块。基于完成状态、次日 00:00 解锁将在 9A-3 实现。
+
+阶段 9A-1 前端和 Worker 验证：
+
+1. 打开前端首页，应先看到登录浮层，未登录时不能进入任何周或模块。
+2. 输入研究编号和姓名，阅读提示并勾选确认，应登录成功。
+3. 刷新页面，相同身份应恢复；点击“更换信息”后输入不同姓名，不应看到原身份的历史进度。
+4. 在后端配置的测试编号下，应显示测试权限已开启；普通编号只按逐日解锁开放模块。
+5. 部署新版 Worker 后运行 smoke:participant，验证首次创建、相同编号+姓名恢复、不同姓名隔离和测试权限。
 验证 AI hook，例如：
 
 ```bash
@@ -313,5 +333,6 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 2. 将 D1 的 `database_id` 填入 `cloudflare-worker/wrangler.toml` 的占位块。
 3. 应用 `cloudflare-worker/migrations/0001_research_data.sql`。
 4. 部署 Worker 后运行 `smoke:participant` 验证参与者 session 接口。
-5. 接入前端参与者编号输入与 session 保存。
+5. 部署 Pages 后手动验证研究编号输入、刷新恢复和逐日解锁展示。
 6. 新增最小事件记录接口，先记录少量关键模块输入。
+7. 接入完整对话 transcript 记录，为后续 JSON / CSV / Excel 导出做准备。
