@@ -113,23 +113,23 @@ export const module11Handlers = {
             this.step = 16;
         } else if (this.step === 16) {
             appendSpecialCard(this.chatMessages, '<p>a. <strong>保密原则</strong>：过程中我们分享的个人信息都是保密的，不对外传播。</p>');
-            appendContinueButton(this.chatMessages, 20);
+            appendContinueButton(this.chatMessages, 15);
             this.step = 17;
         } else if (this.step === 17) {
             appendSpecialCard(this.chatMessages, '<p>b. <strong>不评判原则</strong>：我们不对自己的感受和想法做好坏、对错的评判。</p>');
-            appendContinueButton(this.chatMessages, 20);
+            appendContinueButton(this.chatMessages, 15);
             this.step = 18;
         } else if (this.step === 18) {
             appendSpecialCard(this.chatMessages, '<p>c. <strong>自愿参与</strong>：你有权决定自己分享的深度和内容，你可以选择 ‘过’而不回答。</p>');
-            appendContinueButton(this.chatMessages, 20);
+            appendContinueButton(this.chatMessages, 15);
             this.step = 19;
         } else if (this.step === 19) {
             appendSpecialCard(this.chatMessages, '<p>d. <strong>聚焦当下</strong>：我们尽量关注 ‘此时此地’的感受和体验。</p>');
-            appendContinueButton(this.chatMessages, 20);
+            appendContinueButton(this.chatMessages, 15);
             this.step = 20;
         } else if (this.step === 20) {
             appendSpecialCard(this.chatMessages, '<p>e. <strong>营造环境</strong>：每次练习时请选择一个安静独立的、不被打扰的空间。</p>');
-            appendContinueButton(this.chatMessages, 20);
+            appendContinueButton(this.chatMessages, 15);
             this.step = 21;
         } else if (this.step === 21) {
             appendAiMessage(this.chatMessages, '介绍模块就到这里了。今天，我们共同完成了三件至关重要的事：1）我们建立了初步连接，认识了独特的你；2）我们看清了旅程的目标，了解了这是一段关于培养“与体验共处、朝价值前行”能力的旅程，它科学、系统且充满关怀；3）我们筑好了护栏：确认了共同维护一个安全、不评判的探索空间。', true);

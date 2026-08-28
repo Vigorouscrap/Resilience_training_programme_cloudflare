@@ -17,7 +17,20 @@
                 </h1>
                 <p>验证研究身份后，开启今日练习</p>
             </div>
-            <div class="participant-session-chip" id="participantSessionChip" hidden>
+            <section class="testing-tools" id="testingTools" hidden aria-hidden="true" aria-label="测试工具">
+                <div class="testing-tools-heading">
+                    <strong>测试工具</strong>
+                    <span>仅测试账号可用</span>
+                </div>
+                <label class="testing-toggle">
+                    <input type="checkbox" data-test-skip-waits>
+                    <span>跳过等待、倒计时和音频</span>
+                </label>
+                <label class="testing-toggle">
+                    <input type="checkbox" data-test-fast-mode>
+                    <span>加速测试运行</span>
+                </label>
+            </section>            <div class="participant-session-chip" id="participantSessionChip" hidden>
                 <span id="participantSessionStatus">尚未登录</span>
                 <button type="button" id="participantResetBtn">更换信息</button>
             </div>
@@ -49,7 +62,7 @@
                     <h3 id="participantNoticeTitle">开始前请确认</h3>
                     <ul>
                         <li>请尽量在安静、私密的环境中完成练习。</li>
-                        <li>练习包含音频，请先调整设备音量。</li>
+                        <li>部分练习包含音频，请先调整设备音量。</li>
                         <li>平台会记录练习时间、选择和输入内容，用于本研究分析。</li>
                     </ul>
                 </div>
@@ -63,6 +76,16 @@
         </div>
     </div>
 
+    <div class="module-completion-notice" id="moduleCompletionNotice" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="moduleCompletionTitle">
+        <div class="module-completion-card">
+            <div class="completion-mark" aria-hidden="true">✓</div>
+            <p class="completion-kicker">练习完成</p>
+            <h2 id="moduleCompletionTitle">本模块已完成</h2>
+            <p class="completion-module">模块 <strong data-completion-module></strong> 已完成。</p>
+            <p class="completion-status" data-completion-status role="status" aria-live="polite">完成状态已保存。</p>
+            <button type="button" class="completion-close-btn" data-completion-close>返回训练目录</button>
+        </div>
+    </div>
     <!-- 每日模块列表页面（第一层） -->
     <div class="daily-page" id="dailyPage">
         <div class="daily-page-content">

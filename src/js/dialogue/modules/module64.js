@@ -74,7 +74,7 @@ export const module64Handlers = {
             appendAiMessage(this.chatMessages, '在之前的练习中，我们已经掌握了“观察性自我”这个概念，也学会了通过“双重视角”来解码事件和情绪。现在，我们将面临一个更贴近现实的挑战：当多重压力同时袭来，如何能依然调用那个稳定、智慧的观察者视角？', true);
             this.step = 1;
         } else if (this.step === 1) {
-            appendAiMessage(this.chatMessages, '今天，我们将模拟三种复杂程度依次递增的压力情景，进行综合应用练习。', true);
+            appendAiMessage(this.chatMessages, '今天，我们将模拟两种复杂程度依次递增的压力情景，进行综合应用练习。', true);
             this.step = 2;
         } else if (this.step === 2) {
             appendAiMessage(this.chatMessages, '请不必感到压力，这就像一次模拟飞行训练，目的是让你在安全的环境中，熟练操作你已经掌握的心理方向盘。', true);
@@ -133,7 +133,7 @@ export const module64Handlers = {
                 this.onContinue_Module64();
             });
         } else if (this.step === 12) {
-            appendSpecialCard(this.chatMessages, '<p><strong>4. 提供视角与安抚</strong></p><p>可以尝试对朋友说：“最后，我可以提供一个更广阔、更安抚的视角：‘意外总会发生，它打乱的是计划，但不是你规划未来的能力。这笔支出是解决一个问题（手机丢失），而不是对你整个财务管理的否定。我们可以一起看看，如何调整计划来应对这个意外。”</p>');
+            appendSpecialCard(this.chatMessages, '<p><strong>4. 提供视角与安抚</strong></p><p>可以尝试对朋友说：“意外总会发生，它打乱的是计划，但不是你规划未来的能力。这笔支出是解决一个问题（手机丢失），而不是对你整个财务管理的否定。我们可以一起看看，如何调整计划来应对这个意外。”</p>');
             appendAiMessage(this.chatMessages, '请尝试站在“观察者”的角度，认真说出上面的话。', false);
             startCardCountdown(this.chatMessages, 30, '可完成', '已完成', () => {
                 this.step = 13;

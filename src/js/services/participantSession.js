@@ -122,7 +122,10 @@ export async function startParticipantSession({ participantCode, participantName
         unlockStartAt: response.unlockStartAt || new Date().toISOString(),
         access: {
             canAccessAllModules: Boolean(access.canAccessAllModules),
-            unlockedDayIndex: Number(access.unlockedDayIndex) || 1
+            unlockedDayIndex: Number(access.unlockedDayIndex) || 1,
+            lastCompletedDayIndex: Number(access.lastCompletedDayIndex) || 0,
+            nextUnlockAt: access.nextUnlockAt || null,
+            completedModuleIds: Array.isArray(access.completedModuleIds) ? access.completedModuleIds : []
         },
         metadata: response.metadata || {},
         updatedAt: new Date().toISOString()
@@ -130,4 +133,52 @@ export async function startParticipantSession({ participantCode, participantName
 
     writeJsonStorage(PARTICIPANT_SESSION_STORAGE_KEY, session);
     return session;
+}
+export function updateParticipantSessionAccess(access, metadata = {}) {
+    const session = getParticipantSession();
+    if (!session) return null;
+
+    const nextSession = {
+        ...session,
+        access: {
+            ...session.access,
+            ...(access || {}),
+            unlockedDayIndex: Number(access?.unlockedDayIndex ?? session.access?.unlockedDayIndex) || 1,
+            lastCompletedDayIndex: Number(access?.lastCompletedDayIndex ?? session.access?.lastCompletedDayIndex) || 0,
+            nextUnlockAt: access?.nextUnlockAt ?? session.access?.nextUnlockAt ?? null,
+            completedModuleIds: Array.isArray(access?.completedModuleIds)
+                ? access.completedModuleIds
+                : (session.access?.completedModuleIds || [])
+        },
+        metadata: {
+            ...session.metadata,
+            ...metadata
+        },
+        updatedAt: new Date().toISOString()
+    };
+    writeJsonStorage(PARTICIPANT_SESSION_STORAGE_KEY, nextSession);
+    return nextSession;
+}
+export async function startModuleRun(moduleId, metadata = {}) {
+    const session = getParticipantSession();
+    if (!session) throw new Error('尚未建立参与者会话。');
+
+    return postJson('/api/v1/module-runs/start', {
+        participantCode: session.participantCode,
+        sessionId: session.sessionId,
+        moduleId,
+        metadata
+    });
+}
+
+export async function completeModuleRun(moduleId, metadata = {}) {
+    const session = getParticipantSession();
+    if (!session) throw new Error('尚未建立参与者会话。');
+
+    return postJson('/api/v1/module-runs/complete', {
+        participantCode: session.participantCode,
+        sessionId: session.sessionId,
+        moduleId,
+        metadata
+    });
 }

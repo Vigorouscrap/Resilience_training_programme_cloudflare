@@ -12,6 +12,8 @@ import {
     clearParticipantSession,
     getParticipantSession,
     startParticipantSession,
+    startModuleRun,
+    updateParticipantSessionAccess,
     validateParticipantIdentity
 } from './services/participantSession.js';
 
@@ -195,6 +197,9 @@ function initApp() {
     );
 
     const dialogueManager = new DialogueManager(chatMessages, inputArea, userInput);
+    let moduleRunStartPromise = null;
+    let completionNotice = document.getElementById('moduleCompletionNotice');
+    let testingTools = document.getElementById('testingTools');
     let participantSession = getParticipantSession();
     pageManager.setParticipantSession(participantSession);
 
@@ -202,7 +207,6 @@ function initApp() {
         participantSession = session || null;
         pageManager.setParticipantSession(participantSession);
         pageManager.renderWeekLocks();
-
         const gateActive = !participantSession;
         participantGate.classList.toggle('active', gateActive);
         participantGate.hidden = !gateActive;
@@ -220,89 +224,127 @@ function initApp() {
         participantCodeInput.disabled = false;
         participantNameInput.disabled = false;
         participantConsentInput.disabled = false;
-
-        if (gateActive && !options.preserveInputs) {
-            requestAnimationFrame(() => participantCodeInput.focus());
+        if (testingTools) {
+            const tester = Boolean(participantSession && ['tester', 'admin'].includes(participantSession.role));
+            testingTools.hidden = !tester;
+            testingTools.setAttribute('aria-hidden', String(!tester));
         }
+        if (gateActive && !options.preserveInputs) requestAnimationFrame(() => participantCodeInput.focus());
+    }
+
+    function showCompletionNotice(moduleMeta, response) {
+        if (!completionNotice) return;
+        completionNotice.querySelector('[data-completion-module]').textContent = moduleMeta.moduleId;
+        completionNotice.querySelector('[data-completion-status]').textContent = response?.persisted === false ? '本次完成状态暂未成功保存，请稍后重试。' : '完成状态已保存。';
+        completionNotice.hidden = false;
+        completionNotice.setAttribute('aria-hidden', 'false');
+        completionNotice.querySelector('[data-completion-close]')?.focus();
+    }
+
+    function hideCompletionNotice() {
+        if (!completionNotice) return;
+        completionNotice.hidden = true;
+        completionNotice.setAttribute('aria-hidden', 'true');
     }
 
     renderParticipantSession(participantSession);
-
-    const testingConfig = updateTestingConfig(getTestingConfigFromUrl());
-    if (testingConfig.fastMode) {
-        enableFastRuntime();
-    }
-
+    updateTestingConfig({ fastMode: false, skipMode: false, skipWaits: false });
     function openModule(requestedModuleId) {
         const moduleMeta = getModuleMeta(normalizeModuleId(requestedModuleId));
-        if (!moduleMeta) {
-            console.warn('[resilience-test] Unknown module:', requestedModuleId);
-            return false;
-        }
+        if (!moduleMeta) return false;
         if (!participantSession) {
-            renderParticipantSession(null, {
-                warning: true,
-                formMessage: '请先完成参与者验证，再进入练习模块。'
-            });
+            renderParticipantSession(null, { warning: true, formMessage: '请先完成参与者验证，再进入练习模块。' });
             pageManager.showHome();
             return false;
         }
         if (!pageManager.canAccessModule(moduleMeta.weekIdx, moduleMeta.dayIdx)) {
-            renderParticipantSession(participantSession, {
-                message: `当前编号尚未解锁 ${moduleMeta.moduleId}。请按逐日顺序完成，或使用测试编号进行全流程检查。`
-            });
+            renderParticipantSession(participantSession, { message: '当前编号尚未解锁 ' + moduleMeta.moduleId + '。请按逐日顺序完成。' });
             pageManager.showHome();
             return false;
         }
-
         stopSpeech();
+        moduleRunStartPromise = startModuleRun(moduleMeta.moduleId, { source: 'module-open' }).catch((error) => {
+            console.warn('Module run could not be started', error);
+            throw error;
+        });
+        dialogueManager.setModuleRunStartPromise(moduleRunStartPromise);
         practiceTitle.innerText = moduleMeta.moduleTitle;
         pageManager.showDaily(moduleMeta.weekIdx);
         dialogueManager.resetForModule(moduleMeta.moduleId);
+        dialogueManager.onModuleCompleted = (response) => {
+            participantSession = updateParticipantSessionAccess(response.access, { lastModuleCompleted: moduleMeta.moduleId }) || participantSession;
+            pageManager.setParticipantSession(participantSession);
+            pageManager.renderWeekLocks();
+            showCompletionNotice(moduleMeta, response);
+        };
+        dialogueManager.onModuleCompletionFailed = () => {
+            if (!completionNotice) return;
+            completionNotice.querySelector('[data-completion-module]').textContent = moduleMeta.moduleId;
+            completionNotice.querySelector('[data-completion-status]').textContent = '完成状态保存失败，请检查网络后重试。';
+            completionNotice.hidden = false;
+            completionNotice.setAttribute('aria-hidden', 'false');
+        };
         pageManager.showPractice();
         return true;
     }
+    document.querySelector('[data-completion-close]')?.addEventListener('click', () => {
+        hideCompletionNotice();
+        stopSpeech();
+        dialogueManager.invalidateAsyncCallbacks();
+        pageManager.showHome();
+    });
+
+    testingTools?.querySelector('[data-test-skip-waits]')?.addEventListener('change', (event) => {
+        if (!['tester', 'admin'].includes(participantSession?.role)) return;
+        updateTestingConfig({ skipWaits: event.target.checked, skipMode: event.target.checked });
+    });
+    testingTools?.querySelector('[data-test-fast-mode]')?.addEventListener('change', (event) => {
+        if (!['tester', 'admin'].includes(participantSession?.role)) return;
+        updateTestingConfig({ fastMode: event.target.checked });
+        if (event.target.checked) enableFastRuntime();
+        else disableFastRuntime();
+    });
 
     globalThis[TESTING_API_KEY] = {
         openModule(requestedModuleId, options = {}) {
             if (Object.prototype.hasOwnProperty.call(options, 'fastMode')) {
+                if (!['tester', 'admin'].includes(participantSession?.role)) return false;
                 updateTestingConfig({ fastMode: Boolean(options.fastMode) });
-                if (options.fastMode) {
-                    enableFastRuntime();
-                } else {
-                    disableFastRuntime();
-                }
+                if (options.fastMode) enableFastRuntime();
+                else disableFastRuntime();
             }
-
             return openModule(requestedModuleId);
         },
         restartModule(requestedModuleId = dialogueManager.currentModule) {
             return openModule(requestedModuleId);
         },
         setFastMode(enabled = true) {
+            if (!['tester', 'admin'].includes(participantSession?.role)) return false;
             updateTestingConfig({ fastMode: Boolean(enabled) });
-            if (enabled) {
-                enableFastRuntime();
-            } else {
-                disableFastRuntime();
-            }
+            if (enabled) enableFastRuntime();
+            else disableFastRuntime();
+            return true;
         },
         setSkipMode(enabled = true) {
-            updateTestingConfig({ skipMode: Boolean(enabled) });
+            if (!['tester', 'admin'].includes(participantSession?.role)) return false;
+            updateTestingConfig({ skipMode: Boolean(enabled), skipWaits: Boolean(enabled) });
+            return true;
         },
         skipCurrentWait() {
+            if (!['tester', 'admin'].includes(participantSession?.role)) return false;
             return skipCurrentWait(chatMessages);
         },
         getState() {
             return {
                 currentModule: dialogueManager.currentModule,
                 step: dialogueManager.step,
+                role: participantSession?.role || null,
                 fastMode: Boolean(ensureTestingConfig().fastMode),
-                skipMode: Boolean(ensureTestingConfig().skipMode)
+                skipMode: Boolean(ensureTestingConfig().skipMode),
+                skipWaits: Boolean(ensureTestingConfig().skipWaits)
             };
         }
     };
-
     participantForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const validation = validateParticipantIdentity({

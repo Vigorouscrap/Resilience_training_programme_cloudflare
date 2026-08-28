@@ -1,4 +1,4 @@
-import { createResearchDataRepository } from './data/research-repository.js';
+import { createResearchDataRepository, ModuleRunAccessError, ModuleRunValidationError } from './data/research-repository.js';
 
 export interface Env {
     DEEPSEEK_API_KEY: string;
@@ -25,6 +25,13 @@ interface ParticipantStartRequestBody {
     participantCode?: string;
     clientSessionId?: string;
     participantName?: string;
+    metadata?: Record<string, unknown>;
+}
+
+interface ModuleRunRequestBody {
+    participantCode?: string;
+    sessionId?: string;
+    moduleId?: string;
     metadata?: Record<string, unknown>;
 }
 interface HookVariant {
@@ -658,6 +665,80 @@ async function handleParticipantStartRequest(request: Request, env: Env, corsHea
     }
 }
 
+async function handleModuleRunRequest(
+    request: Request,
+    env: Env,
+    corsHeaders: HeadersInit,
+    complete: boolean
+): Promise<Response> {
+    let body: ModuleRunRequestBody;
+    try {
+        body = await request.json();
+    } catch {
+        return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders);
+    }
+
+    const codeValidation = validateParticipantCode(String(body.participantCode || ''));
+    if (!codeValidation.ok) {
+        return jsonResponse({ error: codeValidation.error }, 400, corsHeaders);
+    }
+
+    const sessionId = String(body.sessionId || '').trim();
+    const moduleId = String(body.moduleId || '').trim();
+    if (!sessionId || !moduleId) {
+        return jsonResponse({ error: 'sessionId and moduleId are required.' }, 400, corsHeaders);
+    }
+
+    const input = {
+        participantCode: codeValidation.normalizedValue,
+        sessionId,
+        moduleId,
+        metadata: {
+            ...(body.metadata || {}),
+            runtime: 'cloudflare-worker'
+        }
+    };
+
+    try {
+        const repository = createResearchDataRepository(env.DB);
+        const result = complete
+            ? await repository.completeModuleRun(input)
+            : await repository.startModuleRun(input);
+        return jsonResponse({
+            ...result,
+            metadata: {
+                runtime: 'cloudflare-worker',
+                storage: result.persisted ? 'd1' : 'memory-noop'
+            }
+        }, 200, corsHeaders);
+    } catch (error) {
+        if (error instanceof ModuleRunAccessError) {
+            return jsonResponse({ error: error.message, code: 'MODULE_LOCKED' }, 403, corsHeaders);
+        }
+        if (error instanceof ModuleRunValidationError) {
+            return jsonResponse({ error: error.message }, 400, corsHeaders);
+        }
+
+        console.warn('Module run persistence failed', error instanceof Error ? error.message : error);
+        const persistenceRequired = String(env.REQUIRE_PERSISTENCE || '').toLowerCase() === 'true';
+        if (env.DB || persistenceRequired) {
+            return jsonResponse({ error: 'Research data storage is unavailable.' }, 503, corsHeaders);
+        }
+
+        const fallbackRepository = createResearchDataRepository(undefined);
+        const result = complete
+            ? await fallbackRepository.completeModuleRun(input)
+            : await fallbackRepository.startModuleRun(input);
+        return jsonResponse({
+            ...result,
+            metadata: {
+                runtime: 'cloudflare-worker',
+                storage: 'memory-noop',
+                warning: 'Persistence is unavailable; returned a non-persisted module run.'
+            }
+        }, 200, corsHeaders);
+    }
+}
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         const corsHeaders = buildCorsHeaders(request, env);
@@ -682,6 +763,12 @@ export default {
 
         if (request.method === 'POST' && url.pathname === '/api/v1/participants/start') {
             return handleParticipantStartRequest(request, env, corsHeaders);
+        }
+        if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/start') {
+            return handleModuleRunRequest(request, env, corsHeaders, false);
+        }
+        if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/complete') {
+            return handleModuleRunRequest(request, env, corsHeaders, true);
         }
         const hookMatch = url.pathname.match(/^\/api\/v1\/ai\/hooks\/([^/]+)$/);
         if (request.method === 'POST' && hookMatch) {

@@ -9,7 +9,8 @@ import {
     consumePendingSequentialRender,
     queueUiMutation,
     resetSequentialRender,
-    stopManagedMedia
+    stopManagedMedia,
+    hasManagedWait
 } from '../ui.js';
 import { module11Handlers } from './modules/module11.js';
 import { module12Handlers } from './modules/module12.js';
@@ -39,6 +40,7 @@ import { module62Handlers } from './modules/module62.js';
 import { module64Handlers } from './modules/module64.js';
 import { module66Handlers } from './modules/module66.js';
 import { module67Handlers } from './modules/module67.js';
+import { completeModuleRun } from '../services/participantSession.js';
 
 export class DialogueManager {
     constructor(chatMessages, inputArea, userInput) {
@@ -50,6 +52,7 @@ export class DialogueManager {
         this.dialogueSessionId = 0;
         this.isContinuing = false;
         this.pendingContinueAction = null;
+        this.moduleRunStartPromise = null;
         this.participant = {
             name: '朋友',
             hometown: '',
@@ -168,6 +171,7 @@ export class DialogueManager {
         this.currentModule = module;
         this.chatMessages.innerHTML = '';
         this.pendingContinueAction = null;
+        this.moduleCompletionState = { status: 'idle', moduleId: module };
         resetSequentialRender(this.chatMessages);
         this.step = -1;
         this.participant = {
@@ -369,6 +373,51 @@ export class DialogueManager {
         }
     }
 
+    setModuleRunStartPromise(startPromise) {
+        this.moduleRunStartPromise = startPromise || null;
+    }
+
+    scheduleCompletionCheck() {
+        const moduleId = this.currentModule;
+        setTimeout(() => {
+            if (this.currentModule !== moduleId || this.moduleCompletionState?.status !== 'idle') return;
+            if (this.pendingContinueAction || hasManagedWait(this.chatMessages)) return;
+            if (this.chatMessages.querySelector('.continue-wrapper, .button-group, .card-action-buttons')) return;
+            if (!this.inputArea.classList.contains('disabled') || !this.userInput.disabled) return;
+            void this.completeCurrentModule();
+        }, 80);
+    }
+
+    async completeCurrentModule() {
+        if (!this.currentModule || this.moduleCompletionState?.status === 'completed' || this.moduleCompletionState?.status === 'saving') {
+            return this.moduleCompletionState?.status === 'completed';
+        }
+
+        this.moduleCompletionState = { status: 'saving', moduleId: this.currentModule };
+        try {
+            if (this.moduleRunStartPromise) await this.moduleRunStartPromise;
+            const response = await completeModuleRun(this.currentModule, {
+                clientStep: this.step,
+                source: 'module-terminal'
+            });
+            this.moduleCompletionState = {
+                status: 'completed',
+                moduleId: this.currentModule,
+                moduleRun: response.moduleRun,
+                access: response.access
+            };
+            this.onModuleCompleted?.(response);
+            return true;
+        } catch (error) {
+            this.moduleCompletionState = {
+                status: 'failed',
+                moduleId: this.currentModule,
+                error
+            };
+            this.onModuleCompletionFailed?.(error);
+            return false;
+        }
+    }
     invalidateAsyncCallbacks() {
         this.dialogueSessionId += 1;
         this.chatMessages.dataset.dialogueSessionId = String(this.dialogueSessionId);
@@ -461,6 +510,7 @@ export class DialogueManager {
         } finally {
             endSequentialRender(this.chatMessages);
             this.isContinuing = false;
+            this.scheduleCompletionCheck();
         }
     }
 

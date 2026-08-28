@@ -103,6 +103,10 @@ export function clearManagedWait(chatMessages, controller = null) {
     }
 }
 
+export function hasManagedWait(chatMessages) {
+    return Boolean(chatMessages && getWaitState(chatMessages).activeWait);
+}
+
 export function skipCurrentWait(chatMessages) {
     if (!chatMessages) return false;
     const state = getWaitState(chatMessages);
