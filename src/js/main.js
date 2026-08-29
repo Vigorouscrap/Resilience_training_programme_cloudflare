@@ -228,6 +228,13 @@ function initApp() {
             const tester = Boolean(participantSession && ['tester', 'admin'].includes(participantSession.role));
             testingTools.hidden = !tester;
             testingTools.setAttribute('aria-hidden', String(!tester));
+            if (tester) {
+                // 测试账号显示模块内的跳过按钮；等待仍默认保留，点击按钮才会跳过。
+                updateTestingConfig({ skipMode: true, skipWaits: false });
+            } else {
+                updateTestingConfig({ skipMode: false, skipWaits: false, fastMode: false });
+                disableFastRuntime();
+            }
         }
         if (gateActive && !options.preserveInputs) requestAnimationFrame(() => participantCodeInput.focus());
     }
@@ -248,7 +255,16 @@ function initApp() {
     }
 
     renderParticipantSession(participantSession);
-    updateTestingConfig({ fastMode: false, skipMode: false, skipWaits: false });
+    const testingConfigFromUrl = getTestingConfigFromUrl();
+    const testingConfig = updateTestingConfig({
+        fastMode: false,
+        skipMode: Boolean(participantSession && ['tester', 'admin'].includes(participantSession.role)),
+        skipWaits: false
+    });
+    if (testingConfigFromUrl.fastMode && participantSession && ['tester', 'admin'].includes(participantSession.role)) {
+        testingConfig.fastMode = true;
+        enableFastRuntime();
+    }
     function openModule(requestedModuleId) {
         const moduleMeta = getModuleMeta(normalizeModuleId(requestedModuleId));
         if (!moduleMeta) return false;
@@ -294,10 +310,6 @@ function initApp() {
         pageManager.showHome();
     });
 
-    testingTools?.querySelector('[data-test-skip-waits]')?.addEventListener('change', (event) => {
-        if (!['tester', 'admin'].includes(participantSession?.role)) return;
-        updateTestingConfig({ skipWaits: event.target.checked, skipMode: event.target.checked });
-    });
     testingTools?.querySelector('[data-test-fast-mode]')?.addEventListener('change', (event) => {
         if (!['tester', 'admin'].includes(participantSession?.role)) return;
         updateTestingConfig({ fastMode: event.target.checked });
@@ -433,7 +445,7 @@ function initApp() {
             }
             if (tile.classList.contains('is-locked')) {
                 renderParticipantSession(participantSession, {
-                    message: '这一周还没有解锁。请按逐日节奏完成前面的练习，或使用测试编号检查全部模块。'
+                    message: '这一周还未开放，请先完成前面的练习。'
                 });
                 return;
             }
@@ -454,7 +466,7 @@ function initApp() {
         }
         if (card.classList.contains('is-locked')) {
             renderParticipantSession(participantSession, {
-                message: '这个模块尚未解锁。普通参与者会按每日节奏逐步开放，测试编号可以访问全部模块。'
+                message: '这个模块还未开放，请先完成前面的练习。'
             });
             return;
         }
@@ -511,7 +523,7 @@ function initApp() {
     });
 
     // 初始化显示主页
-    if (testingConfig.moduleId && openModule(testingConfig.moduleId)) {
+    if (testingConfigFromUrl.moduleId && openModule(testingConfigFromUrl.moduleId)) {
         return;
     }
 

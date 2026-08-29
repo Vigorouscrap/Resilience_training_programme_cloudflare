@@ -58,7 +58,7 @@ export class PageManager {
             const accessible = this.canAccessModule(weekIdx, i);
             const completed = this.participantSession?.access?.completedModuleIds?.includes(moduleId);
             const lockNote = accessible ? '' : '<span class="module-lock-note">第 ' + ((weekIdx * 7) + i + 1) + ' 天解锁</span>';
-            const statusNote = completed ? '<span class="module-complete-note" aria-label="已完成">✓ 已完成</span>' : '';
+            const statusNote = completed ? '<span class="module-complete-note" aria-label="已完成" title="已完成">✓</span>' : '';
             const className = ['card', 'daily-sub', accessible ? '' : 'is-locked', completed ? 'is-complete' : ''].filter(Boolean).join(' ');
             html += '<div class="' + className + '" data-week="' + (weekIdx + 1) + '" data-day="' + (i + 1) + '" aria-disabled="' + (accessible ? 'false' : 'true') + '">' + statusNote + '<span class="module-name">' + subModuleNames[weekIdx][i] + '</span>' + lockNote + '</div>';
         }
