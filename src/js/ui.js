@@ -11,6 +11,15 @@ const longAudioWakeLockPathHints = [
 ];
 const longAudioWakeLockMinDurationSeconds = 45;
 
+function recordResearchEvent(event) {
+    try {
+        const recorder = globalThis.__RESILIENCE_RECORD_EVENT__;
+        if (typeof recorder === 'function') recorder(event);
+    } catch {
+        // Event capture is best effort and must never interrupt a module.
+    }
+}
+
 function getTestingConfig() {
     const config = globalThis.__RESILIENCE_TESTING__;
     return config && typeof config === 'object' ? config : {};
@@ -429,6 +438,7 @@ export function appendAiMessage(chatMessages, text, withContinue = false) {
         row.appendChild(bubble);
 
         chatMessages.appendChild(row);
+        recordResearchEvent({ type: 'conversation_message', messageRole: 'ai', source: 'fixed_script', messageText: String(text), sequenceIndex: chatMessages.children.length });
         scrollChat(chatMessages);
 
         if (withContinue) {     /*是否自动添加继续按钮*/
@@ -447,6 +457,7 @@ export function appendUserMessage(chatMessages, text) {
     row.className = 'message-row-right';
     row.innerHTML = `<div class="bubble-right">${text}</div>`;
     chatMessages.appendChild(row);
+    recordResearchEvent({ type: 'conversation_message', messageRole: 'user', source: 'user_input', messageText: String(text), sequenceIndex: chatMessages.children.length });
     scrollChat(chatMessages);
 }
 
@@ -459,6 +470,7 @@ export function appendSpecialCard(chatMessages, html) {
         card.className = 'special-card';
         card.innerHTML = html;
         chatMessages.appendChild(card);
+        recordResearchEvent({ type: 'conversation_message', messageRole: 'system_script', source: 'fixed_script', messageText: card.textContent || '', sequenceIndex: chatMessages.children.length });
         scrollChat(chatMessages);
     });
 }
@@ -508,6 +520,8 @@ export function appendDialogueCard(chatMessages, options = {}) {
             row.appendChild(bubble);
             card.appendChild(row);
         });
+
+        recordResearchEvent({ type: 'conversation_message', messageRole: 'system_script', source: 'fixed_script', messageText: card.textContent || '', sequenceIndex: chatMessages.children.length });
 
         scrollChat(chatMessages);
     });
@@ -765,6 +779,7 @@ export function appendButtonGroup(chatMessages, buttons, onClickCallback) {
                 wrap.querySelectorAll('button').forEach(button => {
                     button.disabled = true;
                 });
+                recordResearchEvent({ type: 'conversation_message', messageRole: 'user', source: 'button_choice', messageText: String(btnText), sequenceIndex: chatMessages.children.length });
                 beginSequentialRender(chatMessages);
                 try {
                     onClickCallback(btnText, btn);

@@ -377,6 +377,30 @@ export class DialogueManager {
         this.moduleRunStartPromise = startPromise || null;
     }
 
+    renderReplay(messages = []) {
+        this.invalidateAsyncCallbacks();
+        this.chatMessages.innerHTML = '';
+        if (!messages.length) {
+            const empty = document.createElement('div');
+            empty.className = 'hint-text';
+            empty.textContent = '本模块已完成，暂未找到可回放的对话记录。';
+            this.chatMessages.appendChild(empty);
+        }
+        messages.forEach((message) => {
+            const role = message?.messageRole === 'user' ? 'user' : 'ai';
+            const row = document.createElement('div');
+            row.className = role === 'user' ? 'message-row-right' : 'message-row-left';
+            const bubble = document.createElement('div');
+            bubble.className = role === 'user' ? 'bubble-right' : 'bubble-left';
+            bubble.textContent = String(message?.messageText || '');
+            row.appendChild(bubble);
+            this.chatMessages.appendChild(row);
+        });
+        disableInput(this.inputArea, this.userInput);
+        this.moduleCompletionState = { status: 'completed', moduleId: this.currentModule, replay: true };
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
     scheduleCompletionCheck() {
         const moduleId = this.currentModule;
         setTimeout(() => {

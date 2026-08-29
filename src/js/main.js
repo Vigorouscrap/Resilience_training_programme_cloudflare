@@ -14,6 +14,8 @@ import {
     startParticipantSession,
     startModuleRun,
     updateParticipantSessionAccess,
+    recordResearchEvents,
+    getConversationReplay,
     validateParticipantIdentity
 } from './services/participantSession.js';
 
@@ -197,6 +199,18 @@ function initApp() {
     );
 
     const dialogueManager = new DialogueManager(chatMessages, inputArea, userInput);
+    let pendingResearchEvents = [];
+    let researchEventTimer = null;
+    const flushResearchEvents = () => {
+        if (!pendingResearchEvents.length) return;
+        const batch = pendingResearchEvents.splice(0, 100);
+        void recordResearchEvents(batch).catch(() => {});
+    };
+    globalThis.__RESILIENCE_RECORD_EVENT__ = (event) => {
+        if (!participantSession || !dialogueManager.currentModule || !event || globalThis.__RESILIENCE_REPLAYING__) return;
+        pendingResearchEvents.push({ ...event, moduleId: dialogueManager.currentModule, step: dialogueManager.step });
+        if (!researchEventTimer) researchEventTimer = setTimeout(() => { researchEventTimer = null; flushResearchEvents(); }, 200);
+    };
     let moduleRunStartPromise = null;
     let completionNotice = document.getElementById('moduleCompletionNotice');
     let testingTools = document.getElementById('testingTools');
@@ -286,7 +300,19 @@ function initApp() {
         dialogueManager.setModuleRunStartPromise(moduleRunStartPromise);
         practiceTitle.innerText = moduleMeta.moduleTitle;
         pageManager.showDaily(moduleMeta.weekIdx);
+        const isReplay = participantSession.access?.completedModuleIds?.includes(moduleMeta.moduleId);
+        globalThis.__RESILIENCE_REPLAYING__ = isReplay;
         dialogueManager.resetForModule(moduleMeta.moduleId);
+        globalThis.__RESILIENCE_REPLAYING__ = false;
+        if (isReplay) {
+            void getConversationReplay(moduleMeta.moduleId).then((replay) => {
+                if (dialogueManager.currentModule === moduleMeta.moduleId) {
+                    dialogueManager.renderReplay(Array.isArray(replay?.messages) ? replay.messages : []);
+                }
+            }).catch(() => {
+                if (dialogueManager.currentModule === moduleMeta.moduleId) dialogueManager.renderReplay([]);
+            });
+        }
         dialogueManager.onModuleCompleted = (response) => {
             participantSession = updateParticipantSessionAccess(response.access, { lastModuleCompleted: moduleMeta.moduleId }) || participantSession;
             pageManager.setParticipantSession(participantSession);
@@ -508,6 +534,7 @@ function initApp() {
     });
 
     window.addEventListener('pagehide', () => {
+        flushResearchEvents();
         stopSpeech();
         dialogueManager.invalidateAsyncCallbacks();
     });

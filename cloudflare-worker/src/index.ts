@@ -1,4 +1,10 @@
-import { createResearchDataRepository, ModuleRunAccessError, ModuleRunValidationError } from './data/research-repository.js';
+import {
+    createResearchDataRepository,
+    ModuleRunAccessError,
+    ModuleRunValidationError,
+    RecordConversationMessageInput,
+    RecordModuleEventInput
+} from './data/research-repository.js';
 
 export interface Env {
     DEEPSEEK_API_KEY: string;
@@ -13,6 +19,7 @@ export interface Env {
 }
 
 interface AiHookRequestBody {
+    participantCode?: string;
     sessionId?: string;
     moduleId?: string;
     step?: number | string | null;
@@ -33,6 +40,33 @@ interface ModuleRunRequestBody {
     sessionId?: string;
     moduleId?: string;
     metadata?: Record<string, unknown>;
+}
+
+interface EventsRequestBody {
+    participantCode?: string;
+    sessionId?: string;
+    events?: Array<{
+        type?: 'conversation_message' | 'module_event';
+        moduleId?: string;
+        hookId?: string;
+        messageRole?: RecordConversationMessageInput['messageRole'];
+        messageText?: string;
+        source?: RecordConversationMessageInput['source'];
+        eventType?: string;
+        step?: number | string | null;
+        sequenceIndex?: number | null;
+        durationMs?: number | null;
+        userInput?: string;
+        choiceValue?: string;
+        context?: Record<string, unknown>;
+        metadata?: Record<string, unknown>;
+    }>;
+}
+
+interface ReplayRequestBody {
+    participantCode?: string;
+    sessionId?: string;
+    moduleId?: string;
 }
 interface HookVariant {
     key: string;
@@ -547,6 +581,29 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
         console.warn('AI hook fallback used', hookId, error instanceof Error ? error.message : error);
     }
 
+    if (env.DB && body.sessionId && body.moduleId && body.participantCode) {
+        try {
+            const repository = createResearchDataRepository(env.DB);
+            const context = await repository.resolveParticipant(String(body.participantCode), String(body.sessionId));
+            await repository.recordAiCallEvent({
+                participantId: context.participantId,
+                sessionId: String(body.sessionId),
+                moduleId: String(body.moduleId),
+                hookId,
+                variant: variant.key,
+                userInput,
+                replyText,
+                fallbackUsed,
+                promptVersion: hook.version,
+                provider: hook.provider,
+                model: env.DEEPSEEK_MODEL || hook.model,
+                metadata: { runtime: 'cloudflare-worker' }
+            });
+        } catch (error) {
+            console.warn('AI event persistence failed', error instanceof Error ? error.message : error);
+        }
+    }
+
     return jsonResponse({
         moduleId: hook.moduleId,
         hookId: hook.hookId,
@@ -739,6 +796,60 @@ async function handleModuleRunRequest(
         }, 200, corsHeaders);
     }
 }
+
+async function handleEventsRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
+    let body: EventsRequestBody;
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders); }
+    const codeValidation = validateParticipantCode(String(body.participantCode || ''));
+    const sessionId = String(body.sessionId || '').trim();
+    const events = Array.isArray(body.events) ? body.events.slice(0, 100) : [];
+    if (!codeValidation.ok || !sessionId || !events.length) return jsonResponse({ error: 'participantCode, sessionId and events are required.' }, 400, corsHeaders);
+    try {
+        const repository = createResearchDataRepository(env.DB);
+        const context = await repository.resolveParticipant(codeValidation.normalizedValue, sessionId);
+        for (const event of events) {
+            const moduleId = String(event.moduleId || '').trim();
+            if (!moduleId) continue;
+            if (event.type === 'conversation_message' && event.messageText && event.messageRole && event.source) {
+                await repository.recordConversationMessage({
+                    participantId: context.participantId, sessionId, moduleId,
+                    hookId: String(event.hookId || ''), messageRole: event.messageRole,
+                    messageText: String(event.messageText), source: event.source,
+                    step: event.step, sequenceIndex: event.sequenceIndex, durationMs: event.durationMs,
+                    metadata: event.metadata
+                });
+            } else if (event.type === 'module_event' && event.eventType) {
+                await repository.recordModuleEvent({
+                    participantId: context.participantId, sessionId, moduleId,
+                    eventType: String(event.eventType), step: event.step,
+                    userInput: event.userInput, choiceValue: event.choiceValue, context: event.context
+                });
+            }
+        }
+        return jsonResponse({ accepted: events.length, persisted: Boolean(env.DB) }, 202, corsHeaders);
+    } catch (error) {
+        console.warn('Event persistence failed', error instanceof Error ? error.message : error);
+        return jsonResponse({ error: 'Research data storage is unavailable.' }, env.DB ? 503 : 202, corsHeaders);
+    }
+}
+
+async function handleReplayRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
+    let body: ReplayRequestBody;
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders); }
+    const codeValidation = validateParticipantCode(String(body.participantCode || ''));
+    const sessionId = String(body.sessionId || '').trim();
+    const moduleId = String(body.moduleId || '').trim();
+    if (!codeValidation.ok || !sessionId || !moduleId) return jsonResponse({ error: 'participantCode, sessionId and moduleId are required.' }, 400, corsHeaders);
+    try {
+        const repository = createResearchDataRepository(env.DB);
+        const messages = await repository.getConversationMessages({ participantCode: codeValidation.normalizedValue, sessionId, moduleId });
+        return jsonResponse({ moduleId, messages, persisted: Boolean(env.DB) }, 200, corsHeaders);
+    } catch (error) {
+        if (error instanceof ModuleRunValidationError) return jsonResponse({ error: error.message }, 400, corsHeaders);
+        console.warn('Conversation replay failed', error instanceof Error ? error.message : error);
+        return jsonResponse({ error: 'Research data storage is unavailable.' }, env.DB ? 503 : 200, corsHeaders);
+    }
+}
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         const corsHeaders = buildCorsHeaders(request, env);
@@ -769,6 +880,12 @@ export default {
         }
         if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/complete') {
             return handleModuleRunRequest(request, env, corsHeaders, true);
+        }
+        if (request.method === 'POST' && url.pathname === '/api/v1/events') {
+            return handleEventsRequest(request, env, corsHeaders);
+        }
+        if (request.method === 'POST' && url.pathname === '/api/v1/conversation/replay') {
+            return handleReplayRequest(request, env, corsHeaders);
         }
         const hookMatch = url.pathname.match(/^\/api\/v1\/ai\/hooks\/([^/]+)$/);
         if (request.method === 'POST' && hookMatch) {

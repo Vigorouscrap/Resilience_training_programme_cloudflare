@@ -182,3 +182,23 @@ export async function completeModuleRun(moduleId, metadata = {}) {
         metadata
     });
 }
+
+export async function recordResearchEvents(events) {
+    const session = getParticipantSession();
+    if (!session || !Array.isArray(events) || !events.length) return null;
+    return postJson('/api/v1/events', {
+        participantCode: session.participantCode,
+        sessionId: session.sessionId,
+        events
+    }, { timeoutMs: 5000 });
+}
+
+export async function getConversationReplay(moduleId) {
+    const session = getParticipantSession();
+    if (!session) return { messages: [] };
+    return postJson('/api/v1/conversation/replay', {
+        participantCode: session.participantCode,
+        sessionId: session.sessionId,
+        moduleId
+    });
+}

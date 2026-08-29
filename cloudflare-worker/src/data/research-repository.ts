@@ -69,6 +69,26 @@ export interface RecordConversationMessageInput {
     metadata?: Record<string, unknown>;
 }
 
+export interface ConversationMessageSummary {
+    id: string;
+    moduleId: string;
+    hookId: string;
+    messageRole: RecordConversationMessageInput['messageRole'];
+    messageText: string;
+    source: RecordConversationMessageInput['source'];
+    step: string | null;
+    sequenceIndex: number | null;
+    durationMs: number | null;
+    metadata: Record<string, unknown>;
+    createdAt: string;
+}
+
+export interface ConversationReplayInput {
+    participantCode: string;
+    sessionId: string;
+    moduleId: string;
+}
+
 export interface ModuleRunSummary {
     id: string;
     moduleId: string;
@@ -104,6 +124,8 @@ export interface ResearchDataRepository {
     recordModuleEvent(input: RecordModuleEventInput): Promise<void>;
     recordAiCallEvent(input: RecordAiCallEventInput): Promise<void>;
     recordConversationMessage(input: RecordConversationMessageInput): Promise<void>;
+    resolveParticipant(participantCode: string, sessionId: string): Promise<ParticipantContext>;
+    getConversationMessages(input: ConversationReplayInput): Promise<ConversationMessageSummary[]>;
 }
 
 interface ModuleRunRow {
@@ -296,6 +318,10 @@ class NoopResearchDataRepository implements ResearchDataRepository {
     async recordModuleEvent(): Promise<void> {}
     async recordAiCallEvent(): Promise<void> {}
     async recordConversationMessage(): Promise<void> {}
+    async resolveParticipant(participantCode: string, sessionId: string): Promise<ParticipantContext> {
+        return { participantId: 'noop_' + normalizeParticipantCode(participantCode), role: 'participant', unlockStartAt: nowIso() };
+    }
+    async getConversationMessages(): Promise<ConversationMessageSummary[]> { return []; }
 }
 
 class D1ResearchDataRepository implements ResearchDataRepository {
@@ -308,7 +334,7 @@ class D1ResearchDataRepository implements ResearchDataRepository {
         return result.results || [];
     }
 
-    private async getParticipantContext(participantCode: string, sessionId: string): Promise<ParticipantContext> {
+    async resolveParticipant(participantCode: string, sessionId: string): Promise<ParticipantContext> {
         const context = await this.db.prepare(
             'SELECT p.id, p.role, p.unlock_start_at FROM participants p INNER JOIN sessions s ON s.participant_id = p.id WHERE p.participant_code = ? AND s.id = ?'
         ).bind(normalizeParticipantCode(participantCode), sessionId).first<{
@@ -395,7 +421,7 @@ class D1ResearchDataRepository implements ResearchDataRepository {
 
     private async resolveModuleRun(input: StartModuleRunInput, complete: boolean): Promise<ModuleRunResult> {
         const dayIndex = moduleDayIndex(input.moduleId);
-        const context = await this.getParticipantContext(input.participantCode, input.sessionId);
+        const context = await this.resolveParticipant(input.participantCode, input.sessionId);
         const access = await this.getAccess(context.participantId, context.role);
         if (!access.canAccessAllModules && dayIndex > access.unlockedDayIndex) {
             throw new ModuleRunAccessError('Module is not unlocked.');
@@ -509,6 +535,35 @@ class D1ResearchDataRepository implements ResearchDataRepository {
             serializeJson(input.metadata),
             nowIso()
         ).run();
+    }
+
+    async getConversationMessages(input: ConversationReplayInput): Promise<ConversationMessageSummary[]> {
+        const context = await this.resolveParticipant(input.participantCode, input.sessionId);
+        const moduleId = String(input.moduleId || '').trim();
+        moduleDayIndex(moduleId);
+        const completed = await this.db.prepare(
+            'SELECT 1 AS completed FROM module_runs WHERE participant_id = ? AND module_id = ? AND status = ? LIMIT 1'
+        ).bind(context.participantId, moduleId, 'completed').first<{ completed: number }>();
+        if (!completed) return [];
+        const result = await this.db.prepare(
+            'SELECT id, module_id, hook_id, message_role, message_text, source, step, sequence_index, duration_ms, metadata_json, created_at FROM conversation_messages WHERE participant_id = ? AND session_id = ? AND module_id = ? ORDER BY COALESCE(sequence_index, 2147483647), created_at, id'
+        ).bind(context.participantId, input.sessionId, moduleId).all<{
+            id: string; module_id: string; hook_id: string;
+            message_role: RecordConversationMessageInput['messageRole']; message_text: string;
+            source: RecordConversationMessageInput['source']; step: string | null;
+            sequence_index: number | null; duration_ms: number | null;
+            metadata_json: string; created_at: string;
+        }>();
+        return (result.results || []).map((row) => {
+            let metadata: Record<string, unknown> = {};
+            try { const parsed = JSON.parse(row.metadata_json || '{}'); if (parsed && typeof parsed === 'object') metadata = parsed; } catch {}
+            return {
+                id: row.id, moduleId: row.module_id, hookId: row.hook_id,
+                messageRole: row.message_role, messageText: row.message_text, source: row.source,
+                step: row.step, sequenceIndex: row.sequence_index == null ? null : Number(row.sequence_index),
+                durationMs: row.duration_ms == null ? null : Number(row.duration_ms), metadata, createdAt: row.created_at
+            };
+        });
     }
 }
 
