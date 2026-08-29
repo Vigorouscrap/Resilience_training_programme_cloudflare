@@ -305,15 +305,21 @@ function initApp() {
         if (isReplay) dialogueManager.resetForReplay(moduleMeta.moduleId);
         else dialogueManager.resetForModule(moduleMeta.moduleId);
         globalThis.__RESILIENCE_REPLAYING__ = false;
-        if (isReplay) {
-            void getConversationReplay(moduleMeta.moduleId).then((replay) => {
-                if (dialogueManager.currentModule === moduleMeta.moduleId) {
-                    dialogueManager.renderReplay(Array.isArray(replay?.messages) ? replay.messages : [], replay?.snapshotHtml || '');
-                }
-            }).catch(() => {
-                if (dialogueManager.currentModule === moduleMeta.moduleId) dialogueManager.renderReplay([]);
-            });
-        }
+        const loadReplay = () => getConversationReplay(moduleMeta.moduleId).then((replay) => {
+            if (dialogueManager.currentModule === moduleMeta.moduleId) {
+                dialogueManager.renderReplay(Array.isArray(replay?.messages) ? replay.messages : [], replay?.snapshotHtml || '');
+            }
+        }).catch(() => {
+            if (dialogueManager.currentModule === moduleMeta.moduleId) dialogueManager.renderReplay([]);
+        });
+        if (isReplay) void loadReplay();
+        else void moduleRunStartPromise.then((result) => {
+            if (result?.moduleRun?.status === 'completed' && dialogueManager.currentModule === moduleMeta.moduleId) {
+                dialogueManager.resetForReplay(moduleMeta.moduleId);
+                return loadReplay();
+            }
+            return null;
+        }).catch(() => {});
         dialogueManager.onModuleCompleted = (response) => {
             participantSession = updateParticipantSessionAccess(response.access, { lastModuleCompleted: moduleMeta.moduleId }) || participantSession;
             pageManager.setParticipantSession(participantSession);
