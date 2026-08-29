@@ -455,7 +455,10 @@ export function appendAiMessage(chatMessages, text, withContinue = false) {
 export function appendUserMessage(chatMessages, text) {
     const row = document.createElement('div');
     row.className = 'message-row-right';
-    row.innerHTML = `<div class="bubble-right">${text}</div>`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble-right';
+    bubble.textContent = String(text);
+    row.appendChild(bubble);
     chatMessages.appendChild(row);
     recordResearchEvent({ type: 'conversation_message', messageRole: 'user', source: 'user_input', messageText: String(text), sequenceIndex: chatMessages.children.length });
     scrollChat(chatMessages);
@@ -675,6 +678,14 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
                 }
                 finalize();
             }
+        });
+        recordResearchEvent({
+            type: 'conversation_message',
+            messageRole: 'ui_event',
+            source: 'module_event',
+            messageText: '音频引导',
+            sequenceIndex: root.children.length,
+            metadata: { kind: 'audio', audioSrc: String(audioSrc), mimeType: options.mimeType || 'audio/mpeg' }
         });
         const skipControlHost = document.createElement('div');
         skipControlHost.className = 'countdown-wrapper after-card';

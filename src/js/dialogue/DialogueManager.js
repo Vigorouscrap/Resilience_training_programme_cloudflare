@@ -377,9 +377,55 @@ export class DialogueManager {
         this.moduleRunStartPromise = startPromise || null;
     }
 
-    renderReplay(messages = []) {
+    resetForReplay(module) {
+        stopManagedMedia(this.chatMessages);
+        this.invalidateAsyncCallbacks();
+        this.currentModule = module;
+        this.chatMessages.innerHTML = '';
+        this.pendingContinueAction = null;
+        this.moduleCompletionState = { status: 'completed', moduleId: module, replay: true };
+        this.step = -1;
+        disableInput(this.inputArea, this.userInput);
+    }
+
+    renderReplay(messages = [], snapshotHtml = '') {
         this.invalidateAsyncCallbacks();
         this.chatMessages.innerHTML = '';
+        if (snapshotHtml) {
+            const template = document.createElement('template');
+            template.innerHTML = String(snapshotHtml);
+            template.content.querySelectorAll('script, iframe, object, embed, form').forEach((node) => node.remove());
+            template.content.querySelectorAll('*').forEach((node) => {
+                Array.from(node.attributes || []).forEach((attribute) => {
+                    if (/^on/i.test(attribute.name)) node.removeAttribute(attribute.name);
+                });
+            });
+            this.chatMessages.appendChild(template.content.cloneNode(true));
+        }
+        if (snapshotHtml) {
+            const audioMessages = messages.filter((message) => message?.metadata?.kind === 'audio' && message?.metadata?.audioSrc);
+            if (audioMessages.length) {
+                const audioList = document.createElement('div');
+                audioList.className = 'replay-audio-list';
+                audioMessages.forEach((message, index) => {
+                    const audioRow = document.createElement('div');
+                    audioRow.className = 'replay-audio-row';
+                    const label = document.createElement('span');
+                    label.textContent = `音频引导 ${index + 1}`;
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.preload = 'metadata';
+                    audio.src = String(message.metadata.audioSrc);
+                    audioRow.append(label, audio);
+                    audioList.appendChild(audioRow);
+                });
+                this.chatMessages.appendChild(audioList);
+            }
+            disableInput(this.inputArea, this.userInput);
+            this.moduleCompletionState = { status: 'completed', moduleId: this.currentModule, replay: true };
+            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            return;
+        }
         if (!messages.length) {
             const empty = document.createElement('div');
             empty.className = 'hint-text';
@@ -422,7 +468,8 @@ export class DialogueManager {
             if (this.moduleRunStartPromise) await this.moduleRunStartPromise;
             const response = await completeModuleRun(this.currentModule, {
                 clientStep: this.step,
-                source: 'module-terminal'
+                source: 'module-terminal',
+                snapshotHtml: this.chatMessages.innerHTML
             });
             this.moduleCompletionState = {
                 status: 'completed',

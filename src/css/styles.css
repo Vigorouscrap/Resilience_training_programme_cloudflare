@@ -999,6 +999,28 @@
     margin-left: 4rem;
 }
 
+.replay-audio-list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1rem 0 0 4rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid rgba(126, 163, 196, 0.38);
+    border-radius: 0.8rem;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.replay-audio-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #425f78;
+    font-size: 0.88rem;
+}
+
+.replay-audio-row audio {
+    width: min(100%, 24rem);
+}
+
 @media (max-width: 900px) {
     .dashboard {
         padding: 2rem 1.5rem;
@@ -1198,6 +1220,16 @@
     .countdown-wrapper.after-card,
     .countdown-wrapper.after-message {
         margin-left: 3rem;
+    }
+
+    .replay-audio-list {
+        margin-left: 3rem;
+    }
+
+    .replay-audio-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.35rem;
     }
 
     .input-area {

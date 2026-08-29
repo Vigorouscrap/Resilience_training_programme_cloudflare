@@ -745,14 +745,14 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] 在统一 UI 层记录固定引导、用户按钮选择和文本输入，保留 moduleId、step、顺序号和时间戳。
 - [x] AI hook 成功或 fallback 后尽力写入 ai_call_events；写入失败只记录 Worker 警告，不阻塞课程。
 - [x] 事件采集不依赖单个模块脚本，已覆盖现有 42 个模块的通用消息/输入/按钮路径；代表模块端到端浏览器回归仍待 9A-7。
-- [x] 新增 POST /api/v1/conversation/replay；已完成模块重新打开时只读恢复 `conversation_messages` 中的固定文案、用户回复和按钮选择，回放失败或无历史时保持只读并提示。音频元数据回放待后续增强。
+- [x] 新增 POST /api/v1/conversation/replay；完成时保存聊天区受控 HTML 快照，已完成模块重新打开时优先恢复原有头像、气泡、卡片和排版；旧数据无快照时降级为结构化消息回放。音频事件保存资源路径并在回放页恢复可播放控件。
 - [ ] 核心数据稳定后再接入快速连续点击、空闲超过 5 分钟和 visibilitychange 行为事件。
 - [ ] 设计前端事件缓冲、异步重试和去重；普通事件丢失不阻塞模块，完成状态保存失败也优先保证练习流程可继续。
-- [ ] 确认平台提示只描述实际采集的练习时间、选择和输入，不加入数据保留期限、删除或匿名化说明。
+- [ ] 不修改平台提示，不加入数据保留期限、删除或匿名化说明。
 
 完成标准：从页面操作到 D1 查询可以还原参与者当天完成了什么、用了多久、输入或选择了什么。
 
-9A-5 实现说明（2026-08-29）：D1 已有 `conversation_messages`、`module_events`、`ai_call_events` 表，本轮补齐事件批量写入、AI 调用记录和回放查询。回放接口要求 participantCode、sessionId 与已完成 moduleId 匹配，避免跨参与者或未完成模块读取；前端回放使用只读气泡，不重新执行训练流程。
+9A-5 实现说明（2026-08-29）：D1 已有 `conversation_messages`、`module_events`、`ai_call_events` 表，本轮补齐事件批量写入、AI 调用记录和回放查询，并新增 `conversation_snapshots` 保存完成瞬间的聊天区 HTML。回放接口要求 participantCode、sessionId 与已完成 moduleId 匹配，避免跨参与者或未完成模块读取；前端优先恢复受控快照，旧数据才使用只读气泡降级回放。用户输入统一使用文本节点，避免把输入内容当 HTML 导致乱码或注入。
 
 ### 9A-6：受保护的数据导出
 

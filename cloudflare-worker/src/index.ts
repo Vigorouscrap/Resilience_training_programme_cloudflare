@@ -40,6 +40,7 @@ interface ModuleRunRequestBody {
     sessionId?: string;
     moduleId?: string;
     metadata?: Record<string, unknown>;
+    snapshotHtml?: string;
 }
 
 interface EventsRequestBody {
@@ -750,10 +751,11 @@ async function handleModuleRunRequest(
         participantCode: codeValidation.normalizedValue,
         sessionId,
         moduleId,
-        metadata: {
-            ...(body.metadata || {}),
-            runtime: 'cloudflare-worker'
-        }
+            metadata: {
+                ...(body.metadata || {}),
+                runtime: 'cloudflare-worker'
+            },
+            snapshotHtml: complete ? String(body.snapshotHtml || body.metadata?.snapshotHtml || '') : undefined
     };
 
     try {
@@ -842,8 +844,8 @@ async function handleReplayRequest(request: Request, env: Env, corsHeaders: Head
     if (!codeValidation.ok || !sessionId || !moduleId) return jsonResponse({ error: 'participantCode, sessionId and moduleId are required.' }, 400, corsHeaders);
     try {
         const repository = createResearchDataRepository(env.DB);
-        const messages = await repository.getConversationMessages({ participantCode: codeValidation.normalizedValue, sessionId, moduleId });
-        return jsonResponse({ moduleId, messages, persisted: Boolean(env.DB) }, 200, corsHeaders);
+        const replay = await repository.getConversationReplay({ participantCode: codeValidation.normalizedValue, sessionId, moduleId });
+        return jsonResponse({ moduleId, ...replay, persisted: Boolean(env.DB) }, 200, corsHeaders);
     } catch (error) {
         if (error instanceof ModuleRunValidationError) return jsonResponse({ error: error.message }, 400, corsHeaders);
         console.warn('Conversation replay failed', error instanceof Error ? error.message : error);

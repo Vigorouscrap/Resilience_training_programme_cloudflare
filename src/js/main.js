@@ -302,12 +302,13 @@ function initApp() {
         pageManager.showDaily(moduleMeta.weekIdx);
         const isReplay = participantSession.access?.completedModuleIds?.includes(moduleMeta.moduleId);
         globalThis.__RESILIENCE_REPLAYING__ = isReplay;
-        dialogueManager.resetForModule(moduleMeta.moduleId);
+        if (isReplay) dialogueManager.resetForReplay(moduleMeta.moduleId);
+        else dialogueManager.resetForModule(moduleMeta.moduleId);
         globalThis.__RESILIENCE_REPLAYING__ = false;
         if (isReplay) {
             void getConversationReplay(moduleMeta.moduleId).then((replay) => {
                 if (dialogueManager.currentModule === moduleMeta.moduleId) {
-                    dialogueManager.renderReplay(Array.isArray(replay?.messages) ? replay.messages : []);
+                    dialogueManager.renderReplay(Array.isArray(replay?.messages) ? replay.messages : [], replay?.snapshotHtml || '');
                 }
             }).catch(() => {
                 if (dialogueManager.currentModule === moduleMeta.moduleId) dialogueManager.renderReplay([]);

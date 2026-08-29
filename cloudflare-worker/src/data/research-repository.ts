@@ -89,6 +89,11 @@ export interface ConversationReplayInput {
     moduleId: string;
 }
 
+export interface ConversationReplayResult {
+    snapshotHtml: string | null;
+    messages: ConversationMessageSummary[];
+}
+
 export interface ModuleRunSummary {
     id: string;
     moduleId: string;
@@ -104,6 +109,7 @@ export interface StartModuleRunInput {
     sessionId: string;
     moduleId: string;
     metadata?: Record<string, unknown>;
+    snapshotHtml?: string;
 }
 
 export interface CompleteModuleRunInput extends StartModuleRunInput {}
@@ -126,6 +132,7 @@ export interface ResearchDataRepository {
     recordConversationMessage(input: RecordConversationMessageInput): Promise<void>;
     resolveParticipant(participantCode: string, sessionId: string): Promise<ParticipantContext>;
     getConversationMessages(input: ConversationReplayInput): Promise<ConversationMessageSummary[]>;
+    getConversationReplay(input: ConversationReplayInput): Promise<ConversationReplayResult>;
 }
 
 interface ModuleRunRow {
@@ -322,6 +329,7 @@ class NoopResearchDataRepository implements ResearchDataRepository {
         return { participantId: 'noop_' + normalizeParticipantCode(participantCode), role: 'participant', unlockStartAt: nowIso() };
     }
     async getConversationMessages(): Promise<ConversationMessageSummary[]> { return []; }
+    async getConversationReplay(): Promise<ConversationReplayResult> { return { snapshotHtml: null, messages: [] }; }
 }
 
 class D1ResearchDataRepository implements ResearchDataRepository {
@@ -464,6 +472,13 @@ class D1ResearchDataRepository implements ResearchDataRepository {
         }
 
         if (!moduleRun) throw new Error('Module run could not be read.');
+        if (complete && input.snapshotHtml) {
+            const snapshotHtml = String(input.snapshotHtml).slice(0, 500000);
+            await this.db.prepare(
+                'INSERT INTO conversation_snapshots (id, participant_id, session_id, module_id, html_snapshot, snapshot_version, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(participant_id, module_id) DO UPDATE SET session_id = excluded.session_id, html_snapshot = excluded.html_snapshot, snapshot_version = excluded.snapshot_version, created_at = excluded.created_at'
+            ).bind(createId('conversation_snapshot'), context.participantId, input.sessionId, input.moduleId, snapshotHtml, 'v1', nowIso()).run();
+        }
+
         return {
             persisted: true,
             moduleRun: toModuleRunSummary(moduleRun),
@@ -564,6 +579,17 @@ class D1ResearchDataRepository implements ResearchDataRepository {
                 durationMs: row.duration_ms == null ? null : Number(row.duration_ms), metadata, createdAt: row.created_at
             };
         });
+    }
+
+    async getConversationReplay(input: ConversationReplayInput): Promise<ConversationReplayResult> {
+        const context = await this.resolveParticipant(input.participantCode, input.sessionId);
+        const snapshot = await this.db.prepare(
+            'SELECT html_snapshot FROM conversation_snapshots WHERE participant_id = ? AND session_id = ? AND module_id = ? LIMIT 1'
+        ).bind(context.participantId, input.sessionId, input.moduleId).first<{ html_snapshot: string }>();
+        return {
+            snapshotHtml: snapshot?.html_snapshot || null,
+            messages: await this.getConversationMessages(input)
+        };
     }
 }
 
