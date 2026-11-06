@@ -102,6 +102,7 @@ export function startCardCountdown(chatMessages, seconds, readyText, onComplete)
 }
 
 export function appendSpeechReplayCard(chatMessages, html, speechText, options = {}) {
+    let currentCard = null;
     appendSpecialCard(
         chatMessages,
         `${module5CardStyles}
@@ -110,33 +111,30 @@ export function appendSpeechReplayCard(chatMessages, html, speechText, options =
             <div class="module5-media-actions">
                 <button type="button" class="module5-replay-btn">${options.replayLabel || '再次播放'}</button>
             </div>
-        </div>`
+        </div>`,
+        (card) => {
+            currentCard = card;
+            const replayBtn = currentCard.querySelector('.module5-replay-btn');
+            const replayKey = `module5-replay-${chatMessages.querySelectorAll('.module5-replay-btn').length}`;
+            if (replayBtn) replayBtn.dataset.audioReplayKey = replayKey;
+
+            const playReplayAudio = (withFlowAdvance = false) => {
+                if (!options.audioPath) return;
+                playManagedAudio(chatMessages, options.audioPath, {
+                    mimeType: options.audioMimeType || 'audio/mpeg',
+                    replayable: true,
+                    replayKey,
+                    replayLabel: options.replayLabel || '再次播放',
+                    onEnded: withFlowAdvance ? options.onEnded : null
+                });
+            };
+
+            replayBtn?.addEventListener('click', () => playReplayAudio(false));
+
+            if (typeof options.onInit === 'function') options.onInit(currentCard);
+            if (options.autoPlay !== false) playReplayAudio(true);
+        }
     );
-
-    const cards = chatMessages.querySelectorAll('.special-card');
-    const currentCard = cards[cards.length - 1];
-    const replayBtn = currentCard?.querySelector('.module5-replay-btn');
-
-    const playReplayAudio = (withFlowAdvance = false) => {
-        if (!options.audioPath) return;
-
-        playManagedAudio(chatMessages, options.audioPath, {
-            mimeType: options.audioMimeType || 'audio/mpeg',
-            onEnded: withFlowAdvance ? options.onEnded : null
-        });
-    };
-
-    replayBtn?.addEventListener('click', () => {
-        playReplayAudio(false);
-    });
-
-    if (typeof options.onInit === 'function' && currentCard) {
-        options.onInit(currentCard);
-    }
-
-    if (options.autoPlay !== false) {
-        playReplayAudio(true);
-    }
 
     return currentCard;
 }

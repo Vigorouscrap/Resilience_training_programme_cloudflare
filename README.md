@@ -312,11 +312,16 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 | 项目 | Cloudflare 实验线 | 腾讯云正式线 |
 |---|---|---|
-| 前端 | Cloudflare Pages | Vercel / EdgeOne Pages / COS + EdgeOne |
+| 前端 | Cloudflare Pages | EdgeOne Pages + `www.resilience-training.cloud`，Nginx 静态托管为回退 |
 | 后端 | Cloudflare Workers | Lighthouse + Fastify + Nginx + systemd |
+| 数据库 | Cloudflare D1 | 同一台 Lighthouse 上的 PostgreSQL，不购买独立云数据库 |
 | 优点 | 部署快、免费额度友好、适合实验 | 更贴近国内正式访问、后端能力完整 |
-| 风险 | 国内网络稳定性不确定，Worker 后端需重构 | 需要域名、HTTPS、ICP备案 |
+| 风险 | 国内网络稳定性不确定 | 仍需完成 API HTTPS、Fastify 接口补齐、本机数据库备份和三网验收 |
 | 当前定位 | 实验/备用入口 | 正式路线 |
+
+2026-11-06 已确认：域名实名认证、ICP备案和腾讯云权限可用；正式规模约 100 人；D1 与中国大陆 PostgreSQL 数据分开保存且不迁移。EdgeOne Pages 不需要重做前端，直接部署同一份 `src/`，只为内地环境生成指向 `https://api.resilience-training.cloud` 的运行时配置。
+
+完整评估、EdgeOne 优缺点、本机 PostgreSQL 边界和 M0-M5 待办见 `docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md`。
 
 ---
 
@@ -326,7 +331,8 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 - Cloudflare Worker 必须保持和现有前端 API 契约兼容。
 - 前端课程文案、UI、模块流程仍遵守原路线图约束，不因 Cloudflare 实验线随意改写。
 - 当前已经完成全部现有 AI hook 的 Worker 迁移、线上部署与逐个 hook 验证。
-- 下一阶段是阶段 9A：用户体系与数据能力最小原型，优先采用参与者编号 / 邀请码，而不是完整账号密码注册。
+- 当前 Cloudflare 线是唯一完整代码基线；不要回到 2026-06-19 停止的旧仓库继续开发业务功能。
+- 内地路线使用同一套 `src/`，在本仓库 `backend/` 补齐 Fastify + PostgreSQL，不复制第二套前端。
 - 如果 Worker 后端继续扩大，建议把 prompt 与 hook 配置从 `backend/` 抽成可复用共享包，避免双后端长期复制。
 - 详见 `docs/IMPLEMENTATION_ROADMAP_CLOUDFLARE.md`。
 
@@ -334,10 +340,9 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 ## 下一步建议
 
-1. 在 Cloudflare 后台或 Wrangler 创建 D1 数据库。
-2. 当前实验库已绑定到 cloudflare-worker/wrangler.toml；如新建环境，只需替换 database_name 和 database_id。
-3. 应用 `cloudflare-worker/migrations/0001_research_data.sql`。
-4. 部署 Worker 后运行 `smoke:participant` 验证参与者 session 接口。
-5. 部署 Pages 后手动验证研究编号输入、刷新恢复和逐日解锁展示。
-6. 新增最小事件记录接口，先记录少量关键模块输入。
-7. 接入完整对话 transcript 记录，为后续 JSON / CSV / Excel 导出做准备。
+1. 回归并提交当前 2026-08-31 工作区修复，建立可回退版本。
+2. 创建 EdgeOne Pages 测试项目，直接发布 `src/`，核对当前套餐、媒体限制和中国大陆三网效果。
+3. 参数化 `runtime-config.js` 并固化 Worker/Fastify 共享 API 契约。
+4. 在 Lighthouse 安装仅监听本机的 PostgreSQL，为 Fastify 补齐参与者、进度、事件、回放和导出接口。
+5. 为 `api.resilience-training.cloud` 配置 HTTPS，将腾讯云 CORS 收紧到 `https://www.resilience-training.cloud`。
+6. 完成 42 个模块、手机端、三网、异常恢复、数据隔离和备份恢复验收。

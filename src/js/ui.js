@@ -163,7 +163,7 @@ function appendContinueButtonNow(chatMessages, delaySeconds = 0) {
                 if (timer) clearInterval(timer);
                 clearManagedWait(chatMessages, controller);
                 btn.classList.remove('disabled');
-                btn.innerText = '⏵ 点击继续';
+                btn.innerText = '▷ 点击继续';
             }
         });
         attachSkipControl(wrap, controller, '跳过倒计时');
@@ -177,11 +177,11 @@ function appendContinueButtonNow(chatMessages, delaySeconds = 0) {
                 finished = true;
                 clearManagedWait(chatMessages, controller);
                 btn.classList.remove('disabled');
-                btn.innerText = '⏵ 点击继续';
+                btn.innerText = '▷ 点击继续';
             }
         }, 1000);
     } else {
-        btn.innerText = '⏵ 点击继续';
+        btn.innerText = '▷ 点击继续';
     }
     wrap.appendChild(btn);
     chatMessages.appendChild(wrap);
@@ -467,7 +467,7 @@ export function appendUserMessage(chatMessages, text) {
 /**
  * 添加特殊卡片
  */
-export function appendSpecialCard(chatMessages, html) {
+export function appendSpecialCard(chatMessages, html, onCreated = null) {
     appendContentOrQueue(chatMessages, 'card', () => {
         const card = document.createElement('div');
         card.className = 'special-card';
@@ -475,6 +475,7 @@ export function appendSpecialCard(chatMessages, html) {
         chatMessages.appendChild(card);
         recordResearchEvent({ type: 'conversation_message', messageRole: 'system_script', source: 'fixed_script', messageText: card.textContent || '', sequenceIndex: chatMessages.children.length });
         scrollChat(chatMessages);
+        if (typeof onCreated === 'function') onCreated(card);
     });
 }
 
@@ -679,14 +680,22 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
                 finalize();
             }
         });
-        recordResearchEvent({
-            type: 'conversation_message',
-            messageRole: 'ui_event',
-            source: 'module_event',
-            messageText: '音频引导',
-            sequenceIndex: root.children.length,
-            metadata: { kind: 'audio', audioSrc: String(audioSrc), mimeType: options.mimeType || 'audio/mpeg' }
-        });
+        if (options.recordEvent !== false) {
+            recordResearchEvent({
+                type: 'conversation_message',
+                messageRole: 'ui_event',
+                source: 'module_event',
+                messageText: '音频引导',
+                sequenceIndex: root.children.length,
+                metadata: {
+                    kind: options.replayable ? 'audio-replay' : 'audio',
+                    audioSrc: String(audioSrc),
+                    mimeType: options.mimeType || 'audio/mpeg',
+                    replayKey: options.replayKey || '',
+                    replayLabel: options.replayLabel || ''
+                }
+            });
+        }
         const skipControlHost = document.createElement('div');
         skipControlHost.className = 'countdown-wrapper after-card';
         attachSkipControl(skipControlHost, controller, '跳过音频');
@@ -812,7 +821,7 @@ export function appendCardActionButtons(chatMessages, showCompleteBtn = false, o
     appendControlOrQueue(chatMessages, () => {
         const wrap = document.createElement('div');
         wrap.className = 'card-action-buttons';
-        
+
         const backBtn = document.createElement('button');
         backBtn.className = 'card-btn';
         backBtn.innerText = '返回上一步';
@@ -825,7 +834,7 @@ export function appendCardActionButtons(chatMessages, showCompleteBtn = false, o
             }
         });
         wrap.appendChild(backBtn);
-        
+
         if (showCompleteBtn) {
             const completeBtn = document.createElement('button');
             completeBtn.className = 'card-btn primary';
@@ -840,7 +849,7 @@ export function appendCardActionButtons(chatMessages, showCompleteBtn = false, o
             });
             wrap.appendChild(completeBtn);
         }
-        
+
         chatMessages.appendChild(wrap);
         scrollChat(chatMessages);
     });
@@ -916,14 +925,14 @@ export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTime
         chatMessages.appendChild(card);
         const sessionId = getChatSessionId(chatMessages);
         const deadline = Date.now() + (delaySeconds * 1000);
-        
+
         // 添加计时器
         const timerDiv = document.createElement('div');
         timerDiv.className = 'card-timer';
         let remaining = delaySeconds;
         timerDiv.innerText = `⏳ ${remaining}秒后可继续`;
         card.appendChild(timerDiv);
-        
+
         const timer = setInterval(() => {
             if (!isChatSessionActive(chatMessages, sessionId)) {
                 clearInterval(timer);
@@ -948,7 +957,7 @@ export function appendTimedCard(chatMessages, content, delaySeconds = 30, onTime
                 }
             }
         }, 1000);
-        
+
         scrollChat(chatMessages);
     });
 }
@@ -1069,7 +1078,7 @@ export function appendAiMessageWithTimer(chatMessages, text, delayMs, callback, 
         }
         const row = document.createElement('div');
         row.className = 'message-row-left';
-        
+
         // 创建一个容器来放消息和计时器
         const messageContainer = document.createElement('div');
         messageContainer.style.display = 'flex';

@@ -10,7 +10,8 @@ import {
     queueUiMutation,
     resetSequentialRender,
     stopManagedMedia,
-    hasManagedWait
+    hasManagedWait,
+    playManagedAudio
 } from '../ui.js';
 import { module11Handlers } from './modules/module11.js';
 import { module12Handlers } from './modules/module12.js';
@@ -162,7 +163,48 @@ export class DialogueManager {
             breathAnswers: [],
             growthAnswer: ''
         };
+        this.installCompletionHooks();
         this.invalidateAsyncCallbacks();
+    }
+
+    // Some modules advance through button, audio, or input callbacks instead of
+    // passing through onContinue(). Wrap those entry points so terminal states
+    // still run the same completion check without changing each module script.
+    installCompletionHooks() {
+        if (this._completionHooksInstalled) return;
+
+        const methodNames = Object.keys(Object.getPrototypeOf(this)).filter((name) => (
+            name.startsWith('onContinue_')
+            || name.startsWith('handleModule')
+            || name.startsWith('startModule')
+            || name.startsWith('completeModule')
+        ));
+
+        methodNames.forEach((name) => {
+            const original = this[name];
+            if (typeof original !== 'function' || original.__completionWrapped) return;
+
+            const wrapped = function wrappedCompletionEntry(...args) {
+                let result;
+                try {
+                    result = original.apply(this, args);
+                } catch (error) {
+                    this.scheduleCompletionCheck();
+                    throw error;
+                }
+
+                if (result && typeof result.then === 'function') {
+                    return result.finally(() => this.scheduleCompletionCheck());
+                }
+
+                this.scheduleCompletionCheck();
+                return result;
+            };
+            Object.defineProperty(wrapped, '__completionWrapped', { value: true });
+            this[name] = wrapped;
+        });
+
+        this._completionHooksInstalled = true;
     }
 
     resetForModule(module) {
@@ -403,24 +445,35 @@ export class DialogueManager {
             this.chatMessages.appendChild(template.content.cloneNode(true));
         }
         if (snapshotHtml) {
-            const audioMessages = messages.filter((message) => message?.metadata?.kind === 'audio' && message?.metadata?.audioSrc);
-            if (audioMessages.length) {
-                const audioList = document.createElement('div');
-                audioList.className = 'replay-audio-list';
-                audioMessages.forEach((message, index) => {
-                    const audioRow = document.createElement('div');
-                    audioRow.className = 'replay-audio-row';
-                    const label = document.createElement('span');
-                    label.textContent = `音频引导 ${index + 1}`;
-                    const audio = document.createElement('audio');
-                    audio.controls = true;
-                    audio.preload = 'metadata';
-                    audio.src = String(message.metadata.audioSrc);
-                    audioRow.append(label, audio);
-                    audioList.appendChild(audioRow);
-                });
-                this.chatMessages.appendChild(audioList);
+            const replayButtons = Array.from(this.chatMessages.querySelectorAll('.module5-replay-btn'));
+            const replayMessages = new Map();
+            const replayEvents = messages.filter((message) => message?.metadata?.kind === 'audio-replay' && message?.metadata?.audioSrc);
+            replayEvents.forEach((message, index) => {
+                const key = String(message.metadata.replayKey || `legacy-replay-${index}`);
+                if (!replayMessages.has(key)) replayMessages.set(key, message);
+            });
+
+            // Snapshots created before replay metadata was added can still restore
+            // the first legacy audio events into the visible replay buttons.
+            if (replayMessages.size === 0 && replayButtons.length > 0) {
+                messages
+                    .filter((message) => message?.metadata?.kind === 'audio' && message?.metadata?.audioSrc)
+                    .slice(0, replayButtons.length)
+                    .forEach((message, index) => replayMessages.set(`legacy-replay-${index}`, message));
             }
+
+            replayButtons.forEach((button, index) => {
+                const key = String(button.dataset.audioReplayKey || `legacy-replay-${index}`);
+                const message = replayMessages.get(key) || replayMessages.get(`legacy-replay-${index}`);
+                if (!message?.metadata?.audioSrc) return;
+                button.textContent = String(message.metadata.replayLabel || button.textContent || '再次播放');
+                button.addEventListener('click', () => {
+                    playManagedAudio(this.chatMessages, String(message.metadata.audioSrc), {
+                        mimeType: message.metadata.mimeType || 'audio/mpeg',
+                        recordEvent: false
+                    });
+                });
+            });
             disableInput(this.inputArea, this.userInput);
             this.moduleCompletionState = { status: 'completed', moduleId: this.currentModule, replay: true };
             this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
@@ -453,6 +506,9 @@ export class DialogueManager {
             if (this.currentModule !== moduleId || this.moduleCompletionState?.status !== 'idle') return;
             if (this.pendingContinueAction || hasManagedWait(this.chatMessages)) return;
             if (this.chatMessages.querySelector('.continue-wrapper, .button-group, .card-action-buttons')) return;
+            // Some interactive cards use native controls instead of the shared
+            // button group. They remain pending until every choice is checked.
+            if (this.chatMessages.querySelector('.module44-quiz input:not(:disabled), .module44-quiz button:not(:disabled)')) return;
             if (!this.inputArea.classList.contains('disabled') || !this.userInput.disabled) return;
             void this.completeCurrentModule();
         }, 80);

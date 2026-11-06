@@ -133,6 +133,7 @@ export const module17Handlers = {
                 appendAiMessage(this.chatMessages, response, false);
                 appendAiMessage(this.chatMessages, '本次回顾到此结束。这段时间你完成了三种内在探索，无论体验深浅，你为自己付出的时间和关注，本身就是一种自我关怀。我们明天将开启第二阶段的练习，期待与你再次相见。', false);
                 this.step = 20;
+                this.scheduleCompletionCheck();
             });
         }
     },
@@ -158,6 +159,7 @@ export const module17Handlers = {
             appendAiMessage(this.chatMessages, '如果暂时没有这样的想法，也完全没关系。能回看这一周的体验，本身就是一种收获。', false);
             appendAiMessage(this.chatMessages, '本次回顾到此结束。这段时间你完成了三种内在探索，无论体验深浅，你为自己付出的时间和关注，本身就是一种自我关怀。我们明天将开启第二阶段的练习，期待与你再次相见。', false);
             this.step = 20;
+            this.scheduleCompletionCheck();
         }
     }
 

@@ -183,6 +183,18 @@ export async function completeModuleRun(moduleId, metadata = {}) {
     });
 }
 
+export async function resetModuleRun(moduleId, metadata = {}) {
+    const session = getParticipantSession();
+    if (!session) throw new Error('尚未建立参与者会话。');
+
+    return postJson('/api/v1/module-runs/reset', {
+        participantCode: session.participantCode,
+        sessionId: session.sessionId,
+        moduleId,
+        metadata
+    });
+}
+
 export async function recordResearchEvents(events) {
     const session = getParticipantSession();
     if (!session || !Array.isArray(events) || !events.length) return null;

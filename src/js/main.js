@@ -13,6 +13,7 @@ import {
     getParticipantSession,
     startParticipantSession,
     startModuleRun,
+    resetModuleRun,
     updateParticipantSessionAccess,
     recordResearchEvents,
     getConversationReplay,
@@ -214,7 +215,11 @@ function initApp() {
     let moduleRunStartPromise = null;
     let completionNotice = document.getElementById('moduleCompletionNotice');
     let testingTools = document.getElementById('testingTools');
+    const inlineCompletionToggle = testingTools?.querySelector('[data-test-inline-completion]');
     let participantSession = getParticipantSession();
+    let completionContext = null;
+    let completionReturnTarget = null;
+    let openModuleToken = 0;
     pageManager.setParticipantSession(participantSession);
 
     function renderParticipantSession(session, options = {}) {
@@ -242,6 +247,9 @@ function initApp() {
             const tester = Boolean(participantSession && ['tester', 'admin'].includes(participantSession.role));
             testingTools.hidden = !tester;
             testingTools.setAttribute('aria-hidden', String(!tester));
+            if (inlineCompletionToggle) {
+                inlineCompletionToggle.checked = tester && Boolean(ensureTestingConfig().inlineCompletion);
+            }
             if (tester) {
                 // 测试账号显示模块内的跳过按钮；等待仍默认保留，点击按钮才会跳过。
                 updateTestingConfig({ skipMode: true, skipWaits: false });
@@ -254,12 +262,21 @@ function initApp() {
     }
 
     function showCompletionNotice(moduleMeta, response) {
+        if (ensureTestingConfig().inlineCompletion && ['tester', 'admin'].includes(participantSession?.role)) {
+            renderInlineCompletionCelebration(moduleMeta);
+            hideCompletionNotice();
+            return;
+        }
         if (!completionNotice) return;
+        completionContext = moduleMeta;
+        completionReturnTarget = document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+            ? document.activeElement
+            : chatMessages;
         completionNotice.querySelector('[data-completion-module]').textContent = moduleMeta.moduleId;
         completionNotice.querySelector('[data-completion-status]').textContent = response?.persisted === false ? '本次完成状态暂未成功保存，请稍后重试。' : '完成状态已保存。';
         completionNotice.hidden = false;
         completionNotice.setAttribute('aria-hidden', 'false');
-        completionNotice.querySelector('[data-completion-close]')?.focus();
+        completionNotice.querySelector('[data-completion-directory], [data-completion-home]')?.focus();
     }
 
     function hideCompletionNotice() {
@@ -268,12 +285,61 @@ function initApp() {
         completionNotice.setAttribute('aria-hidden', 'true');
     }
 
+    function dismissCompletionNotice() {
+        hideCompletionNotice();
+        const target = completionReturnTarget;
+        if (target && document.contains(target) && !target.disabled) {
+            target.focus?.();
+        } else {
+            chatMessages.focus?.();
+        }
+    }
+
+    function renderInlineCompletionCelebration(moduleMeta) {
+        const existing = chatMessages.querySelector('.inline-completion-celebration');
+        existing?.remove();
+        const celebration = document.createElement('div');
+        celebration.className = 'inline-completion-celebration';
+        celebration.setAttribute('role', 'status');
+        celebration.setAttribute('aria-live', 'polite');
+        celebration.innerHTML = `<span>恭喜完成今日训练🎉</span><small>模块 ${moduleMeta.moduleId} 已完成</small>`;
+        chatMessages.appendChild(celebration);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        const burst = document.createElement('div');
+        burst.className = 'completion-confetti-layer';
+        burst.setAttribute('aria-hidden', 'true');
+        const colors = ['#4f8bb9', '#d27b4a', '#7a9d65', '#c3a44d', '#8e6aa9', '#4d9a91'];
+        for (let index = 0; index < 42; index += 1) {
+            const piece = document.createElement('i');
+            piece.className = 'completion-confetti-piece';
+            const angle = (Math.PI * 2 * index) / 42 + (Math.random() - 0.5) * 0.35;
+            const distance = 110 + Math.random() * 210;
+            piece.style.setProperty('--confetti-x', `${Math.cos(angle) * distance}px`);
+            piece.style.setProperty('--confetti-y', `${Math.sin(angle) * distance + 100}px`);
+            piece.style.setProperty('--confetti-r', `${Math.round((Math.random() - 0.5) * 720)}deg`);
+            piece.style.setProperty('--confetti-color', colors[index % colors.length]);
+            piece.style.setProperty('--confetti-delay', `${Math.round(Math.random() * 160)}ms`);
+            burst.appendChild(piece);
+        }
+        practicePage.appendChild(burst);
+        setTimeout(() => burst.remove(), 1900);
+    }
+
+    function syncParticipantAccess(access, metadata = {}) {
+        if (!access) return;
+        participantSession = updateParticipantSessionAccess(access, metadata) || participantSession;
+        pageManager.setParticipantSession(participantSession);
+        pageManager.renderWeekLocks();
+    }
+
     renderParticipantSession(participantSession);
     const testingConfigFromUrl = getTestingConfigFromUrl();
     const testingConfig = updateTestingConfig({
         fastMode: false,
         skipMode: Boolean(participantSession && ['tester', 'admin'].includes(participantSession.role)),
-        skipWaits: false
+        skipWaits: false,
+        inlineCompletion: false
     });
     if (testingConfigFromUrl.fastMode && participantSession && ['tester', 'admin'].includes(participantSession.role)) {
         testingConfig.fastMode = true;
@@ -301,6 +367,7 @@ function initApp() {
         practiceTitle.innerText = moduleMeta.moduleTitle;
         pageManager.showDaily(moduleMeta.weekIdx);
         const isReplay = participantSession.access?.completedModuleIds?.includes(moduleMeta.moduleId);
+        const currentOpenToken = ++openModuleToken;
         globalThis.__RESILIENCE_REPLAYING__ = isReplay;
         if (isReplay) dialogueManager.resetForReplay(moduleMeta.moduleId);
         else dialogueManager.resetForModule(moduleMeta.moduleId);
@@ -313,17 +380,22 @@ function initApp() {
             if (dialogueManager.currentModule === moduleMeta.moduleId) dialogueManager.renderReplay([]);
         });
         if (isReplay) void loadReplay();
-        else void moduleRunStartPromise.then((result) => {
-            if (result?.moduleRun?.status === 'completed' && dialogueManager.currentModule === moduleMeta.moduleId) {
-                dialogueManager.resetForReplay(moduleMeta.moduleId);
+        void moduleRunStartPromise.then((result) => {
+            if (currentOpenToken !== openModuleToken || dialogueManager.currentModule !== moduleMeta.moduleId) return null;
+            syncParticipantAccess(result?.access, { lastModuleOpened: moduleMeta.moduleId });
+            if (result?.moduleRun?.status === 'completed') {
+                globalThis.__RESILIENCE_REPLAYING__ = true;
+                if (!isReplay) dialogueManager.resetForReplay(moduleMeta.moduleId);
                 return loadReplay();
+            }
+            if (isReplay) {
+                globalThis.__RESILIENCE_REPLAYING__ = false;
+                dialogueManager.resetForModule(moduleMeta.moduleId);
             }
             return null;
         }).catch(() => {});
         dialogueManager.onModuleCompleted = (response) => {
-            participantSession = updateParticipantSessionAccess(response.access, { lastModuleCompleted: moduleMeta.moduleId }) || participantSession;
-            pageManager.setParticipantSession(participantSession);
-            pageManager.renderWeekLocks();
+            syncParticipantAccess(response.access, { lastModuleCompleted: moduleMeta.moduleId });
             showCompletionNotice(moduleMeta, response);
         };
         dialogueManager.onModuleCompletionFailed = () => {
@@ -336,11 +408,45 @@ function initApp() {
         pageManager.showPractice();
         return true;
     }
-    document.querySelector('[data-completion-close]')?.addEventListener('click', () => {
+
+    async function resetCompletedModule(moduleId, weekIdx, resetButton) {
+        if (!['tester', 'admin'].includes(participantSession?.role)) return false;
+        if (!globalThis.confirm?.(`确定从头重做模块 ${moduleId} 吗？上一次测试内容将被替换。`)) return false;
+
+        if (resetButton) resetButton.disabled = true;
+        try {
+            const response = await resetModuleRun(moduleId, { source: 'directory-reset' });
+            syncParticipantAccess(response?.access, { lastModuleReset: moduleId });
+            pageManager.showDaily(weekIdx);
+            return openModule(moduleId);
+        } catch (error) {
+            renderParticipantSession(participantSession, {
+                warning: true,
+                message: `模块重置失败：${error instanceof Error ? error.message : '请稍后重试。'}`
+            });
+            return false;
+        } finally {
+            if (resetButton) resetButton.disabled = false;
+        }
+    }
+    const leaveAfterCompletion = (destination) => {
         hideCompletionNotice();
         stopSpeech();
         dialogueManager.invalidateAsyncCallbacks();
-        pageManager.showHome();
+        if (destination === 'directory' && completionContext) {
+            pageManager.showDaily(completionContext.weekIdx);
+        } else {
+            pageManager.showHome();
+        }
+    };
+    document.querySelector('[data-completion-home]')?.addEventListener('click', () => leaveAfterCompletion('home'));
+    document.querySelector('[data-completion-directory]')?.addEventListener('click', () => leaveAfterCompletion('directory'));
+    document.querySelector('[data-completion-dismiss]')?.addEventListener('click', dismissCompletionNotice);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && completionNotice && !completionNotice.hidden) {
+            event.preventDefault();
+            dismissCompletionNotice();
+        }
     });
 
     testingTools?.querySelector('[data-test-fast-mode]')?.addEventListener('change', (event) => {
@@ -348,6 +454,13 @@ function initApp() {
         updateTestingConfig({ fastMode: event.target.checked });
         if (event.target.checked) enableFastRuntime();
         else disableFastRuntime();
+    });
+    inlineCompletionToggle?.addEventListener('change', (event) => {
+        if (!['tester', 'admin'].includes(participantSession?.role)) {
+            event.target.checked = false;
+            return;
+        }
+        updateTestingConfig({ inlineCompletion: event.target.checked });
     });
 
     globalThis[TESTING_API_KEY] = {
@@ -463,6 +576,10 @@ function initApp() {
         stopSpeech();
         dialogueManager.invalidateAsyncCallbacks();
         pageManager.goBackToDaily();
+        const currentModuleMeta = getModuleMeta(dialogueManager.currentModule);
+        if (currentModuleMeta) {
+            pageManager.showDaily(currentModuleMeta.weekIdx);
+        }
     });
 
     // 事件绑定：周方块
@@ -488,6 +605,16 @@ function initApp() {
 
     // 事件绑定：子模块卡片
     subModulesDiv.addEventListener('click', e => {
+        const resetButton = e.target.closest('[data-module-reset]');
+        if (resetButton) {
+            e.preventDefault();
+            e.stopPropagation();
+            const resetModuleId = resetButton.dataset.moduleReset;
+            const resetCard = resetButton.closest('.daily-sub');
+            const resetWeekIdx = Number(resetCard?.dataset.week) - 1;
+            void resetCompletedModule(resetModuleId, resetWeekIdx, resetButton);
+            return;
+        }
         const card = e.target.closest('.daily-sub');
         if (!card) return;
         if (!participantSession) {

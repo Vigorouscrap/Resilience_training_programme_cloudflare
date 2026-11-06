@@ -127,6 +127,7 @@ export interface ResearchDataRepository {
     startParticipantSession(input: StartParticipantSessionInput): Promise<ParticipantSessionResult>;
     startModuleRun(input: StartModuleRunInput): Promise<ModuleRunResult>;
     completeModuleRun(input: CompleteModuleRunInput): Promise<ModuleRunResult>;
+    resetModuleRun(input: StartModuleRunInput): Promise<ModuleRunResult>;
     recordModuleEvent(input: RecordModuleEventInput): Promise<void>;
     recordAiCallEvent(input: RecordAiCallEventInput): Promise<void>;
     recordConversationMessage(input: RecordConversationMessageInput): Promise<void>;
@@ -322,6 +323,14 @@ class NoopResearchDataRepository implements ResearchDataRepository {
         };
     }
 
+    async resetModuleRun(input: StartModuleRunInput): Promise<ModuleRunResult> {
+        const context = await this.resolveParticipant(input.participantCode, input.sessionId);
+        if (context.role !== 'tester' && context.role !== 'admin') {
+            throw new ModuleRunAccessError('Only tester accounts can reset completed modules.');
+        }
+        return this.startModuleRun(input);
+    }
+
     async recordModuleEvent(): Promise<void> {}
     async recordAiCallEvent(): Promise<void> {}
     async recordConversationMessage(): Promise<void> {}
@@ -492,6 +501,46 @@ class D1ResearchDataRepository implements ResearchDataRepository {
 
     async completeModuleRun(input: CompleteModuleRunInput): Promise<ModuleRunResult> {
         return this.resolveModuleRun(input, true);
+    }
+
+    async resetModuleRun(input: StartModuleRunInput): Promise<ModuleRunResult> {
+        const context = await this.resolveParticipant(input.participantCode, input.sessionId);
+        if (context.role !== 'tester' && context.role !== 'admin') {
+            throw new ModuleRunAccessError('Only tester accounts can reset completed modules.');
+        }
+
+        const existing = await this.db.prepare(
+            'SELECT id, module_id, day_index, status, started_at, completed_at, duration_seconds FROM module_runs WHERE participant_id = ? AND module_id = ?'
+        ).bind(context.participantId, input.moduleId).first<ModuleRunRow>();
+        if (!existing || existing.status !== 'completed') {
+            throw new ModuleRunValidationError('Only completed modules can be reset.');
+        }
+
+        const timestamp = nowIso();
+        await this.db.batch([
+            this.db.prepare(
+                'UPDATE module_runs SET session_id = ?, status = ?, started_at = ?, completed_at = NULL, duration_seconds = NULL, metadata_json = ? WHERE id = ?'
+            ).bind(input.sessionId, 'started', timestamp, serializeJson(input.metadata), existing.id),
+            this.db.prepare('DELETE FROM conversation_messages WHERE participant_id = ? AND module_id = ?')
+                .bind(context.participantId, input.moduleId),
+            this.db.prepare('DELETE FROM module_events WHERE participant_id = ? AND module_id = ?')
+                .bind(context.participantId, input.moduleId),
+            this.db.prepare('DELETE FROM ai_call_events WHERE participant_id = ? AND module_id = ?')
+                .bind(context.participantId, input.moduleId),
+            this.db.prepare('DELETE FROM conversation_snapshots WHERE participant_id = ? AND module_id = ?')
+                .bind(context.participantId, input.moduleId)
+        ]);
+
+        const moduleRun = await this.db.prepare(
+            'SELECT id, module_id, day_index, status, started_at, completed_at, duration_seconds FROM module_runs WHERE id = ?'
+        ).bind(existing.id).first<ModuleRunRow>();
+        if (!moduleRun) throw new Error('Module run could not be reset.');
+
+        return {
+            persisted: true,
+            moduleRun: toModuleRunSummary(moduleRun),
+            access: await this.getAccess(context.participantId, context.role)
+        };
     }
 
     async recordModuleEvent(input: RecordModuleEventInput): Promise<void> {

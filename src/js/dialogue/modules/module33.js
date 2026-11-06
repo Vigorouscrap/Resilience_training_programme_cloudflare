@@ -407,6 +407,7 @@ export const module33Handlers = {
         } else if (this.step === 23) {
             appendAiMessage(this.chatMessages, '一个小提醒，我们这几天还需要继续进行情绪日记的记录（问卷星链接：<a href="https://v.wjx.cn/vm/tUtCiF5.aspx#">https://v.wjx.cn/vm/tUtCiF5.aspx#</a>）。每一天你可以选择在当晚（一天结束前）填写这个情绪日记，也可以选择在你遇到有情绪波动的事情时即刻开始记录。', false);
             this.step = 24;
+            this.scheduleCompletionCheck();
         }
     },
 

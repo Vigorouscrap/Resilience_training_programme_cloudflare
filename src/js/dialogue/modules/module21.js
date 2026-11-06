@@ -108,7 +108,9 @@ export const module21Handlers = {
             appendButtonGroup(this.chatMessages, ['已准备好'], () => {
                 const readyGroup = this.chatMessages.querySelector('.button-group');
                 if (readyGroup) readyGroup.remove();
-                this.startWeek2TimedSequence(this.getModule21MeditationSequence());
+                this.startWeek2TimedSequence(this.getModule21MeditationSequence(), () => {
+                    this.scheduleCompletionCheck();
+                });
                 this.step = 8;
             });
             this.step = 7;

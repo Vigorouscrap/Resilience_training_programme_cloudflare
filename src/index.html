@@ -26,6 +26,10 @@
                     <input type="checkbox" data-test-fast-mode>
                     <span>加速测试运行</span>
                 </label>
+                <label class="testing-toggle">
+                    <input type="checkbox" data-test-inline-completion>
+                    <span>应用新版结束提醒</span>
+                </label>
             </section>            <div class="participant-session-chip" id="participantSessionChip" hidden>
                 <span id="participantSessionStatus">尚未登录</span>
                 <button type="button" id="participantResetBtn">更换信息</button>
@@ -74,12 +78,16 @@
 
     <div class="module-completion-notice" id="moduleCompletionNotice" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="moduleCompletionTitle">
         <div class="module-completion-card">
+            <button type="button" class="completion-dismiss-btn" data-completion-dismiss aria-label="关闭完成提示" title="关闭">×</button>
             <div class="completion-mark" aria-hidden="true">✓</div>
             <p class="completion-kicker">练习完成</p>
-            <h2 id="moduleCompletionTitle">本模块已完成</h2>
+            <h2 id="moduleCompletionTitle">恭喜完成今日训练🎉</h2>
             <p class="completion-module">模块 <strong data-completion-module></strong> 已完成。</p>
             <p class="completion-status" data-completion-status role="status" aria-live="polite">完成状态已保存。</p>
-            <button type="button" class="completion-close-btn" data-completion-close>返回训练目录</button>
+            <div class="completion-actions">
+                <button type="button" class="completion-close-btn" data-completion-home>回到主页</button>
+                <button type="button" class="completion-directory-btn" data-completion-directory>回到目录页</button>
+            </div>
         </div>
     </div>
     <!-- 每日模块列表页面（第一层） -->
@@ -106,7 +114,7 @@
             </div>
             
             <!-- 聊天区域 -->
-            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-messages" id="chatMessages" tabindex="-1"></div>
             
             <!-- 固定输入框 -->
             <div class="input-area disabled" id="inputArea">

@@ -59,8 +59,12 @@ export class PageManager {
             const completed = this.participantSession?.access?.completedModuleIds?.includes(moduleId);
             const lockNote = accessible ? '' : '<span class="module-lock-note">第 ' + ((weekIdx * 7) + i + 1) + ' 天解锁</span>';
             const statusNote = completed ? '<span class="module-complete-note" aria-label="已完成" title="已完成">✓</span>' : '';
+            const canReset = completed && ['tester', 'admin'].includes(this.participantSession?.role);
+            const resetNote = canReset
+                ? '<button type="button" class="module-reset-btn" data-module-reset="' + moduleId + '" aria-label="重做模块 ' + moduleId + '" title="重做模块">↻</button>'
+                : '';
             const className = ['card', 'daily-sub', accessible ? '' : 'is-locked', completed ? 'is-complete' : ''].filter(Boolean).join(' ');
-            html += '<div class="' + className + '" data-week="' + (weekIdx + 1) + '" data-day="' + (i + 1) + '" aria-disabled="' + (accessible ? 'false' : 'true') + '">' + statusNote + '<span class="module-name">' + subModuleNames[weekIdx][i] + '</span>' + lockNote + '</div>';
+            html += '<div class="' + className + '" data-week="' + (weekIdx + 1) + '" data-day="' + (i + 1) + '" aria-disabled="' + (accessible ? 'false' : 'true') + '">' + statusNote + resetNote + '<span class="module-name">' + subModuleNames[weekIdx][i] + '</span>' + lockNote + '</div>';
         }
         this.subModulesDiv.innerHTML = html;
 

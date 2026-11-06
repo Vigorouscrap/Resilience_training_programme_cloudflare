@@ -30,6 +30,9 @@ build/
 logs/
 *.log
 
+# Cloudflare local state
+.wrangler/
+
 # 临时文件
 *.tmp
 *.temp
@@ -39,5 +42,5 @@ logs/
 .DS_Store
 .AppleDouble
 .LSOverride
-".cache/" 
-.cache/ 
+".cache/"
+.cache/

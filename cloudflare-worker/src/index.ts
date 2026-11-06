@@ -727,7 +727,8 @@ async function handleModuleRunRequest(
     request: Request,
     env: Env,
     corsHeaders: HeadersInit,
-    complete: boolean
+    complete: boolean,
+    reset = false
 ): Promise<Response> {
     let body: ModuleRunRequestBody;
     try {
@@ -760,9 +761,11 @@ async function handleModuleRunRequest(
 
     try {
         const repository = createResearchDataRepository(env.DB);
-        const result = complete
-            ? await repository.completeModuleRun(input)
-            : await repository.startModuleRun(input);
+        const result = reset
+            ? await repository.resetModuleRun(input)
+            : complete
+                ? await repository.completeModuleRun(input)
+                : await repository.startModuleRun(input);
         return jsonResponse({
             ...result,
             metadata: {
@@ -785,9 +788,11 @@ async function handleModuleRunRequest(
         }
 
         const fallbackRepository = createResearchDataRepository(undefined);
-        const result = complete
-            ? await fallbackRepository.completeModuleRun(input)
-            : await fallbackRepository.startModuleRun(input);
+        const result = reset
+            ? await fallbackRepository.resetModuleRun(input)
+            : complete
+                ? await fallbackRepository.completeModuleRun(input)
+                : await fallbackRepository.startModuleRun(input);
         return jsonResponse({
             ...result,
             metadata: {
@@ -882,6 +887,9 @@ export default {
         }
         if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/complete') {
             return handleModuleRunRequest(request, env, corsHeaders, true);
+        }
+        if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/reset') {
+            return handleModuleRunRequest(request, env, corsHeaders, false, true);
         }
         if (request.method === 'POST' && url.pathname === '/api/v1/events') {
             return handleEventsRequest(request, env, corsHeaders);

@@ -16,7 +16,13 @@ export async function postJson(path, payload, options = {}) {
 
     const timeoutMs = options.timeoutMs ?? 12000;
     const abortController = new AbortController();
-    const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
+    // Fast test mode shortens lesson timers by patching global setTimeout. Keep
+    // network timeouts on the original clock so API calls are not aborted early.
+    const testingConfig = globalThis.__RESILIENCE_TESTING__;
+    const scheduleTimeout = typeof testingConfig?.nativeSetTimeout === 'function'
+        ? testingConfig.nativeSetTimeout
+        : setTimeout;
+    const timeoutId = scheduleTimeout(() => abortController.abort(), timeoutMs);
 
     try {
         const response = await fetch(`${runtimeConfig.apiBaseUrl}${path}`, {

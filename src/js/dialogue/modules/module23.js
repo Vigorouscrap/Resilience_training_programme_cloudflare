@@ -53,7 +53,9 @@ export const module23Handlers = {
             appendButtonGroup(this.chatMessages, ['开始'], () => {
                 const currentBtnGroup = this.chatMessages.querySelector('.button-group');
                 if (currentBtnGroup) currentBtnGroup.remove();
-                this.startWeek2TimedSequence(this.getModule23MeditationSequence());
+                this.startWeek2TimedSequence(this.getModule23MeditationSequence(), () => {
+                    this.scheduleCompletionCheck();
+                });
                 this.step = 4;
             });
         }
