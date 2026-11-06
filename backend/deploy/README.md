@@ -8,7 +8,7 @@
 - Nginx 负责公网域名、HTTPS 和反向代理。
 - systemd 负责后端进程守护和开机自启。
 - 真实密钥只保存在服务器环境变量或 `.env` 文件中，不提交到仓库。
-- 同一个后端可以通过 `CORS_ORIGIN` 同时服务本地、Vercel 预览版、国内正式前端等多个来源。
+- 内地 Fastify 后端只允许 `https://www.resilience-training.cloud` 等内地正式来源；Cloudflare Pages/Vercel 预览环境固定连接 Worker，不应加入腾讯云后端 CORS 白名单。
 
 ---
 
@@ -213,7 +213,9 @@ curl https://api.example.com/health
 
 ### 8. 配置前端 API 地址
 
-前端可以通过 `src/runtime-config.js` 注入：
+生产构建必须使用与前端平台绑定的运行时配置：Cloudflare Pages 使用 Worker；EdgeOne Pages 使用腾讯云 API。仓库根目录的 `npm run build:cloudflare` 和 `npm run build:mainland` 分别生成固定目标的产物。不要使用生产 URL 参数或浏览器存储覆盖 API 地址。
+
+仅本机开发可通过 `src/runtime-config.js` 配置：
 
 ```javascript
 window.__RESILIENCE_RUNTIME__ = {
@@ -221,10 +223,10 @@ window.__RESILIENCE_RUNTIME__ = {
 };
 ```
 
-也可以短期通过 URL 参数测试：
+本机调试时可用 URL 参数临时覆盖：
 
 ```text
-https://your-frontend.example.com/?apiBaseUrl=https://api.example.com
+http://localhost:8000/?apiBaseUrl=http://127.0.0.1:8787
 ```
 
 如何确认：
@@ -299,11 +301,13 @@ sudo journalctl -u resilience-backend -n 100 --no-pager
 
 ## CORS 示例
 
-一个后端同时服务本地、Vercel 和国内正式前端时：
+内地 Fastify 生产环境固定只允许正式 EdgeOne 域名：
 
 ```text
-CORS_ORIGIN=http://localhost:8000,https://your-vercel-site.vercel.app,https://your-cn-frontend.example.com
+CORS_ORIGIN=https://www.resilience-training.cloud
 ```
+
+本地开发来源应只配置在独立的开发环境，不要为了方便把 Cloudflare/Vercel 来源加入内地生产 API。海外/实验前端使用 Cloudflare Worker。
 
 如果浏览器报 CORS 错误，优先检查：
 

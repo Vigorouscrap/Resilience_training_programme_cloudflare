@@ -408,15 +408,12 @@ python -m http.server 8000 --directory src
 
 ### 部署联调补充
 
-- `CORS_ORIGIN` 现在支持单个来源，也支持多个来源用英文逗号分隔。
-- 这意味着当前后端可以同时允许：
-  - 本地联调前端
-  - Vercel 预览前端
-  - 后续国内正式前端
-- 例如：
+- `CORS_ORIGIN` 支持单个来源，也支持多个来源用英文逗号分隔。
+- 内地生产 Fastify 应固定只允许 EdgeOne 正式前端；Cloudflare Pages/Vercel 预览环境应连接 Cloudflare Worker，不要加入腾讯云生产 CORS。
+- 本地联调使用单独的开发环境配置。内地生产示例：
 
 ```text
-CORS_ORIGIN=http://localhost:8000,https://your-vercel-site.vercel.app,https://your-cn-frontend.example.com
+CORS_ORIGIN=https://www.resilience-training.cloud
 ```
 
 ### 当前阶段说明

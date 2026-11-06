@@ -25,7 +25,7 @@
 └─ 中国大陆入口：国内静态托管 -> 腾讯云 Fastify API -> PostgreSQL
 ```
 
-两个入口使用同一套 API 契约，通过各环境的 `runtime-config.js` 选择后端。Cloudflare Worker 与腾讯云 Fastify 可以有不同的平台适配层，但参与者、模块进度、事件、回放和导出规则必须一致。
+两个入口使用同一套 API 契约，但生产后端必须一一绑定，不能由访问者切换：Cloudflare Pages 固定使用 Cloudflare Worker；EdgeOne Pages 固定使用腾讯云 Fastify。两端研究数据分别保存，不跨环境读取、迁移或自动同步。
 
 原因：
 
@@ -106,9 +106,8 @@
 
 ### 需要项目负责人或云账号持有人确认
 
-- EdgeOne Pages 在当前腾讯云账号/套餐下能否为已备案的 `www.resilience-training.cloud` 提供所需的中国大陆节点或加速范围；创建测试项目后以三网实测确认。
-- 正式实验开始和结束时间，便于确定服务器备份保留窗口与发布冻结时间。
-- 获准执行生产导出的研究团队成员及导出凭证保管人。
+- EdgeOne Pages 在当前腾讯云账号/套餐下的具体内地节点/加速范围和媒体额度；创建临时站点后通过三网实测确认。
+- 生产导出凭证保管人暂不作为 M1 或内地试部署的阻塞项；到 M3 开发受保护导出接口前再确定授权人员和凭证交接方式。
 
 ### 工程上尚未完成
 
@@ -116,7 +115,7 @@
 - 腾讯云 API 没有 HTTPS，生产 CORS 仍是示例域名。
 - 腾讯云 Fastify 只实现健康检查和 AI hook，没有 Cloudflare 版的参与者与研究数据 API。
 - 腾讯云尚无已确认的生产 PostgreSQL、迁移脚本、备份、恢复和监控。
-- 前端的 Worker 地址仍写死在 `src/runtime-config.js`，尚未形成按部署环境生成配置的流程。
+- EdgeOne Pages 项目仍需账号持有人在控制台导入 GitHub 仓库并创建；本仓库已备好 Mainland 构建命令和独立输出目录。
 - Worker 与 Fastify 的 AI hook、数据模型和错误响应没有共享契约测试，存在长期漂移风险。
 - 导出接口尚未实现。
 - Cloudflare 生产 CORS 仍为 `*`。
@@ -132,13 +131,13 @@
 
 需要做的部署适配只有：
 
-1. 将项目输出目录设为 `src`，构建命令留空；也可先用直接上传验证，再接 Git 自动部署。
-2. 为内地部署生成 `src/runtime-config.js`，把 `apiBaseUrl` 设为 `https://api.resilience-training.cloud`；Cloudflare 部署仍指向 Worker。
+1. 从 Git 仓库根目录部署，构建命令为 `npm run build:mainland`，输出目录为 `dist/mainland`；也可先用直接上传验证，再接 Git 自动部署。
+2. 构建过程复制 `src/` 并替换产物中的 `runtime-config.js`，把 `apiBaseUrl` 固定为 `https://api.resilience-training.cloud`，不改写源码；Cloudflare 部署继续固定指向 Worker。
 3. 在 EdgeOne Pages 绑定 `www.resilience-training.cloud`，按控制台要求配置 CNAME 和 HTTPS 证书。
 4. 腾讯云 API 的 `CORS_ORIGIN` 明确允许 `https://www.resilience-training.cloud`。
 5. 部署后核对 MP3、MP4、MOV 等较大静态资源的缓存、Range 请求、MIME 类型和手机播放。
 
-不应复制第二份 `src/`，也不应把内地 API 地址永久写死进共享源码。应由部署脚本生成不同环境的运行时配置。
+不复制第二份源代码。两个部署分别从同一份 `src/` 生成独立静态产物并注入固定配置；生产环境不接受 query string 或 sessionStorage 后端覆盖，只有 localhost 本地开发可临时覆盖。
 
 参考：EdgeOne Pages 官方产品说明将其定义为基于腾讯 EdgeOne 的前端/全栈部署平台，并提供 Git 仓库导入、直接上传、自定义域名与 HTTPS 配置文档。实际中国大陆节点能力仍以当前腾讯云账号控制台为准：
 
@@ -161,6 +160,7 @@
 - EdgeOne Pages/套餐实际覆盖的中国大陆节点和访问效果必须以当前账号控制台及三网测试为准，不能只依据产品名称判断。
 - 缓存配置错误可能导致旧版 `runtime-config.js` 或旧静态资源短时间继续生效，因此运行时配置应禁用长缓存或使用版本化发布。
 - 大媒体文件的流量、单文件限制和免费额度需要在创建项目时核对。
+- Cloudflare Worker 不等同于腾讯云 API；为确保大陆请求和研究数据留在大陆，正式前端必须固定连接腾讯云 API。海外/实验前端固定连接 Worker。
 - 前端托管解决不了 API 和数据库问题；`api.resilience-training.cloud` 仍需独立完成 HTTPS、Fastify 和 PostgreSQL。
 
 ### 回退方案
@@ -217,7 +217,7 @@
 
 M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 JavaScript 和两个 smoke 脚本语法检查通过；无头 Edge 加载全部前端模块资源，只有未提供 `favicon.ico` 的非阻塞 404；线上测试账号返回 tester 角色与“数据记录已连接”，三个代表模块入口和已有回放正常。未执行 42 模块完整发布验收，该项仍属于 M5。
 
-### M1：域名、备案与资源决策
+### M1：EdgeOne Pages 前端试部署与域名接入
 
 - [x] 域名实名认证、ICP备案和备案主体手续已完成。
 - [x] 正式前端域名确定为 `www.resilience-training.cloud`，EdgeOne Pages 为首选、Lighthouse Nginx 为回退。
@@ -225,19 +225,26 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 数据库确定为同一台 Lighthouse 上的 PostgreSQL，不购买独立云数据库。
 - [x] Cloudflare D1 数据不迁移；D1 与中国大陆 PostgreSQL 分开保存。
 - [x] 当前容量基线为约 100 人，预实验约 10 人/16 MB。
-- [ ] 创建 EdgeOne Pages 测试项目，确认当前账号套餐、内地节点/加速范围、媒体文件限制与三网效果。
-- [ ] 确认实验时间窗和生产导出凭证保管人。
+- [x] 确认 EdgeOne Pages 作为内地正式前端，使用 `npm run build:mainland` / `dist/mainland` 生成固定 Mainland 产物。
+- [ ] 腾讯云账号持有人在 EdgeOne 控制台从 `Vigorouscrap/Resilience_training_programme_cloudflare` 导入 GitHub 仓库并创建项目，使用构建命令 `npm run build:mainland`、输出目录 `dist/mainland`。
+- [x] 实验周期确认不超过一年；当前 Lighthouse 容量足够，100 人规模不需增加服务器。
+- [x] 生产导出凭证保管人不纳入 M1；开发受保护导出接口前再确认授权人。
+- [x] 固定生产后端映射：Cloudflare Pages -> Worker；EdgeOne Pages -> 腾讯云 API。普通用户和 URL 参数均不能跨环境切换后端。
+- [ ] 先使用 EdgeOne 临时域名部署并验证首页、图片、音频/视频、缓存和 HTTPS；API CORS/完整登录流待腾讯 API HTTPS 和 Fastify 接口补齐后在 M4 验收。
+- [ ] 用移动/联通/电信网络完成至少一次首页及静态媒体访问检查；EdgeOne 中国大陆覆盖以当前账号套餐和实测为准。
+- [ ] 测试通过后绑定 `www.resilience-training.cloud`，配置控制台给出的 CNAME 和 HTTPS 证书。
 
-完成标准：域名、前端、API、数据库和责任人均有明确记录。
+完成标准：EdgeOne 项目成功部署临时静态站点，运行时配置固定指向大陆 API；三网及媒体检查通过后再绑定正式域名。完整登录和研究 API 流程依赖 M3/M4，不作为本阶段静态托管验收条件。项目创建需账号持有人在腾讯云控制台完成授权和仓库选择。
 
 ### M2：统一契约与环境配置
 
 - [ ] 固化所有 API 请求、响应、错误码、角色和时间规则。
 - [ ] 抽取共享 hook 清单、模块顺序和输入校验规则，避免 Worker/Fastify 双份手工维护。
-- [ ] 参数化 `runtime-config.js`，分别生成 Cloudflare 和内地配置。
+- [x] 增加 Cloudflare/Mainland 独立 runtime 配置；EdgeOne 构建到 `dist/mainland/`，不改写共享源代码。
+- [x] 生产环境拒绝 query string/sessionStorage API override，只允许 localhost 本地开发覆盖。
 - [ ] 建立同一套黑盒契约测试，可分别指向 Worker 和 Fastify。
 
-完成标准：前端切换 `apiBaseUrl` 即可使用任一后端，关键行为由测试证明一致。
+完成标准：每个发布产物自动锁定唯一后端；契约测试可分别针对两端运行，但参与者不能从一个环境切换至另一个环境。
 
 ### M3：腾讯云 Fastify + PostgreSQL 补齐
 
@@ -251,11 +258,11 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 
 ### M4：恢复正式 HTTPS 与内地前端
 
-- [ ] 备案手续已完成；为 `api.resilience-training.cloud` 配置有效证书和自动续期。
+- [ ] 为 `api.resilience-training.cloud` 配置有效证书和自动续期（域名实名认证及 ICP 备案手续已完成）。
 - [ ] 将 Nginx 配置为 80 跳转 443，只代理到本机 `127.0.0.1:8787`。
 - [ ] 将腾讯云 `CORS_ORIGIN` 改为真实内地前端和明确的测试来源。
-- [ ] 优先部署 `src/` 到 EdgeOne Pages 并绑定 `www.resilience-training.cloud`；若账号/三网验证不满足要求，则部署到 Lighthouse Nginx。
-- [ ] 为内地部署生成指向腾讯云 HTTPS API 的运行时配置，不复制第二份前端源码。
+- [ ] 将 Mainland 产物部署到 EdgeOne Pages 并绑定 `www.resilience-training.cloud`；若三网验证不满足要求，则部署到 Lighthouse Nginx。
+- [x] 为内地部署生成指向腾讯云 API 的独立运行时配置，不复制第二份前端源码。
 - [ ] 收紧 Worker CORS，移除 `*`。
 
 完成标准：内地前端全程 HTTPS，不依赖 Cloudflare 或 Vercel 资源即可完成训练。
@@ -273,10 +280,10 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 
 ## 立即执行顺序
 
-1. 先完成 M0，避免继续在未提交且可能已部署的代码上迁移。
-2. 创建 EdgeOne Pages 测试项目并完成 M1 剩余的套餐、三网和负责人确认；备案、域名、账号和数据库核心决策已经完成。
-3. 工程侧开展 M2/M3；不再等待备案。
-4. 并行申请/配置证书并执行 M4。
+1. M0 已完成，代码已有 GitHub 基线和回退标签。
+2. 在腾讯云控制台创建 EdgeOne Pages 项目并接入 GitHub；平台登录和确认套餐需由账号持有人在控制台完成。
+3. 临时站点就绪后完成静态媒体、HTTPS 和三网测试；API CORS/登录流留待 M3/M4 完成后验收。
+4. 测试通过后绑定 `www.resilience-training.cloud`；腾讯云 API HTTPS 与 Fastify 能力补齐并行推进。
 5. 最后执行 M5，再开放正式参与者入口。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。

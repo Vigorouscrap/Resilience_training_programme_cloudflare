@@ -148,15 +148,22 @@ https://resilience-ai-worker.1362758164.workers.dev
 
 因此 Cloudflare Pages 部署完成后，直接打开页面也会默认连接 Cloudflare Worker 后端。
 
-如果要临时切换到其它后端，仍然可以用 URL 参数覆盖 `apiBaseUrl`。
+生产部署固定前端与对应后端：Cloudflare Pages 使用 Cloudflare Worker；EdgeOne Pages 使用腾讯云 API。生产环境不接受 URL 或 sessionStorage 覆盖，只有 localhost 本地开发可临时指定 API。
 
 临时测试方式：
 
 ```text
-https://your-project.pages.dev/?apiBaseUrl=https://your-worker.your-account.workers.dev
+http://localhost:8000/?apiBaseUrl=http://127.0.0.1:8787
 ```
 
-长期建议：如果后续需要同时维护多个环境，例如 Cloudflare Worker、腾讯云正式后端、测试后端，再增加构建时生成 `src/runtime-config.js` 的脚本，通过环境变量注入 API 地址。
+EdgeOne Pages 从仓库根目录构建时使用：
+
+```text
+Build command: npm run build:mainland
+Output directory: dist/mainland
+```
+
+该静态构建复制 `src/` 并注入大陆环境配置，不修改 Cloudflare 的 `src/runtime-config.js`。Cloudflare Pages 继续免构建发布 `src/`；也可用 `npm run build:cloudflare` 生成隔离的 Cloudflare 静态产物。
 
 ---
 
@@ -191,11 +198,13 @@ npx wrangler login
 npx wrangler secret put DEEPSEEK_API_KEY
 ```
 
-可选配置前端来源，编辑 `wrangler.toml`：
+Cloudflare Worker 的实验 CORS 示例（仅适用于 Cloudflare 前端）：
 
 ```toml
-CORS_ORIGIN = "https://your-project.pages.dev,https://resilience-training-programme-two.vercel.app"
+CORS_ORIGIN = "https://resilience-training-programme-cloudflare.pages.dev"
 ```
+
+内地腾讯云 API 不使用这份 CORS 配置；其生产来源固定为 `https://www.resilience-training.cloud`，见 `backend/deploy/README.md`。
 
 部署：
 
@@ -321,6 +330,8 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 2026-11-06 已确认：域名实名认证、ICP备案和腾讯云权限可用；正式规模约 100 人；D1 与中国大陆 PostgreSQL 数据分开保存且不迁移。EdgeOne Pages 不需要重做前端，直接部署同一份 `src/`，只为内地环境生成指向 `https://api.resilience-training.cloud` 的运行时配置。
 
+后端映射固定：Cloudflare Pages -> Worker/D1；EdgeOne Pages -> 腾讯云 API/PostgreSQL。生产环境忽略 `?apiBaseUrl=` 和 sessionStorage 覆盖值；仅 localhost 可用于本地调试。
+
 完整评估、EdgeOne 优缺点、本机 PostgreSQL 边界和 M0-M5 待办见 `docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md`。
 
 ---
@@ -340,9 +351,10 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 ## 下一步建议
 
-1. 回归并提交当前 2026-08-31 工作区修复，建立可回退版本。
-2. 创建 EdgeOne Pages 测试项目，直接发布 `src/`，核对当前套餐、媒体限制和中国大陆三网效果。
-3. 参数化 `runtime-config.js` 并固化 Worker/Fastify 共享 API 契约。
-4. 在 Lighthouse 安装仅监听本机的 PostgreSQL，为 Fastify 补齐参与者、进度、事件、回放和导出接口。
-5. 为 `api.resilience-training.cloud` 配置 HTTPS，将腾讯云 CORS 收紧到 `https://www.resilience-training.cloud`。
-6. 完成 42 个模块、手机端、三网、异常恢复、数据隔离和备份恢复验收。
+1. M0 已完成并推送 GitHub。
+2. 账号持有人在 EdgeOne Pages 导入 GitHub 仓库，使用 `npm run build:mainland` / `dist/mainland` 部署临时站点。
+3. 验证静态资源、媒体、HTTPS 与固定的腾讯云 API 目标；通过三网实测后绑定 `www.resilience-training.cloud`。
+4. 固化 Worker/Fastify 共享 API 契约。
+5. 在 Lighthouse 安装仅监听本机的 PostgreSQL，为 Fastify 补齐参与者、进度、事件、回放和导出接口。
+6. 为 `api.resilience-training.cloud` 配置 HTTPS，将腾讯云 CORS 收紧到 `https://www.resilience-training.cloud`。
+7. 完成 42 个模块、手机端、三网、异常恢复、数据隔离和备份恢复验收。

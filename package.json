@@ -8,7 +8,9 @@
     "start": "python -m http.server 8000 --bind 0.0.0.0 --directory src",
     "dev": "python -m http.server 8000 --bind 0.0.0.0 --directory src",
     "start:local": "python -m http.server 8000 --bind 127.0.0.1 --directory src",
-    "build": "echo 'No build step required for this project'"
+    "build": "npm run build:cloudflare",
+    "build:cloudflare": "node scripts/prepare-runtime-config.mjs cloudflare",
+    "build:mainland": "node scripts/prepare-runtime-config.mjs mainland"
   },
   "keywords": [
     "心理弹性",

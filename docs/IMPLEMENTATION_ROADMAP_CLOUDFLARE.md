@@ -43,6 +43,7 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 - 2026-08-31：修复 C_TEST 开启 fastMode 后点击重置模块出现 `Request timed out` 的问题。加速模式只压缩课程计时器，API 客户端超时改用加速前保存的原生 `setTimeout`，避免网络请求被 1ms 计时器提前中止。
 - 2026-11-06：完成 Cloudflare 与原腾讯云项目的代码、接口和在线部署审计。确认原仓库停在共同基线 `a01068d`，Cloudflare 工作区是当前唯一完整功能基线；Cloudflare Pages/Worker 与腾讯云 HTTP 后端仍在线，但腾讯云 HTTPS 超时、CORS 仍为示例值且 Fastify 缺少参与者/进度/事件/回放接口。后续采用“同一前端源码 + Cloudflare 海外/实验后端 + 腾讯云 Fastify/PostgreSQL 内地后端”，详细结论与 M0-M5 待办见 `docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md`。
 - 2026-11-06：根据项目负责人确认收敛内地方案：域名实名认证、ICP备案和腾讯云权限已具备；正式前端使用 `www.resilience-training.cloud`，首选 EdgeOne Pages、Nginx 静态托管为回退；约 100 人规模使用现有 4 核/4 GB/40 GB Lighthouse 上的本机 PostgreSQL，不购买独立数据库；D1 与 PostgreSQL 数据不迁移、不互相同步；隐私治理本轮不扩展。EdgeOne 仅部署同一份 `src/`，不重做前端。
+- 2026-11-06：项目负责人确认实验时间窗不超过一年、现有服务器够用，暂不指定生产导出凭证保管人。固定生产映射为 Cloudflare Pages -> Worker/D1、EdgeOne Pages -> 腾讯云 API/PostgreSQL；生产环境忽略 URL 和 sessionStorage 后端覆盖。新增 EdgeOne Mainland 静态构建命令与独立输出目录。
 
 ### 测试编号登记（2026-08-28）
 
@@ -120,7 +121,7 @@ flowchart LR
 - [x] Cloudflare Pages 地址已可访问。
 - [x] `src/runtime-config.js` 已默认指向当前 Worker 地址。
 - [x] 已确认无 URL 参数时，前端也可以通过 Worker 获得个性化回复。
-- [x] 仍保留 `?apiBaseUrl=...` 临时切换后端的能力。
+- [x] 开发期保留 `localhost` 的 `?apiBaseUrl=...` 临时覆盖；生产构建忽略 URL/sessionStorage 覆盖，并由 Cloudflare/Mainland 独立配置固定后端。
 - [x] 首页已新增研究编号输入与本地保存/恢复。
 - [x] AI hook 请求已携带参与者编号与后端 session 信息。
 - [x] 前端已读取后端 `access` 字段，为逐日解锁与 tester/admin 全模块访问做准备。
@@ -911,8 +912,10 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] 在本仓库 `backend/` 中补齐 Fastify + PostgreSQL，作为中国大陆正式路线。
 - [x] M0：当前工作区已完成审阅、类型/语法检查、`C_TEST` 登录及 `1-1`/`1-5`/`4-4` 代表模块浏览器回归，并固化为 Git 基线和可回退标签；`.wrangler/` 已忽略（2026-11-06）。
 - [x] M1 核心决策：域名/备案/权限已确认；`www` + EdgeOne Pages（Nginx 回退）；本机 PostgreSQL；D1 不迁移；约 100 人规模。
-- [ ] M1 验证项：创建 EdgeOne Pages 测试项目，核对当前套餐的内地覆盖、媒体限制和三网效果，并确定实验时间窗与导出凭证保管人。
-- [ ] M2：固化共享 API 契约、模块/角色/解锁规则和双后端契约测试；参数化前端 API 地址。
+- [x] M1 决策项：实验周期不超过一年；不新增服务器；暂不指定生产导出凭证保管人。
+- [x] M2 映射规则：Cloudflare Pages 固定使用 Worker/D1，EdgeOne Pages 固定使用腾讯云 API/PostgreSQL；生产 URL 参数不能切换后端。
+- [ ] M1 执行项：账号持有人在 EdgeOne 控制台导入 GitHub 仓库，使用 `npm run build:mainland` / `dist/mainland` 部署临时静态站点，完成媒体、HTTPS 和三网检查后绑定 `www.resilience-training.cloud`；API CORS/登录流待 M3/M4。
+- [ ] M2：固化共享 API 契约、模块/角色/解锁规则和双后端契约测试；保持生产环境固定后端映射。
 - [ ] M3：为 Fastify 实现参与者、模块 run、reset、事件、回放、导出和 PostgreSQL migrations。
 - [ ] M4：恢复 `api.resilience-training.cloud` HTTPS，部署内地静态前端，修正腾讯云 CORS 并收紧 Worker CORS。
 - [ ] M5：完成 42 模块、三网、手机端、异常恢复、数据隔离、导出和备份恢复验收。
@@ -928,9 +931,10 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [ ] 腾讯云 Fastify 与当前 Worker API 能力对等。
 - [ ] 统一持久化失败策略；当前生产 `REQUIRE_PERSISTENCE=true` 返回 503，与既定“失败不阻塞课程”规则不一致。
 - [ ] 根域名或 `www` 部署真实内地前端；当前 HTTP 仅显示 Nginx 默认欢迎页，HTTPS 超时。
-- [x] 确认 EdgeOne Pages 不需要重写前端：直接发布 `src/`，仅生成内地 `runtime-config.js`、绑定 `www` 并配置 API CORS。
+- [x] 确认 EdgeOne Pages 不需要重写前端：构建脚本从 `src/` 生成 `dist/mainland/`，固定大陆 API 地址且不改写 Cloudflare 源配置。
 - [x] 确认现有 Lighthouse 容量满足约 100 人；PostgreSQL 与 Fastify 同机部署，5432 不对公网开放，备份复制到服务器外部。
 - [x] 确认 Cloudflare D1 与中国大陆 PostgreSQL 数据独立保存，不做迁移或同步。
+- [x] 生产部署忽略 query string/sessionStorage API 覆盖；仅 localhost 保留临时后端调试能力。
 
 ---
 

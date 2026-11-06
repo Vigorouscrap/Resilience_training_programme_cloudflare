@@ -7,27 +7,33 @@ function normalizeApiBaseUrl(value) {
     return rawValue.replace(/\/+$/, '');
 }
 
+function isLocalHost() {
+    const hostname = globalThis.location?.hostname || '';
+    return hostname === '127.0.0.1' || hostname === 'localhost';
+}
+
 function resolveApiBaseUrl() {
     const searchParams = new URLSearchParams(globalThis.location?.search || '');
     const queryValue = normalizeApiBaseUrl(searchParams.get('apiBaseUrl'));
-    const windowValue = normalizeApiBaseUrl(globalThis.__RESILIENCE_RUNTIME__?.apiBaseUrl);
+    const runtimeConfig = globalThis.__RESILIENCE_RUNTIME__ || {};
+    const windowValue = normalizeApiBaseUrl(runtimeConfig.apiBaseUrl);
+    const allowApiOverride = isLocalHost();
     const storedValue = normalizeApiBaseUrl(globalThis.sessionStorage?.getItem(API_BASE_URL_STORAGE_KEY));
 
-    if (queryValue) {
+    if (allowApiOverride && queryValue) {
         globalThis.sessionStorage?.setItem(API_BASE_URL_STORAGE_KEY, queryValue);
         return queryValue;
+    }
+
+    if (allowApiOverride && storedValue) {
+        return storedValue;
     }
 
     if (windowValue) {
         return windowValue;
     }
 
-    if (storedValue) {
-        return storedValue;
-    }
-
-    const hostname = globalThis.location?.hostname || '';
-    if (hostname === '127.0.0.1' || hostname === 'localhost') {
+    if (isLocalHost()) {
         return DEFAULT_LOCAL_API_BASE_URL;
     }
 
@@ -37,6 +43,7 @@ function resolveApiBaseUrl() {
 export function getRuntimeConfig() {
     const apiBaseUrl = resolveApiBaseUrl();
     return {
+        deploymentId: String(globalThis.__RESILIENCE_RUNTIME__?.deploymentId || 'unknown'),
         apiBaseUrl,
         aiHooksEnabled: Boolean(apiBaseUrl)
     };
