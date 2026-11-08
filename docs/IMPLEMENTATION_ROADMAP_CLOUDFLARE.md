@@ -915,7 +915,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] M1 核心决策：域名/备案/权限已确认；`www` + EdgeOne Pages（Nginx 回退）；本机 PostgreSQL；D1 不迁移；约 100 人规模。
 - [x] M1 决策项：实验周期不超过一年；不新增服务器；暂不指定生产导出凭证保管人。
 - [x] M2 映射规则：Cloudflare Pages 固定使用 Worker/D1，EdgeOne Pages 固定使用腾讯云 API/PostgreSQL；生产 URL 参数不能切换后端。
-- [ ] M1 执行项：EdgeOne 临时 HTTPS 站点已部署；继续核验 Mainland runtime 配置、图片/音视频/缓存与三网访问，通过后绑定 `www.resilience-training.cloud`。API CORS/完整登录流待 M3/M4。
+- [ ] M1 执行项：EdgeOne 临时 HTTPS 站点已部署，移动/联通/电信三网首页访问已通过；继续核验 Mainland runtime 配置及图片/音视频/缓存，通过后绑定 `www.resilience-training.cloud`。API CORS/完整登录流待 M3/M4。
 - [ ] M2：固化共享 API 契约、模块/角色/解锁规则和双后端契约测试；保持生产环境固定后端映射。
 - [ ] M3：为 Fastify 实现参与者、模块 run、reset、事件、回放、导出和 PostgreSQL migrations。
 - [ ] M4：恢复 `api.resilience-training.cloud` HTTPS，部署内地静态前端，修正腾讯云 CORS 并收紧 Worker CORS。
