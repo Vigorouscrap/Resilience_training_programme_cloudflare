@@ -226,15 +226,16 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] Cloudflare D1 数据不迁移；D1 与中国大陆 PostgreSQL 分开保存。
 - [x] 当前容量基线为约 100 人，预实验约 10 人/16 MB。
 - [x] 确认 EdgeOne Pages 作为内地正式前端，使用 `npm run build:mainland` / `dist/mainland` 生成固定 Mainland 产物。
-- [ ] 腾讯云账号持有人在 EdgeOne 控制台从 `Vigorouscrap/Resilience_training_programme_cloudflare` 导入 GitHub 仓库并创建项目，使用构建命令 `npm run build:mainland`、输出目录 `dist/mainland`。
+- [x] 腾讯云账号持有人已在 EdgeOne 控制台从 `Vigorouscrap/Resilience_training_programme_cloudflare` 导入 GitHub 仓库并创建项目，使用构建命令 `npm run build:mainland`、输出目录 `dist/mainland`（2026-11-08）。
 - [x] 实验周期确认不超过一年；当前 Lighthouse 容量足够，100 人规模不需增加服务器。
 - [x] 生产导出凭证保管人不纳入 M1；开发受保护导出接口前再确认授权人。
 - [x] 固定生产后端映射：Cloudflare Pages -> Worker；EdgeOne Pages -> 腾讯云 API。普通用户和 URL 参数均不能跨环境切换后端。
-- [ ] 先使用 EdgeOne 临时域名部署并验证首页、图片、音频/视频、缓存和 HTTPS；API CORS/完整登录流待腾讯 API HTTPS 和 Fastify 接口补齐后在 M4 验收。
+- [x] EdgeOne 临时站点已部署；`resilience-training-programme-dpnsm3wzfcei.edgeone.cool` 的 HTTPS 首页、参与者登录界面和课程入口结构可访问（2026-11-08；访问令牌不写入仓库）。
+- [ ] 在浏览器 Network 面板确认临时站点实际加载的 `runtime-config.js` 为 Mainland 配置，并逐项验证图片、音频/视频、Range 请求、MIME 类型与缓存；自动化远程抓取静态子资源本次超时，不能据此判定资源失败。
 - [ ] 用移动/联通/电信网络完成至少一次首页及静态媒体访问检查；EdgeOne 中国大陆覆盖以当前账号套餐和实测为准。
 - [ ] 测试通过后绑定 `www.resilience-training.cloud`，配置控制台给出的 CNAME 和 HTTPS 证书。
 
-完成标准：EdgeOne 项目成功部署临时静态站点，运行时配置固定指向大陆 API；三网及媒体检查通过后再绑定正式域名。完整登录和研究 API 流程依赖 M3/M4，不作为本阶段静态托管验收条件。项目创建需账号持有人在腾讯云控制台完成授权和仓库选择。
+完成标准：EdgeOne 项目已成功部署临时静态站点；确认运行时配置固定指向大陆 API，且三网及媒体检查通过后再绑定正式域名。完整登录和研究 API 流程依赖 M3/M4，不作为本阶段静态托管验收条件。
 
 ### M2：统一契约与环境配置
 
@@ -281,9 +282,9 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 ## 立即执行顺序
 
 1. M0 已完成，代码已有 GitHub 基线和回退标签。
-2. 在腾讯云控制台创建 EdgeOne Pages 项目并接入 GitHub；平台登录和确认套餐需由账号持有人在控制台完成。
-3. 临时站点就绪后完成静态媒体、HTTPS 和三网测试；API CORS/登录流留待 M3/M4 完成后验收。
-4. 测试通过后绑定 `www.resilience-training.cloud`；腾讯云 API HTTPS 与 Fastify 能力补齐并行推进。
+2. EdgeOne Pages 项目和临时 HTTPS 站点已创建；下一步用浏览器 Network 面板核验 Mainland runtime 配置、媒体文件与缓存行为。
+3. 完成移动/联通/电信三网测试；API CORS/登录流留待 M3/M4 完成后验收。
+4. 静态与三网测试通过后绑定 `www.resilience-training.cloud`；腾讯云 API HTTPS 与 Fastify 能力补齐并行推进。
 5. 最后执行 M5，再开放正式参与者入口。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。
