@@ -233,9 +233,9 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] EdgeOne 临时站点已部署；`resilience-training-programme-dpnsm3wzfcei.edgeone.cool` 的 HTTPS 首页、参与者登录界面和课程入口结构可访问（2026-11-08；访问令牌不写入仓库）。
 - [x] 浏览器已确认临时站点加载 Mainland `runtime-config.js`，图片加载正常（2026-11-08）。音频/视频位于登录后的课程页面，因内地后端尚未完成而移至 M4/M5 验收，不阻塞本次域名绑定。
 - [x] 已用移动/联通/电信网络正常打开 EdgeOne 临时站点首页，三网基础页面访问通过（2026-11-08）。静态媒体播放仍在上一项单独验收。
-- [ ] 在 EdgeOne 项目“域名管理”中将 `www.resilience-training.cloud` 关联生产环境，按控制台项目专属值完成所有权验证和 CNAME，等待免费 SSL 证书生效。
+- [x] `www.resilience-training.cloud` 已关联 EdgeOne 生产环境，CNAME 生效且 HTTPS 证书部署完成；正式域名可正常打开页面（2026-11-09）。
 
-完成标准：EdgeOne 项目已成功部署临时静态站点，Mainland runtime、图片和三网首页访问已通过；完成 `www` 域名与 HTTPS 后结束 M1。登录后的音视频与研究 API 流程依赖内地后端，移至 M4/M5 验收。
+完成标准：已完成。EdgeOne 临时及正式 HTTPS 站点、Mainland runtime、图片、三网首页访问和 `www` 域名均已通过。登录后的音视频与研究 API 流程依赖内地后端，移至 M4/M5 验收。
 
 ### M2：统一契约与环境配置
 
@@ -283,8 +283,9 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 
 1. M0 已完成，代码已有 GitHub 基线和回退标签。
 2. EdgeOne Pages 临时 HTTPS 站点、Mainland runtime、图片和三网首页访问已通过。
-3. 在 EdgeOne 域名管理中添加 `www.resilience-training.cloud`，关联生产环境，并按控制台提供的项目专属验证记录和 CNAME 修改 DNS。
-4. 等待域名验证及免费 SSL 证书生效后复查 HTTPS 首页；音视频、API CORS 和登录流留待 M4/M5。
+3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
+4. 进入 M2，固化参与者、进度、事件、回放、导出和 AI hook 的共享 API 契约与测试规则。
+5. 随后进入 M3，在腾讯云 Fastify + PostgreSQL 实现该契约；音视频、API CORS 和完整登录流留待 M4/M5 联调验收。
 5. 最后执行 M5，再开放正式参与者入口。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。

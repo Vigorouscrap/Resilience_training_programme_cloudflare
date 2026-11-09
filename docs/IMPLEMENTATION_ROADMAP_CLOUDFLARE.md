@@ -46,6 +46,7 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 - 2026-11-06：项目负责人确认实验时间窗不超过一年、现有服务器够用，暂不指定生产导出凭证保管人。固定生产映射为 Cloudflare Pages -> Worker/D1、EdgeOne Pages -> 腾讯云 API/PostgreSQL；生产环境忽略 URL 和 sessionStorage 后端覆盖。新增 EdgeOne Mainland 静态构建命令与独立输出目录。
 - 2026-11-08：EdgeOne Pages 已从 GitHub 主线使用 `npm run build:mainland` / `dist/mainland` 创建临时站点；临时 HTTPS 首页、参与者登录界面和课程入口结构可访问。访问令牌不写入仓库；静态媒体、Mainland runtime 配置和三网效果仍需浏览器/真实网络验收。
 - 2026-11-08：Mainland runtime 配置、图片及移动/联通/电信三网首页访问已确认通过，进入 `www.resilience-training.cloud` 自定义域名绑定阶段。登录后的音视频因内地后端尚未完成，移至 M4/M5 验收，不阻塞域名绑定。
+- 2026-11-09：`www.resilience-training.cloud` 已完成 EdgeOne CNAME 绑定和 HTTPS 证书部署，正式域名页面可访问；M1 完成。下一步先完成 M2 共享 API 契约，再按契约补齐 M3 腾讯云 Fastify + PostgreSQL。
 
 ### 测试编号登记（2026-08-28）
 
@@ -916,7 +917,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] M1 核心决策：域名/备案/权限已确认；`www` + EdgeOne Pages（Nginx 回退）；本机 PostgreSQL；D1 不迁移；约 100 人规模。
 - [x] M1 决策项：实验周期不超过一年；不新增服务器；暂不指定生产导出凭证保管人。
 - [x] M2 映射规则：Cloudflare Pages 固定使用 Worker/D1，EdgeOne Pages 固定使用腾讯云 API/PostgreSQL；生产 URL 参数不能切换后端。
-- [ ] M1 执行项：EdgeOne 临时 HTTPS 站点、Mainland runtime、图片和三网首页访问已通过；正在绑定 `www.resilience-training.cloud` 并等待 SSL 生效。登录后的音视频及 API 流程移至 M4/M5。
+- [x] M1：EdgeOne 临时/正式 HTTPS 站点、Mainland runtime、图片、三网首页访问及 `www.resilience-training.cloud` 绑定均已完成（2026-11-09）；登录后的音视频及 API 流程移至 M4/M5。
 - [ ] M2：固化共享 API 契约、模块/角色/解锁规则和双后端契约测试；保持生产环境固定后端映射。
 - [ ] M3：为 Fastify 实现参与者、模块 run、reset、事件、回放、导出和 PostgreSQL migrations。
 - [ ] M4：恢复 `api.resilience-training.cloud` HTTPS，部署内地静态前端，修正腾讯云 CORS 并收紧 Worker CORS。

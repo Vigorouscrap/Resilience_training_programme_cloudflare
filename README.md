@@ -353,7 +353,7 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 1. M0 已完成并推送 GitHub。
 2. EdgeOne Pages 已使用 `npm run build:mainland` / `dist/mainland` 部署临时 HTTPS 站点（2026-11-08）。
-3. Mainland runtime、图片及移动/联通/电信三网首页访问已通过；当前在 EdgeOne 域名管理中绑定 `www.resilience-training.cloud` 并等待 HTTPS 证书生效。登录后的音视频移至内地后端完成后的 M4/M5 验收。
+3. M1 已完成：Mainland runtime、图片、移动/联通/电信三网首页访问、`www.resilience-training.cloud` CNAME 与 HTTPS 均已通过。登录后的音视频移至内地后端完成后的 M4/M5 验收。
 4. 固化 Worker/Fastify 共享 API 契约。
 5. 在 Lighthouse 安装仅监听本机的 PostgreSQL，为 Fastify 补齐参与者、进度、事件、回放和导出接口。
 6. 为 `api.resilience-training.cloud` 配置 HTTPS，将腾讯云 CORS 收紧到 `https://www.resilience-training.cloud`。
