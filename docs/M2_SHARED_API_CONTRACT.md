@@ -5,6 +5,8 @@
 
 确认记录：2026-11-09，项目负责人确认第 1 节全部五项规则。
 
+实现状态（2026-11-09）：共享契约包、JSON Schema、能力矩阵、单元测试、双 base URL 黑盒测试运行器以及 Worker/Fastify 现有 health/AI 差异修正已提交。Worker 类型检查、Fastify 本地构建与注入契约测试、现有线上 Worker health/core 回归均通过。新 Worker 版本因当前执行环境没有 `CLOUDFLARE_API_TOKEN` 尚未部署；部署后还需运行线上 AI 契约及跨 session 回放测试。
+
 本文件用于统一以下两套后端的对外行为：
 
 - Cloudflare Pages -> Cloudflare Worker -> D1
@@ -558,4 +560,4 @@ PostgreSQL 不需要与 D1 使用相同主键值，也不进行跨库同步。
 4. 先修正 Worker 与契约的小差异，保证现有完整环境成为参考实现。
 5. 再进入 M3，为 Fastify + PostgreSQL 实现缺失接口。
 
-当前仍不开始 M3 数据库迁移，直至共享 schema、Worker 差异和双后端测试框架完成。
+共享 schema、Worker 差异和双后端测试框架已经完成。M2 剩余门槛为部署 Worker 更新并完成线上契约回归；在此之前不开始 M3 数据库迁移。
