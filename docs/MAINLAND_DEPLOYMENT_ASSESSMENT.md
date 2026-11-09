@@ -239,18 +239,20 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 
 ### M2：统一契约与环境配置
 
-- [ ] 固化所有 API 请求、响应、错误码、角色和时间规则。
-- [ ] 抽取共享 hook 清单、模块顺序和输入校验规则，避免 Worker/Fastify 双份手工维护。
+- [x] 固化 API 请求、响应、错误码、角色和时间规则，负责人已全部确认，见 `M2_SHARED_API_CONTRACT.md`。
+- [x] 建立共享 hook 清单、模块顺序、输入校验与访问规则包及基础 JSON Schema；两个运行时直接接入共享规则和研究 schema 扩充纳入 M3。
 - [x] 增加 Cloudflare/Mainland 独立 runtime 配置；EdgeOne 构建到 `dist/mainland/`，不改写共享源代码。
 - [x] 生产环境拒绝 query string/sessionStorage API override，只允许 localhost 本地开发覆盖。
-- [ ] 建立同一套黑盒契约测试，可分别指向 Worker 和 Fastify。
+- [x] 建立可配置 base URL 的同一套黑盒测试；Worker health/core/ai/research 线上通过，Fastify health/AI 本地通过，缺失研究接口保留到 M3。
+- [x] 负责人已部署新版 Worker，事件计数、跨 session 回放、身份隔离及 AI 新字段/错误码通过线上回归（2026-11-09）。
 
-完成标准：每个发布产物自动锁定唯一后端；契约测试可分别针对两端运行，但参与者不能从一个环境切换至另一个环境。
+完成标准：已完成 M2 契约、测试框架与本轮部署验收。每个发布产物自动锁定唯一后端；完整业务契约仍随 M3–M5 实现和验证，不能把 M2 通过视为两套后端均已可正式使用。证据和未覆盖项见 `M2_DEPLOYMENT_VALIDATION.md`。
 
 ### M3：腾讯云 Fastify + PostgreSQL 补齐
 
 - [ ] 把参与者开始/恢复、模块 start/complete/reset、events、replay 接口移植到 Fastify。
 - [ ] 将 D1/SQLite schema 转为 PostgreSQL migrations，并建立事务、唯一约束和幂等规则。
+- [ ] 两端接入共享规则并扩充研究 schema，保存前端练习时长和服务器经过时长；修正 Worker 快照大小/重复完成幂等、回放完成检查、事件校验和鉴权错误分类，详见 M2 验收记录。
 - [ ] 实现测试数据标记、受保护的 CSV/JSON 导出和导出审计。
 - [ ] 配置数据库最小权限账号、自动备份、恢复演练、日志轮换和服务监控。
 - [x] 确认不迁移 D1 数据；两个环境独立保存、独立导出。
@@ -262,7 +264,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [ ] 为 `api.resilience-training.cloud` 配置有效证书和自动续期（域名实名认证及 ICP 备案手续已完成）。
 - [ ] 将 Nginx 配置为 80 跳转 443，只代理到本机 `127.0.0.1:8787`。
 - [ ] 将腾讯云 `CORS_ORIGIN` 改为真实内地前端和明确的测试来源。
-- [ ] 将 Mainland 产物部署到 EdgeOne Pages 并绑定 `www.resilience-training.cloud`；若三网验证不满足要求，则部署到 Lighthouse Nginx。
+- [x] Mainland 产物已部署到 EdgeOne Pages，`www.resilience-training.cloud` 已绑定且 HTTPS 可用（M1）；API 联调仍待下列验收。
 - [x] 为内地部署生成指向腾讯云 API 的独立运行时配置，不复制第二份前端源码。
 - [ ] 收紧 Worker CORS，移除 `*`。
 
@@ -284,8 +286,8 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 1. M0 已完成，代码已有 GitHub 基线和回退标签。
 2. EdgeOne Pages 临时 HTTPS 站点、Mainland runtime、图片和三网首页访问已通过。
 3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
-4. 进入 M2，固化参与者、进度、事件、回放、导出和 AI hook 的共享 API 契约与测试规则。
-5. 随后进入 M3，在腾讯云 Fastify + PostgreSQL 实现该契约；音视频、API CORS 和完整登录流留待 M4/M5 联调验收。
-5. 最后执行 M5，再开放正式参与者入口。
+4. M2 已完成：契约已全部确认，新 Worker 部署后的现有黑盒 profile 全部通过，完整证据和剩余差异已记录。
+5. 下一步进入 M3，在腾讯云 Fastify + PostgreSQL 实现该契约并补齐两端剩余差异；本次尚未开始数据库迁移。
+6. 执行 M4/M5 的 HTTPS/CORS、音视频、完整登录流与发布验收，再开放内地正式参与者入口。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。

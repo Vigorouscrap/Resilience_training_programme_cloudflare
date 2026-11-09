@@ -8,15 +8,15 @@ import {
 
 const baseUrl = String(process.env.CONTRACT_BASE_URL || process.argv[2] || '').replace(/\/+$/, '');
 const profile = String(process.env.CONTRACT_PROFILE || process.argv[3] || 'health').toLowerCase();
-const allowedProfiles = new Set(['health', 'core', 'ai', 'full']);
+const allowedProfiles = new Set(['health', 'core', 'ai', 'research', 'full']);
 
 if (!baseUrl || !allowedProfiles.has(profile)) {
-    console.error('Usage: CONTRACT_BASE_URL=https://api.example.com npm run test:contract -- [baseUrl] [health|core|ai|full]');
+    console.error('Usage: CONTRACT_BASE_URL=https://api.example.com npm run test:contract -- [baseUrl] [health|core|ai|research|full]');
     process.exit(1);
 }
 
 async function requestJson(path, options = {}) {
-    const response = await fetch(`${baseUrl}${path}`, options);
+    const response = await fetch(`${baseUrl}${path}`, { signal: AbortSignal.timeout(30000), ...options });
     const text = await response.text();
     let data = {};
     try { data = text ? JSON.parse(text) : {}; } catch {
@@ -100,6 +100,10 @@ async function testAi() {
     assert.equal(unknown.response.status, 404);
     assert.equal(unknown.data.code, ERROR_CODES.unknownHook);
 
+    const mismatch = await postJson(API_PATHS.aiHook('module-1-1.intro-reply'), { moduleId: '1-2', userInput: 'test' });
+    assert.equal(mismatch.response.status, 400);
+    assert.equal(mismatch.data.code, ERROR_CODES.hookModuleMismatch);
+
     const hookId = 'module-1-1.intro-reply';
     const payload = {
         participantCode: 'M2_AI_TEST',
@@ -119,10 +123,96 @@ async function testAi() {
     assert.ok(result.data.replyText.length > 0);
     assert.equal(typeof result.data.fallbackUsed, 'boolean');
     assert.equal(typeof result.data.metadata, 'object');
+    for (const field of ['promptVersion', 'provider', 'model']) assert.equal(typeof result.data[field], 'string');
     console.log('PASS AI hook contract');
+}
+
+async function testResearch() {
+    const identity = uniqueTestIdentity();
+    const metadata = { testData: true, source: 'm2-contract-research' };
+    async function login(fields) {
+        const result = await postJson(API_PATHS.participantStart, { ...fields, metadata });
+        assert.equal(result.response.status, 200);
+        assert.equal(result.data.persisted, true);
+        return result.data;
+    }
+    const first = await login(identity);
+    assert.equal(first.role, 'participant', 'Regression identities must have ordinary participant permissions');
+    const moduleRequest = { participantCode: identity.participantCode, sessionId: first.sessionId, moduleId: '1-1' };
+    const started = await postJson(API_PATHS.moduleRunStart, { ...moduleRequest, metadata });
+    assert.equal(started.response.status, 200);
+    assert.equal(started.data.persisted, true);
+    const repeatedStart = await postJson(API_PATHS.moduleRunStart, { ...moduleRequest, metadata });
+    assert.equal(repeatedStart.data.moduleRun.id, started.data.moduleRun.id);
+
+    const locked = await postJson(API_PATHS.moduleRunStart, { ...moduleRequest, moduleId: '1-2' });
+    assert.equal(locked.response.status, 403);
+    assert.equal(locked.data.code, ERROR_CODES.moduleLocked);
+
+    const messageText = `M2 replay marker ${identity.participantCode}`;
+    const snapshotHtml = `<div>${messageText}</div>`;
+    const events = await postJson(API_PATHS.events, {
+        ...moduleRequest,
+        events: [
+            { type: 'conversation_message', moduleId: '1-1', messageRole: 'user', messageText, source: 'user_input', sequenceIndex: 1, metadata },
+            { type: 'module_event', moduleId: '1-1', eventType: 'contract_test', context: metadata },
+            { type: 'unknown_event', moduleId: '1-1' }
+        ]
+    });
+    assert.equal(events.response.status, 202);
+    assert.equal(events.data.accepted, 2);
+    assert.equal(events.data.rejected, 1);
+    assert.equal(events.data.persisted, true);
+
+    async function replay(body) {
+        const result = await postJson(API_PATHS.conversationReplay, body);
+        assert.equal(result.response.status, 200);
+        assert.equal(result.data.persisted, true);
+        return result.data;
+    }
+    function assertEmptyReplay(data) {
+        assert.equal(data.snapshotHtml, null);
+        assert.deepEqual(data.messages, []);
+    }
+    assertEmptyReplay(await replay(moduleRequest));
+    const completed = await postJson(API_PATHS.moduleRunComplete, { ...moduleRequest, snapshotHtml, metadata });
+    assert.equal(completed.response.status, 200);
+    assert.equal(completed.data.persisted, true);
+    assert.equal(completed.data.moduleRun.status, 'completed');
+    assert.ok(completed.data.access.completedModuleIds.includes('1-1'));
+
+    const second = await login({ ...identity, clientSessionId: `${identity.clientSessionId}_second` });
+    assert.equal(second.participantId, first.participantId);
+    assert.notEqual(second.sessionId, first.sessionId);
+    const newSessionRequest = { ...moduleRequest, sessionId: second.sessionId };
+    const history = await replay(newSessionRequest);
+    assert.equal(history.snapshotHtml, snapshotHtml);
+    assert.equal(history.messages.length, 1);
+    assert.equal(history.messages[0].messageText, messageText);
+    assert.deepEqual(await replay(newSessionRequest), history, 'Repeated replay must return the same saved history');
+
+    const reset = await postJson(API_PATHS.moduleRunReset, moduleRequest);
+    assert.equal(reset.response.status, 403);
+    assert.equal(reset.data.code, ERROR_CODES.resetForbidden);
+
+    const otherName = await login({ ...identity, participantName: 'M2 Different Name' });
+    assert.notEqual(otherName.participantId, first.participantId);
+    assertEmptyReplay(await replay({ ...moduleRequest, sessionId: otherName.sessionId }));
+
+    const otherIdentity = uniqueTestIdentity();
+    const other = await login(otherIdentity);
+    assertEmptyReplay(await replay({ ...moduleRequest, participantCode: otherIdentity.participantCode, sessionId: other.sessionId }));
+    const mismatched = await postJson(API_PATHS.conversationReplay, { ...moduleRequest, sessionId: other.sessionId });
+    assert.ok([400, 401, 403].includes(mismatched.response.status), 'Mismatched code/session must be rejected');
+    assert.equal(typeof mismatched.data.error, 'string');
+    assert.equal(mismatched.data.snapshotHtml, undefined);
+    assert.equal(mismatched.data.messages, undefined);
+    console.log('PASS research events, cross-session replay, module access and participant isolation');
+    console.log(`Test records retained: ${identity.participantCode}, ${otherIdentity.participantCode} (metadata.testData=true)`);
 }
 
 await testHealth();
 if (profile === 'core' || profile === 'full') await testCore();
 if (profile === 'ai' || profile === 'full') await testAi();
+if (profile === 'research' || profile === 'full') await testResearch();
 console.log(`Contract profile "${profile}" passed for ${baseUrl}`);
