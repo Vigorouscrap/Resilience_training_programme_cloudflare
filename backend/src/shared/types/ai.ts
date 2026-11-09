@@ -1,7 +1,7 @@
 export interface AiHookRequestBody {
     sessionId?: string;
     moduleId: string;
-    step?: number;
+    step?: number | string;
     variant?: string;
     userInput: string;
     context?: Record<string, unknown>;
@@ -10,7 +10,7 @@ export interface AiHookRequestBody {
 export interface AiHookResolvedContext {
     sessionId: string;
     moduleId: string;
-    step: number | null;
+    step: number | string | null;
     variant: string | null;
     userInput: string;
     context: Record<string, unknown>;

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resilience-training.cloud/schemas/api-v1.json",
+  "title": "Resilience Training API v1 shared shapes",
+  "$defs": {
+    "error": {
+      "type": "object",
+      "required": ["error", "code"],
+      "properties": {
+        "error": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "minLength": 1 },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "participantAccess": {
+      "type": "object",
+      "required": ["canAccessAllModules", "unlockedDayIndex", "lastCompletedDayIndex", "nextUnlockAt", "completedModuleIds"],
+      "properties": {
+        "canAccessAllModules": { "type": "boolean" },
+        "unlockedDayIndex": { "type": "integer", "minimum": 1 },
+        "lastCompletedDayIndex": { "type": "integer", "minimum": 0, "maximum": 42 },
+        "nextUnlockAt": { "type": ["string", "null"] },
+        "completedModuleIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "aiHookResponse": {
+      "type": "object",
+      "required": ["sessionId", "moduleId", "hookId", "replyText", "fallbackUsed", "promptVersion", "provider", "model", "metadata"],
+      "properties": {
+        "sessionId": { "type": "string" },
+        "moduleId": { "type": "string" },
+        "hookId": { "type": "string" },
+        "replyText": { "type": "string", "minLength": 1 },
+        "fallbackUsed": { "type": "boolean" },
+        "promptVersion": { "type": "string" },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

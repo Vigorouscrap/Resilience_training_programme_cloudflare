@@ -10,7 +10,10 @@
     "start:local": "python -m http.server 8000 --bind 127.0.0.1 --directory src",
     "build": "npm run build:cloudflare",
     "build:cloudflare": "node scripts/prepare-runtime-config.mjs cloudflare",
-    "build:mainland": "node scripts/prepare-runtime-config.mjs mainland"
+    "build:mainland": "node scripts/prepare-runtime-config.mjs mainland",
+    "test:contract:unit": "node --test shared-contract/*.test.mjs",
+    "test:contract:fastify-local": "npm --prefix backend run build && node scripts/contract-test-fastify-local.mjs",
+    "test:contract": "node scripts/contract-test.mjs"
   },
   "keywords": [
     "心理弹性",

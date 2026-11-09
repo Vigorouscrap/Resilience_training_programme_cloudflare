@@ -24,7 +24,9 @@ export function validateAiHookRequestBody(input: unknown): AiHookRequestBody {
 
     const step = typeof stepValue === 'number' && Number.isFinite(stepValue)
         ? stepValue
-        : undefined;
+        : typeof stepValue === 'string' && stepValue.trim()
+            ? stepValue.trim()
+            : undefined;
 
     return {
         sessionId: sessionId || undefined,

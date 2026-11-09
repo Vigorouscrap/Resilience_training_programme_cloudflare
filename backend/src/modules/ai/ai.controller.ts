@@ -26,8 +26,16 @@ export async function registerAiRoutes(app: FastifyInstance, aiService: AiServic
 
             reply.code(200).send(response);
         } catch (error) {
-            reply.code(400).send({
-                error: error instanceof Error ? error.message : 'Unknown request error.'
+            const message = error instanceof Error ? error.message : 'Unknown request error.';
+            const unknownHook = message.startsWith('Unknown AI hook:');
+            const moduleMismatch = message.startsWith('Hook "') && message.includes('does not belong to module');
+            reply.code(unknownHook ? 404 : 400).send({
+                error: message,
+                code: unknownHook
+                    ? 'UNKNOWN_HOOK'
+                    : moduleMismatch
+                        ? 'HOOK_MODULE_MISMATCH'
+                        : 'VALIDATION_ERROR'
             });
         }
     });

@@ -8,6 +8,7 @@ import { ModuleContextBuilder } from './modules/module-state/module-context.buil
 import { ModuleStateService } from './modules/module-state/module-state.service.js';
 import { SessionRepository } from './modules/sessions/session.repository.js';
 import { SessionService } from './modules/sessions/session.service.js';
+import { listHookDefinitions } from './modules/ai/prompt-registry/index.js';
 
 export async function createApp() {
     const env = loadEnv();
@@ -34,6 +35,8 @@ export async function createApp() {
         app: runtime.appName,
         version: runtime.apiVersion,
         provider: env.aiProvider,
+        runtime: 'fastify-node',
+        hooks: listHookDefinitions().map((hook) => hook.hookId),
         nodeEnv: env.nodeEnv,
         uptimeSeconds: Math.floor(process.uptime()),
         timestamp: new Date().toISOString()

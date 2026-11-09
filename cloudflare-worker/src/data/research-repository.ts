@@ -610,8 +610,8 @@ class D1ResearchDataRepository implements ResearchDataRepository {
         ).bind(context.participantId, moduleId, 'completed').first<{ completed: number }>();
         if (!completed) return [];
         const result = await this.db.prepare(
-            'SELECT id, module_id, hook_id, message_role, message_text, source, step, sequence_index, duration_ms, metadata_json, created_at FROM conversation_messages WHERE participant_id = ? AND session_id = ? AND module_id = ? ORDER BY COALESCE(sequence_index, 2147483647), created_at, id'
-        ).bind(context.participantId, input.sessionId, moduleId).all<{
+            'SELECT id, module_id, hook_id, message_role, message_text, source, step, sequence_index, duration_ms, metadata_json, created_at FROM conversation_messages WHERE participant_id = ? AND module_id = ? ORDER BY COALESCE(sequence_index, 2147483647), created_at, id'
+        ).bind(context.participantId, moduleId).all<{
             id: string; module_id: string; hook_id: string;
             message_role: RecordConversationMessageInput['messageRole']; message_text: string;
             source: RecordConversationMessageInput['source']; step: string | null;
@@ -633,8 +633,8 @@ class D1ResearchDataRepository implements ResearchDataRepository {
     async getConversationReplay(input: ConversationReplayInput): Promise<ConversationReplayResult> {
         const context = await this.resolveParticipant(input.participantCode, input.sessionId);
         const snapshot = await this.db.prepare(
-            'SELECT html_snapshot FROM conversation_snapshots WHERE participant_id = ? AND session_id = ? AND module_id = ? LIMIT 1'
-        ).bind(context.participantId, input.sessionId, input.moduleId).first<{ html_snapshot: string }>();
+            'SELECT html_snapshot FROM conversation_snapshots WHERE participant_id = ? AND module_id = ? LIMIT 1'
+        ).bind(context.participantId, input.moduleId).first<{ html_snapshot: string }>();
         return {
             snapshotHtml: snapshot?.html_snapshot || null,
             messages: await this.getConversationMessages(input)

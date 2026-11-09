@@ -3,7 +3,7 @@ import type { AiHookResolvedContext } from '../../shared/types/ai.js';
 export interface ModuleContextSnapshot {
     sessionId: string;
     moduleId: string;
-    step: number | null;
+    step: number | string | null;
     variant: string | null;
     summary: Record<string, unknown>;
 }

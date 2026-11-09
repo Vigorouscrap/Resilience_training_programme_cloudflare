@@ -551,19 +551,29 @@ async function callDeepSeek(env: Env, hook: HookDefinition, variant: HookVariant
 async function handleHookRequest(request: Request, env: Env, hookId: string, corsHeaders: HeadersInit): Promise<Response> {
     const hook = hooks[hookId];
     if (!hook) {
-        return jsonResponse({ error: `Unknown hookId: ${hookId}` }, 404, corsHeaders);
+        return jsonResponse({ error: `Unknown hookId: ${hookId}`, code: 'UNKNOWN_HOOK' }, 404, corsHeaders);
     }
 
     let body: AiHookRequestBody;
     try {
         body = await request.json();
     } catch {
-        return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders);
+        return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const userInput = String(body.userInput || '').trim();
     if (!userInput) {
-        return jsonResponse({ error: 'Missing required field: userInput' }, 400, corsHeaders);
+        return jsonResponse({ error: 'Missing required field: userInput', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
+    }
+    const requestModuleId = String(body.moduleId || '').trim();
+    if (!requestModuleId) {
+        return jsonResponse({ error: 'Missing required field: moduleId', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
+    }
+    if (requestModuleId !== hook.moduleId) {
+        return jsonResponse({
+            error: `Hook "${hookId}" does not belong to module "${requestModuleId}".`,
+            code: 'HOOK_MODULE_MISMATCH'
+        }, 400, corsHeaders);
     }
 
     const variant = selectVariant(hook, body.variant);
@@ -606,6 +616,7 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
     }
 
     return jsonResponse({
+        sessionId: String(body.sessionId || ''),
         moduleId: hook.moduleId,
         hookId: hook.hookId,
         replyText,
@@ -661,17 +672,17 @@ async function handleParticipantStartRequest(request: Request, env: Env, corsHea
     try {
         body = await request.json();
     } catch {
-        return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders);
+        return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const validation = validateParticipantCode(String(body.participantCode || ''));
     if (!validation.ok) {
-        return jsonResponse({ error: validation.error }, 400, corsHeaders);
+        return jsonResponse({ error: validation.error, code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const nameValidation = validateParticipantName(String(body.participantName || ''));
     if (!nameValidation.ok) {
-        return jsonResponse({ error: nameValidation.error }, 400, corsHeaders);
+        return jsonResponse({ error: nameValidation.error, code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const participantName = nameValidation.displayValue;
@@ -706,7 +717,7 @@ async function handleParticipantStartRequest(request: Request, env: Env, corsHea
         console.warn('Participant session persistence failed', error instanceof Error ? error.message : error);
         const persistenceRequired = String(env.REQUIRE_PERSISTENCE || '').toLowerCase() === 'true';
         if (env.DB || persistenceRequired) {
-            return jsonResponse({ error: 'Research data storage is unavailable.' }, 503, corsHeaders);
+            return jsonResponse({ error: 'Research data storage is unavailable.', code: 'STORAGE_UNAVAILABLE' }, 503, corsHeaders);
         }
 
         const fallbackRepository = createResearchDataRepository(undefined);
@@ -734,18 +745,18 @@ async function handleModuleRunRequest(
     try {
         body = await request.json();
     } catch {
-        return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders);
+        return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const codeValidation = validateParticipantCode(String(body.participantCode || ''));
     if (!codeValidation.ok) {
-        return jsonResponse({ error: codeValidation.error }, 400, corsHeaders);
+        return jsonResponse({ error: codeValidation.error, code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const sessionId = String(body.sessionId || '').trim();
     const moduleId = String(body.moduleId || '').trim();
     if (!sessionId || !moduleId) {
-        return jsonResponse({ error: 'sessionId and moduleId are required.' }, 400, corsHeaders);
+        return jsonResponse({ error: 'sessionId and moduleId are required.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const input = {
@@ -775,16 +786,23 @@ async function handleModuleRunRequest(
         }, 200, corsHeaders);
     } catch (error) {
         if (error instanceof ModuleRunAccessError) {
-            return jsonResponse({ error: error.message, code: 'MODULE_LOCKED' }, 403, corsHeaders);
+            return jsonResponse({
+                error: error.message,
+                code: reset ? 'RESET_FORBIDDEN' : 'MODULE_LOCKED'
+            }, 403, corsHeaders);
         }
         if (error instanceof ModuleRunValidationError) {
-            return jsonResponse({ error: error.message }, 400, corsHeaders);
+            const moduleNotCompleted = reset && error.message === 'Only completed modules can be reset.';
+            return jsonResponse({
+                error: error.message,
+                code: moduleNotCompleted ? 'MODULE_NOT_COMPLETED' : 'INVALID_MODULE_ID'
+            }, moduleNotCompleted ? 409 : 400, corsHeaders);
         }
 
         console.warn('Module run persistence failed', error instanceof Error ? error.message : error);
         const persistenceRequired = String(env.REQUIRE_PERSISTENCE || '').toLowerCase() === 'true';
         if (env.DB || persistenceRequired) {
-            return jsonResponse({ error: 'Research data storage is unavailable.' }, 503, corsHeaders);
+            return jsonResponse({ error: 'Research data storage is unavailable.', code: 'STORAGE_UNAVAILABLE' }, 503, corsHeaders);
         }
 
         const fallbackRepository = createResearchDataRepository(undefined);
@@ -806,17 +824,19 @@ async function handleModuleRunRequest(
 
 async function handleEventsRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
     let body: EventsRequestBody;
-    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders); }
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders); }
     const codeValidation = validateParticipantCode(String(body.participantCode || ''));
     const sessionId = String(body.sessionId || '').trim();
     const events = Array.isArray(body.events) ? body.events.slice(0, 100) : [];
-    if (!codeValidation.ok || !sessionId || !events.length) return jsonResponse({ error: 'participantCode, sessionId and events are required.' }, 400, corsHeaders);
+    if (!codeValidation.ok || !sessionId || !events.length) return jsonResponse({ error: 'participantCode, sessionId and events are required.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     try {
         const repository = createResearchDataRepository(env.DB);
         const context = await repository.resolveParticipant(codeValidation.normalizedValue, sessionId);
+        let accepted = 0;
+        let rejected = 0;
         for (const event of events) {
             const moduleId = String(event.moduleId || '').trim();
-            if (!moduleId) continue;
+            if (!moduleId) { rejected += 1; continue; }
             if (event.type === 'conversation_message' && event.messageText && event.messageRole && event.source) {
                 await repository.recordConversationMessage({
                     participantId: context.participantId, sessionId, moduleId,
@@ -825,36 +845,46 @@ async function handleEventsRequest(request: Request, env: Env, corsHeaders: Head
                     step: event.step, sequenceIndex: event.sequenceIndex, durationMs: event.durationMs,
                     metadata: event.metadata
                 });
+                accepted += 1;
             } else if (event.type === 'module_event' && event.eventType) {
                 await repository.recordModuleEvent({
                     participantId: context.participantId, sessionId, moduleId,
                     eventType: String(event.eventType), step: event.step,
                     userInput: event.userInput, choiceValue: event.choiceValue, context: event.context
                 });
+                accepted += 1;
+            } else {
+                rejected += 1;
             }
         }
-        return jsonResponse({ accepted: events.length, persisted: Boolean(env.DB) }, 202, corsHeaders);
+        return jsonResponse({ accepted, rejected, persisted: Boolean(env.DB) }, 202, corsHeaders);
     } catch (error) {
         console.warn('Event persistence failed', error instanceof Error ? error.message : error);
-        return jsonResponse({ error: 'Research data storage is unavailable.' }, env.DB ? 503 : 202, corsHeaders);
+        return jsonResponse({
+            error: 'Research data storage is unavailable.',
+            code: 'STORAGE_UNAVAILABLE',
+            accepted: 0,
+            rejected: events.length,
+            persisted: false
+        }, 202, corsHeaders);
     }
 }
 
 async function handleReplayRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
     let body: ReplayRequestBody;
-    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.' }, 400, corsHeaders); }
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders); }
     const codeValidation = validateParticipantCode(String(body.participantCode || ''));
     const sessionId = String(body.sessionId || '').trim();
     const moduleId = String(body.moduleId || '').trim();
-    if (!codeValidation.ok || !sessionId || !moduleId) return jsonResponse({ error: 'participantCode, sessionId and moduleId are required.' }, 400, corsHeaders);
+    if (!codeValidation.ok || !sessionId || !moduleId) return jsonResponse({ error: 'participantCode, sessionId and moduleId are required.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     try {
         const repository = createResearchDataRepository(env.DB);
         const replay = await repository.getConversationReplay({ participantCode: codeValidation.normalizedValue, sessionId, moduleId });
         return jsonResponse({ moduleId, ...replay, persisted: Boolean(env.DB) }, 200, corsHeaders);
     } catch (error) {
-        if (error instanceof ModuleRunValidationError) return jsonResponse({ error: error.message }, 400, corsHeaders);
+        if (error instanceof ModuleRunValidationError) return jsonResponse({ error: error.message, code: 'INVALID_MODULE_ID' }, 400, corsHeaders);
         console.warn('Conversation replay failed', error instanceof Error ? error.message : error);
-        return jsonResponse({ error: 'Research data storage is unavailable.' }, env.DB ? 503 : 200, corsHeaders);
+        return jsonResponse({ error: 'Research data storage is unavailable.', code: 'STORAGE_UNAVAILABLE' }, env.DB ? 503 : 200, corsHeaders);
     }
 }
 export default {
@@ -902,7 +932,7 @@ export default {
             return handleHookRequest(request, env, decodeURIComponent(hookMatch[1]), corsHeaders);
         }
 
-        return jsonResponse({ error: 'Not found.' }, 404, corsHeaders);
+        return jsonResponse({ error: 'Not found.', code: 'NOT_FOUND' }, 404, corsHeaders);
     }
 };
 
