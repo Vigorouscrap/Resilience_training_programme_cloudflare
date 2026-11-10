@@ -76,6 +76,8 @@ sudo -u postgres psql -d postgres -c '\du'
 
 2026-11-10 已确认 PostgreSQL 14.24 的 `main` cluster 在 5432 在线、开机启用并仅监听 `localhost`；初始只有系统数据库和 `postgres` 管理角色，没有旧项目数据库或角色。不使用旧 Prisma migrate 命令；Prisma 模型保留为未使用的历史骨架，不是本次研究数据模型。
 
+旁路服务器执行 `npm ci` 后报告的 3 个 high severity 均来自未被运行代码引用的旧 Prisma CLI/config 依赖及 `deepmerge-ts`。M3 使用 `pg` 和 SQL migration runner，不使用 Prisma。发布分支已移除 `prisma`、`@prisma/client` 及相应 npm scripts，历史 `backend/prisma/schema.prisma` 仅保留作早期设计参考；不要执行 `npm audit fix` 自动升级数据库工具链。
+
 ### 2. 创建独立 owner 和运行账号
 
 仅在确认没有同名数据库和角色后，审阅 `backend/deploy/postgres-bootstrap.sql.example`，在交互式 psql 中执行，其中 `\password` 会交互询问密码，避免把密码写入命令历史：
