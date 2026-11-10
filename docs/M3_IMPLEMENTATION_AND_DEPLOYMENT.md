@@ -57,6 +57,8 @@ PGlite 是单连接引擎；本地并发测试排队连接，不等同于腾讯�
 
 服务器必须使用本仓库的新版本，并保留仓库根目录的 `shared-contract/`。不能仅复制 `backend/dist/`，编译后的服务仍引用共享模块。
 
+2026-11-10 实机确认当前 `/opt/resilience-training-programme` 是旧仓库 `xiaoqisong12-lgtm/Resilience_training_programme.git`，提交 `746a69d`，没有 `shared-contract/`；工作区干净，现有 systemd 直接从该目录运行。M3 发布代码则位于 `Vigorouscrap/Resilience_training_programme_cloudflare.git` 的 `release/m3-mainland-postgres` 分支，两者不是同一 Git 历史。禁止在旧目录内强改 remote、强制 reset 或直接 pull M3。采用旁路目录 `/opt/resilience-training-programme-m3`：先克隆、构建、迁移和本机验收，保留旧目录作为可恢复的代码回退点，最后才修改 systemd WorkingDirectory/EnvironmentFile。
+
 当前 Node.js 22.22.3 满足要求，无需升级。下一步安装 Ubuntu 仓库提供的 PostgreSQL 服务和客户端：
 
 ```bash
@@ -97,6 +99,8 @@ export MIGRATION_DATABASE_URL
 npm run db:migrate
 unset MIGRATION_DATABASE_URL
 ```
+
+上述路径对当前服务器应替换为 `/opt/resilience-training-programme-m3/backend`。旧目录的 `.env` 可在服务器内复制到新目录作为基础，但不能提交 Git；复制后将 `DATABASE_URL` 改为 `resilience_app`，迁移连接串只在当前终端临时输入，不写入 systemd 环境文件。正式切换前保留 `/etc/systemd/system/resilience-backend.service` 备份，并记录旧提交 `746a69d`。
 
 迁移 URL 使用 owner 账号。随后管理员执行 `REVOKE ALL ON TABLE research_migrations FROM resilience_app;`，运行账号只保留研究表 SELECT/INSERT/UPDATE/DELETE 权限。迁移再次执行应显示 up to date。
 

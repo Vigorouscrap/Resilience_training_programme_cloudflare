@@ -96,6 +96,7 @@
 - 域名：`resilience-training.cloud`。
 - API DNS：`api.resilience-training.cloud -> 1.117.58.64`，当前仍可通过 HTTP 访问。
 - 服务器已经安装 Node.js、Git、Nginx，并用 systemd 托管 Fastify。2026-11-10 实机确认 Node.js 为 `v22.22.3`，服务目录为 `/opt/resilience-training-programme/backend`，服务用户为 `ubuntu`。
+- 同日确认该服务目录来自旧仓库 `xiaoqisong12-lgtm/Resilience_training_programme.git`（提交 `746a69d`），工作区干净但没有 `shared-contract/`；M3 必须从 Cloudflare 主线发布分支旁路部署，不能在旧仓库内直接拉取或强制合并。
 - Nginx 已将 80 端口反向代理到 `127.0.0.1:8787`。
 - 服务器曾验证 DeepSeek 真调用成功；当前健康接口仍报告 provider 为 DeepSeek。
 - 原项目本地 `.env.local` 中存在已配置的 DeepSeek 和 session 项，但数据库和 CORS 仍是本地/占位配置；文件已被 Git 忽略。本文件不记录任何密钥值。
