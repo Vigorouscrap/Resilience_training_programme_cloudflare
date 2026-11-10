@@ -90,6 +90,8 @@ sudo -u postgres psql
 
 PostgreSQL 仅监听 `127.0.0.1`/本地 socket，5432 不开放公网；应用使用 `resilience_app`，迁移使用 `resilience_owner`。连接串密码中的特殊字符须做 URL 编码。
 
+Fastify 同样默认监听 `127.0.0.1`，生产 `.env` 设置 `HOST=127.0.0.1`；公网只经过 Nginx 的 80/443，备用验收端口也不会直接监听公网网卡。
+
 2026-11-10 已完成本节：`resilience_owner`、`resilience_app` 和 `resilience_programme` 已创建，public schema 归 owner，PUBLIC 的 schema CREATE 已撤销，app 获得 schema USAGE，owner 后续创建的表会自动授予 app DML 权限。误执行的 `GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO resilience_app;` 报 `relation "tables" does not exist`，只是把 `TABLES` 当成表名的语法错误；当时尚未迁移建表，不会改变权限或数据库内容，无需回滚。迁移后如需补授现有表，正确语法是 `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO resilience_app;`。
 
 同日权限核验通过：两个角色均可登录，但都不是 superuser，且没有 CREATEDB/CREATEROLE；数据库 owner 为 `resilience_owner`，`resilience_app` 仅有 CONNECT；public schema 上 owner 有 CREATE，app 有 USAGE 但没有 CREATE。默认表权限显示 `resilience_app=arwd/resilience_owner`，即后续 owner 创建的表自动授予 INSERT/SELECT/UPDATE/DELETE。`\dt` 返回无 relation，确认正式迁移前数据库为空。数据库 ACL 中 PUBLIC 仅保留 TEMP（`=T`），由于 PUBLIC 的 CONNECT 已撤销，不构成外部连接入口。

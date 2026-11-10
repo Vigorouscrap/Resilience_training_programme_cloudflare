@@ -31,6 +31,8 @@ backend/.env.local
 
 ## 当前变量说明
 
+- `HOST` / `PORT`
+  - Fastify 监听地址和端口；生产固定使用 `127.0.0.1:8787`，只允许本机 Nginx 代理。
 - `AI_PROVIDER`
   - 当前固定为 `deepseek`
 - `DEEPSEEK_BASE_URL`

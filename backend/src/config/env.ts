@@ -24,6 +24,7 @@ const REQUIRED_ENV_KEYS = [
 
 export interface AppEnv {
     nodeEnv: string;
+    host: string;
     port: number;
     corsOrigins: string[];
     aiProvider: string;
@@ -67,6 +68,7 @@ function parseCorsOrigins(value: string | undefined): string[] {
 export function loadEnv(): AppEnv {
     return {
         nodeEnv: process.env.NODE_ENV?.trim() || 'development',
+        host: process.env.HOST?.trim() || '127.0.0.1',
         port: parsePositiveInteger(process.env.PORT, 8787),
         corsOrigins: parseCorsOrigins(process.env.CORS_ORIGIN),
         aiProvider: requireEnv('AI_PROVIDER'),

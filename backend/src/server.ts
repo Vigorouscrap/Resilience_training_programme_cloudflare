@@ -5,7 +5,7 @@ async function startServer() {
 
     try {
         await app.listen({
-            host: '0.0.0.0',
+            host: env.host,
             port: env.port
         });
     } catch (error) {
