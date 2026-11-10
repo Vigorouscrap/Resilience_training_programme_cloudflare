@@ -110,6 +110,8 @@ unset MIGRATION_DATABASE_URL
 
 2026-11-10 检查确认旧 `.env` 已包含 AI provider、DeepSeek、PORT、SESSION_SECRET、DATABASE_URL 和 CORS 所需变量，可以作为旁路环境基础；但文件权限为 `0644 ubuntu:ubuntu`，其中的 API key 和 session secret 可被其他本地用户读取。复制前将旧文件收紧为 `0600`，新文件使用 `install -m 600` 创建。只输出变量名核验，不输出或上传值；数据库密码通过隐藏输入临时注入并 URL 编码。
 
+同日已验证 `resilience_owner` 通过 TCP/密码连接 `resilience_programme`，旁路 backend 从新 `.env` 加载的 `DATABASE_URL` 也以 `resilience_app` 成功连接同一数据库。迁移密码和运行密码、连接账号及 URL 编码均已实际验证，下一步可执行首次 migration；迁移前仍未切换或重启旧 systemd 服务。
+
 迁移 URL 使用 owner 账号。随后管理员执行 `REVOKE ALL ON TABLE research_migrations FROM resilience_app;`，运行账号只保留研究表 SELECT/INSERT/UPDATE/DELETE 权限。迁移再次执行应显示 up to date。
 
 在服务器已有 `.env` 中更新：
