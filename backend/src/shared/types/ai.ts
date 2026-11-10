@@ -1,4 +1,5 @@
 export interface AiHookRequestBody {
+    participantCode?: string;
     sessionId?: string;
     moduleId: string;
     step?: number | string;

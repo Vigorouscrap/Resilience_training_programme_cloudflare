@@ -521,9 +521,11 @@ export class DialogueManager {
 
         this.moduleCompletionState = { status: 'saving', moduleId: this.currentModule };
         try {
+            const practiceDurationSeconds = this.getPracticeDurationSeconds?.() ?? null;
             if (this.moduleRunStartPromise) await this.moduleRunStartPromise;
             const response = await completeModuleRun(this.currentModule, {
                 clientStep: this.step,
+                practiceDurationSeconds,
                 source: 'module-terminal',
                 snapshotHtml: this.chatMessages.innerHTML
             });

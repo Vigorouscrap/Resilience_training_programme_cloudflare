@@ -1,0 +1,17 @@
+export const API_VERSION: string;
+export const API_PATHS: Record<string, any>;
+export const ERROR_CODES: Record<string, string>;
+export const SUPPORTED_HOOKS: readonly { hookId: string; moduleId: string }[];
+export const SUPPORTED_HOOK_IDS: readonly string[];
+export const PARTICIPANT_ROLES: readonly string[];
+export const MESSAGE_ROLES: readonly string[];
+export const MESSAGE_SOURCES: readonly string[];
+export function normalizeParticipantCode(value: unknown): string;
+export function normalizeParticipantName(value: unknown): string;
+export function validateParticipantCode(value: unknown): { ok: boolean; normalizedValue: string; error?: string };
+export function validateParticipantName(value: unknown): { ok: boolean; normalizedValue: string; displayValue: string; error?: string };
+export function parseModuleId(value: unknown): { moduleId: string; week: number; day: number; dayIndex: number } | null;
+export function moduleDayIndex(value: unknown): number | null;
+export function nextAsiaShanghaiMidnight(value: string): string | null;
+export function calculateAccess(role: string, records: any[], nowMs?: number): any;
+export function normalizeStep(value: unknown): string | number | null;

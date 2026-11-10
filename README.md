@@ -1,5 +1,17 @@
 # 心理弹性训练程序 - Cloudflare 实验仓库
 
+## 当前主线状态（2026-11-09）
+
+本仓库现为唯一开发基线：一套课程源码，两套固定部署适配。Cloudflare Pages → Worker/D1；EdgeOne Pages → 腾讯云 Fastify/PostgreSQL。旧 `Resilience_training_programme` 仓库保留早期部署历史。下文早期实验记录仅供追溯，当前进度以本段及路线图阶段 10 为准。
+
+M3 代码与本地验证已完成，生产数据库迁移、服务发布与备份恢复验收尚未执行。Fastify 和 Worker 共用 `shared-contract/research.mjs`，已支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。无数据库时核心接口返回 503，普通事件返回 202/persisted:false，AI 仍可 fallback。
+
+- [M3 实现、测试与部署步骤](docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md)
+- [当前部署路线与待办](docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md)
+- [已确认的共享契约](docs/M2_SHARED_API_CONTRACT.md)
+
+本地验证：`npm run test:research`、`npm run test:contract:unit`、`npm run test:contract:fastify-local`、`npm --prefix cloudflare-worker run check`。先在 `backend/` 和 `cloudflare-worker/` 安装依赖。生产静态构建分别使用 `npm run build:cloudflare` / `npm run build:mainland`；原始 `src/` 不作为内地发布产物。
+
 本仓库是 `Resilience_training_programme` 的 Cloudflare 实验线，用来验证：
 
 - 前端是否可以用 Cloudflare Pages 免费部署。

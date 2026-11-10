@@ -3,6 +3,109 @@
   "$id": "https://resilience-training.cloud/schemas/api-v1.json",
   "title": "Resilience Training API v1 shared shapes",
   "$defs": {
+    "moduleId": { "type": "string", "pattern": "^[1-6]-[1-7]$" },
+    "participantCode": { "type": "string", "minLength": 2, "maxLength": 64, "pattern": "^[A-Za-z0-9_-]+$" },
+    "participantStartRequest": {
+      "type": "object",
+      "required": ["participantCode", "participantName"],
+      "properties": {
+        "participantCode": { "$ref": "#/$defs/participantCode" },
+        "participantName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "clientSessionId": { "type": "string", "maxLength": 200 },
+        "metadata": { "type": "object" }
+      }
+    },
+    "sessionIdentity": {
+      "type": "object",
+      "required": ["participantCode", "sessionId"],
+      "properties": {
+        "participantCode": { "$ref": "#/$defs/participantCode" },
+        "sessionId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "moduleRequest": {
+      "allOf": [
+        { "$ref": "#/$defs/sessionIdentity" },
+        { "type": "object", "required": ["moduleId"], "properties": {
+          "moduleId": { "$ref": "#/$defs/moduleId" },
+          "metadata": { "type": "object" }
+        } }
+      ]
+    },
+    "moduleCompleteRequest": {
+      "allOf": [
+        { "$ref": "#/$defs/moduleRequest" },
+        { "type": "object", "properties": {
+          "practiceDurationSeconds": { "type": ["integer", "null"], "minimum": 0, "maximum": 2147483647 },
+          "snapshotHtml": { "type": "string", "maxLength": 500000 }
+        } }
+      ]
+    },
+    "moduleRun": {
+      "type": "object",
+      "required": ["id", "moduleId", "dayIndex", "status", "startedAt", "completedAt", "practiceDurationSeconds", "elapsedDurationSeconds"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "moduleId": { "$ref": "#/$defs/moduleId" },
+        "dayIndex": { "type": "integer", "minimum": 1, "maximum": 42 },
+        "status": { "enum": ["started", "completed"] },
+        "startedAt": { "type": "string" },
+        "completedAt": { "type": ["string", "null"] },
+        "practiceDurationSeconds": { "type": ["integer", "null"], "minimum": 0 },
+        "elapsedDurationSeconds": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "moduleResponse": {
+      "type": "object",
+      "required": ["persisted", "moduleRun", "access"],
+      "properties": {
+        "persisted": { "const": true },
+        "moduleRun": { "$ref": "#/$defs/moduleRun" },
+        "access": { "$ref": "#/$defs/participantAccess" }
+      }
+    },
+    "participantResponse": {
+      "type": "object",
+      "required": ["participantId", "participantCode", "participantName", "sessionId", "persisted", "role", "unlockStartAt", "access"],
+      "properties": {
+        "participantId": { "type": "string", "minLength": 1 },
+        "participantCode": { "$ref": "#/$defs/participantCode" },
+        "participantName": { "type": "string", "minLength": 1 },
+        "sessionId": { "type": "string", "minLength": 1 },
+        "persisted": { "const": true },
+        "role": { "enum": ["participant", "tester", "admin"] },
+        "unlockStartAt": { "type": "string" },
+        "access": { "$ref": "#/$defs/participantAccess" }
+      }
+    },
+    "eventsRequest": {
+      "description": "Invalid individual entries count as rejected; mixed batches are allowed. Identity fields use the normalized sessionIdentity shape.",
+      "allOf": [
+        { "$ref": "#/$defs/sessionIdentity" },
+        { "type": "object", "required": ["events"], "properties": {
+          "events": { "type": "array", "minItems": 1, "maxItems": 100 }
+        } }
+      ]
+    },
+    "eventResponse": {
+      "type": "object",
+      "required": ["accepted", "rejected", "persisted"],
+      "properties": {
+        "accepted": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "rejected": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "persisted": { "type": "boolean" }
+      }
+    },
+    "replayResponse": {
+      "type": "object",
+      "required": ["moduleId", "snapshotHtml", "messages", "persisted"],
+      "properties": {
+        "moduleId": { "$ref": "#/$defs/moduleId" },
+        "snapshotHtml": { "type": ["string", "null"] },
+        "messages": { "type": "array", "items": { "type": "object" } },
+        "persisted": { "const": true }
+      }
+    },
     "error": {
       "type": "object",
       "required": ["error", "code"],

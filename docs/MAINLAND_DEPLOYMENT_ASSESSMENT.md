@@ -95,7 +95,7 @@
 - 公网 IP：`1.117.58.64`。
 - 域名：`resilience-training.cloud`。
 - API DNS：`api.resilience-training.cloud -> 1.117.58.64`，当前仍可通过 HTTP 访问。
-- 服务器已经安装 Node.js、Git、Nginx，并用 systemd 托管 Fastify。
+- 服务器已经安装 Node.js、Git、Nginx，并用 systemd 托管 Fastify。2026-11-10 实机确认 Node.js 为 `v22.22.3`，服务目录为 `/opt/resilience-training-programme/backend`，服务用户为 `ubuntu`。
 - Nginx 已将 80 端口反向代理到 `127.0.0.1:8787`。
 - 服务器曾验证 DeepSeek 真调用成功；当前健康接口仍报告 provider 为 DeepSeek。
 - 原项目本地 `.env.local` 中存在已配置的 DeepSeek 和 session 项，但数据库和 CORS 仍是本地/占位配置；文件已被 Git 忽略。本文件不记录任何密钥值。
@@ -107,14 +107,14 @@
 ### 需要项目负责人或云账号持有人确认
 
 - EdgeOne Pages 在当前腾讯云账号/套餐下的具体内地节点/加速范围和媒体额度；创建临时站点后通过三网实测确认。
-- 生产导出凭证保管人暂不作为 M1 或内地试部署的阻塞项；到 M3 开发受保护导出接口前再确定授权人员和凭证交接方式。
+- 不要求现在指定生产导出凭证保管人；M3 已实现凭证保护，未配置 token 时禁用导出，不影响训练。实际导出前由负责人在对应后端配置 token，见 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
 
 ### 工程上尚未完成
 
 - Cloudflare 当前 16 个文件的改动尚未提交和打标签。
 - 腾讯云 API 没有 HTTPS，生产 CORS 仍是示例域名。
 - 腾讯云 Fastify 只实现健康检查和 AI hook，没有 Cloudflare 版的参与者与研究数据 API。
-- 腾讯云尚无已确认的生产 PostgreSQL、迁移脚本、备份、恢复和监控。
+- 2026-11-10 已确认 PostgreSQL 14.24 在 5432 在线、开机启用且仅监听 localhost；初始无旧项目库。`resilience_programme`、`resilience_owner`、`resilience_app` 已创建并设置 schema/default DML 权限，生产迁移、备份和恢复尚未执行。系统盘可用 31 GB（使用率 19%）。
 - EdgeOne Pages 项目仍需账号持有人在控制台导入 GitHub 仓库并创建；本仓库已备好 Mainland 构建命令和独立输出目录。
 - Worker 与 Fastify 的 AI hook、数据模型和错误响应没有共享契约测试，存在长期漂移风险。
 - 导出接口尚未实现。
@@ -250,14 +250,17 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 
 ### M3：腾讯云 Fastify + PostgreSQL 补齐
 
-- [ ] 把参与者开始/恢复、模块 start/complete/reset、events、replay 接口移植到 Fastify。
-- [ ] 将 D1/SQLite schema 转为 PostgreSQL migrations，并建立事务、唯一约束和幂等规则。
-- [ ] 两端接入共享规则并扩充研究 schema，保存前端练习时长和服务器经过时长；修正 Worker 快照大小/重复完成幂等、回放完成检查、事件校验和鉴权错误分类，详见 M2 验收记录。
-- [ ] 实现测试数据标记、受保护的 CSV/JSON 导出和导出审计。
+- [x] 把参与者开始/恢复、模块 start/complete/reset、events、replay 接口移植到 Fastify，本地 HTTP 契约通过。
+- [x] 将 D1/SQLite schema 转为 PostgreSQL migrations，并建立事务、唯一约束和幂等规则；迁移 SQL 经 PGlite 验证，生产迁移命令待实机执行。
+- [x] 两端接入共享研究服务并扩充研究 schema，保存前端练习时长和服务器经过时长；修正 Worker 快照大小/重复完成幂等、回放完成检查、事件校验和鉴权错误分类。
+- [x] 实现测试数据标记、受保护的 CSV/JSON 导出和导出审计，本地验证隔离、BOM、中文、引号和换行。
+- [x] 提供数据库 owner/运行账号分离、每日备份 service/timer、恢复演练和部署/回滚操作说明，见 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
+- [x] 核对腾讯云服务路径、systemd 用户、Node 版本和磁盘；安装并检查 PostgreSQL 14.24，创建 `resilience_programme`、owner/app 角色，并验证登录属性、数据库/schema 隔离及默认 DML 权限（2026-11-10）。
 - [ ] 配置数据库最小权限账号、自动备份、恢复演练、日志轮换和服务监控。
+- [ ] 腾讯云真实 PostgreSQL 部署迁移、独立连接并发测试；D1 应用 0004 迁移并部署 Worker，重新发布两套前端后验收。
 - [x] 确认不迁移 D1 数据；两个环境独立保存、独立导出。
 
-完成标准：腾讯云环境通过与 Worker 相同的契约和数据隔离测试。
+完成标准：腾讯云环境通过与 Worker 相同的契约和数据隔离测试。当前为“代码和本地验证完成，生产实施待执行”，未完成 M3 线上验收；本轮未修改腾讯云或 Cloudflare 生产服务。
 
 ### M4：恢复正式 HTTPS 与内地前端
 
@@ -287,7 +290,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 2. EdgeOne Pages 临时 HTTPS 站点、Mainland runtime、图片和三网首页访问已通过。
 3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
 4. M2 已完成：契约已全部确认，新 Worker 部署后的现有黑盒 profile 全部通过，完整证据和剩余差异已记录。
-5. 下一步进入 M3，在腾讯云 Fastify + PostgreSQL 实现该契约并补齐两端剩余差异；本次尚未开始数据库迁移。
+5. M3 代码和本地验证完成；按 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md` 在腾讯云部署 PostgreSQL/Fastify，并先迁移 D1 再部署 Worker。生产迁移和备份恢复尚未执行。
 6. 执行 M4/M5 的 HTTPS/CORS、音视频、完整登录流与发布验收，再开放内地正式参与者入口。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。

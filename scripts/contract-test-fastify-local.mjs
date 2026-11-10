@@ -15,7 +15,7 @@ Object.assign(process.env, {
 });
 
 const { createApp } = await import('../backend/dist/app.js');
-const { app } = await createApp();
+const { app } = await createApp({ researchDatabase: null });
 
 try {
     const health = await app.inject({ method: 'GET', url: '/health' });
@@ -69,9 +69,10 @@ try {
         url: '/api/v1/participants/start',
         payload: { participantCode: 'M2_BOUNDARY', participantName: 'M2 Boundary' }
     });
-    assert.equal(m3Boundary.statusCode, 404);
+    assert.equal(m3Boundary.statusCode, 503);
+    assert.equal(m3Boundary.json().code, 'STORAGE_UNAVAILABLE');
 
-    console.log('PASS Fastify local M2 contract and M3 boundary');
+    console.log('PASS Fastify health/AI contract and unavailable storage response');
 } finally {
     await app.close();
 }

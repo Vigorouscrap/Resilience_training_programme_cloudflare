@@ -9,17 +9,9 @@ test('M2 capabilities exist in both deployments', () => {
     }
 });
 
-test('Fastify research-data endpoints remain explicitly assigned to M3', () => {
-    const fastify = DEPLOYMENT_CAPABILITIES.fastify;
-    for (const [name, state] of Object.entries(fastify)) {
-        if (state !== 'missing') continue;
-        assert.equal(CONTRACT_CAPABILITIES[name].milestone, 'M3');
+test('both code adapters implement all declared routes; production rollout is separate', () => {
+    for (const deployment of Object.values(DEPLOYMENT_CAPABILITIES)) {
+        assert.deepEqual(Object.keys(deployment).sort(), Object.keys(CONTRACT_CAPABILITIES).sort());
+        assert.ok(Object.values(deployment).every((state) => state === 'implemented'));
     }
-});
-
-test('Cloudflare export is the only missing Worker contract capability', () => {
-    const missing = Object.entries(DEPLOYMENT_CAPABILITIES.cloudflare)
-        .filter(([, state]) => state === 'missing')
-        .map(([name]) => name);
-    assert.deepEqual(missing, ['export']);
 });

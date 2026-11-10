@@ -1,6 +1,6 @@
 # M2 部署验收记录
 
-日期：2026-11-09（Asia/Shanghai）。状态：M2 契约与本轮部署验收通过；M3 尚未启动。
+日期：2026-11-09（Asia/Shanghai）。本记录保留 M2 交接时状态：M2 契约与本轮部署验收通过，当时 M3 尚未启动。后续进展见 [M3 实现与部署](M3_IMPLEMENTATION_AND_DEPLOYMENT.md)。
 
 负责人确认已部署 Worker 后，针对 `https://resilience-ai-worker.1362758164.workers.dev` 执行：
 

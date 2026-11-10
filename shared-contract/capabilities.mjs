@@ -20,17 +20,17 @@ export const DEPLOYMENT_CAPABILITIES = Object.freeze({
         moduleRunReset: 'implemented',
         events: 'implemented',
         conversationReplay: 'implemented',
-        export: 'missing'
+        export: 'implemented'
     }),
     fastify: Object.freeze({
         health: 'implemented',
         aiHooks: 'implemented',
-        participantStart: 'missing',
-        moduleRunStart: 'missing',
-        moduleRunComplete: 'missing',
-        moduleRunReset: 'missing',
-        events: 'missing',
-        conversationReplay: 'missing',
-        export: 'missing'
+        participantStart: 'implemented',
+        moduleRunStart: 'implemented',
+        moduleRunComplete: 'implemented',
+        moduleRunReset: 'implemented',
+        events: 'implemented',
+        conversationReplay: 'implemented',
+        export: 'implemented'
     })
 });

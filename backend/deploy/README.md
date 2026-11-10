@@ -1,5 +1,7 @@
 # 轻量云服务器部署说明
 
+2026-11-09 更新：M3 已补齐真实研究接口与 PostgreSQL 数据层。当前部署以 [M3 实现与部署](../../docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md) 为准；下文“数据库可占位”等内容仅适用于早期 AI 演示。登录、进度和导出必须连接真实 PostgreSQL。必须保留仓库根目录的 `shared-contract/`，不能只上传 `backend/dist/`；迁移使用 `npm run db:migrate`，不使用历史 Prisma 模型。
+
 本文件写给后续实际部署和联调时使用，目标是让当前后端可以部署到腾讯云 Lighthouse、阿里云 ECS 或其它轻量 Linux 云服务器上。
 
 当前部署方案尽量不绑定某一家云厂商：

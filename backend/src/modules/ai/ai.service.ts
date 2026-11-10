@@ -87,7 +87,7 @@ export class AiService {
                 sessionId,
                 hook,
                 input,
-                error instanceof Error ? error.message : 'unknown_error'
+                'provider_unavailable'
             );
         }
     }

@@ -33,6 +33,10 @@ export interface AppEnv {
     deepseekTimeoutMs: number;
     databaseUrl: string;
     sessionSecret: string;
+    testerParticipantCodes: string[];
+    adminParticipantCodes: string[];
+    adminExportToken: string;
+    exportCredentialId: string;
 }
 
 function requireEnv(name: (typeof REQUIRED_ENV_KEYS)[number]): string {
@@ -71,6 +75,10 @@ export function loadEnv(): AppEnv {
         deepseekModel: requireEnv('DEEPSEEK_MODEL'),
         deepseekTimeoutMs: parsePositiveInteger(process.env.DEEPSEEK_TIMEOUT_MS, 15000),
         databaseUrl: requireEnv('DATABASE_URL'),
-        sessionSecret: requireEnv('SESSION_SECRET')
+        sessionSecret: requireEnv('SESSION_SECRET'),
+        testerParticipantCodes: String(process.env.TESTER_PARTICIPANT_CODES || '').split(',').map((value) => value.trim().toUpperCase()).filter(Boolean),
+        adminParticipantCodes: String(process.env.ADMIN_PARTICIPANT_CODES || '').split(',').map((value) => value.trim().toUpperCase()).filter(Boolean),
+        adminExportToken: String(process.env.ADMIN_EXPORT_TOKEN || '').trim(),
+        exportCredentialId: String(process.env.EXPORT_CREDENTIAL_ID || 'primary').trim()
     };
 }

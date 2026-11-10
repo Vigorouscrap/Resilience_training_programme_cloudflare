@@ -29,6 +29,7 @@ export function validateAiHookRequestBody(input: unknown): AiHookRequestBody {
             : undefined;
 
     return {
+        participantCode: typeof payload.participantCode === 'string' ? payload.participantCode.trim().toUpperCase() : undefined,
         sessionId: sessionId || undefined,
         moduleId,
         step,

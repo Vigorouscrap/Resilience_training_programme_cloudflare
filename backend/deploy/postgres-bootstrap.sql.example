@@ -1,0 +1,18 @@
+-- Run once as the local PostgreSQL administrator on a NEW database.
+-- Inspect existing databases/tables first. This intentionally fails if roles or DB exist.
+\set ON_ERROR_STOP on
+CREATE ROLE resilience_owner LOGIN;
+\password resilience_owner
+CREATE ROLE resilience_app LOGIN;
+\password resilience_app
+CREATE DATABASE resilience_programme OWNER resilience_owner;
+REVOKE CONNECT ON DATABASE resilience_programme FROM PUBLIC;
+GRANT CONNECT ON DATABASE resilience_programme TO resilience_owner, resilience_app;
+\connect resilience_programme
+ALTER SCHEMA public OWNER TO resilience_owner;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA public TO resilience_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE resilience_owner IN SCHEMA public
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO resilience_app;
+-- After migrations, as owner/admin:
+-- REVOKE ALL ON TABLE research_migrations FROM resilience_app;

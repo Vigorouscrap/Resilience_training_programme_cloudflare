@@ -5,6 +5,7 @@
 
 import { PageManager } from './pages.js';
 import { PracticeTimer } from './timer.js';
+import { ResearchEventQueue } from './services/researchEventQueue.js';
 import { DialogueManager } from './dialogue.js';
 import { weekTitles, subModuleNames } from './data.js';
 import { skipCurrentWait } from './ui.js';
@@ -200,17 +201,17 @@ function initApp() {
     );
 
     const dialogueManager = new DialogueManager(chatMessages, inputArea, userInput);
-    let pendingResearchEvents = [];
-    let researchEventTimer = null;
-    const flushResearchEvents = () => {
-        if (!pendingResearchEvents.length) return;
-        const batch = pendingResearchEvents.splice(0, 100);
-        void recordResearchEvents(batch).catch(() => {});
+    dialogueManager.getPracticeDurationSeconds = () => {
+        practiceTimer.stop();
+        return practiceTimer.seconds;
     };
+    const eventQueue = new ResearchEventQueue(recordResearchEvents, {
+        schedule: (callback, delay) => (globalThis.__RESILIENCE_TESTING__?.nativeSetTimeout || setTimeout)(callback, delay)
+    });
+    const flushResearchEvents = () => { void eventQueue.flush(); };
     globalThis.__RESILIENCE_RECORD_EVENT__ = (event) => {
         if (!participantSession || !dialogueManager.currentModule || !event || globalThis.__RESILIENCE_REPLAYING__) return;
-        pendingResearchEvents.push({ ...event, moduleId: dialogueManager.currentModule, step: dialogueManager.step });
-        if (!researchEventTimer) researchEventTimer = setTimeout(() => { researchEventTimer = null; flushResearchEvents(); }, 200);
+        eventQueue.push({ ...event, moduleId: dialogueManager.currentModule, step: dialogueManager.step }, participantSession);
     };
     let moduleRunStartPromise = null;
     let completionNotice = document.getElementById('moduleCompletionNotice');
@@ -395,6 +396,8 @@ function initApp() {
             return null;
         }).catch(() => {});
         dialogueManager.onModuleCompleted = (response) => {
+            practiceTimer.stop();
+            flushResearchEvents();
             syncParticipantAccess(response.access, { lastModuleCompleted: moduleMeta.moduleId });
             showCompletionNotice(moduleMeta, response);
         };

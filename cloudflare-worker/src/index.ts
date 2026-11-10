@@ -1,10 +1,5 @@
-import {
-    createResearchDataRepository,
-    ModuleRunAccessError,
-    ModuleRunValidationError,
-    RecordConversationMessageInput,
-    RecordModuleEventInput
-} from './data/research-repository.js';
+import { SUPPORTED_HOOKS, SUPPORTED_HOOK_IDS } from '../../shared-contract/index.mjs';
+import { ResearchService, createD1Adapter, handleResearchRequest } from '../../shared-contract/research.mjs';
 
 export interface Env {
     DEEPSEEK_API_KEY: string;
@@ -16,6 +11,8 @@ export interface Env {
     ADMIN_PARTICIPANT_CODES?: string;
     REQUIRE_PERSISTENCE?: string;
     DB?: D1Database;
+    ADMIN_EXPORT_TOKEN?: string;
+    EXPORT_CREDENTIAL_ID?: string;
 }
 
 interface AiHookRequestBody {
@@ -28,47 +25,6 @@ interface AiHookRequestBody {
     context?: Record<string, unknown>;
 }
 
-interface ParticipantStartRequestBody {
-    participantCode?: string;
-    clientSessionId?: string;
-    participantName?: string;
-    metadata?: Record<string, unknown>;
-}
-
-interface ModuleRunRequestBody {
-    participantCode?: string;
-    sessionId?: string;
-    moduleId?: string;
-    metadata?: Record<string, unknown>;
-    snapshotHtml?: string;
-}
-
-interface EventsRequestBody {
-    participantCode?: string;
-    sessionId?: string;
-    events?: Array<{
-        type?: 'conversation_message' | 'module_event';
-        moduleId?: string;
-        hookId?: string;
-        messageRole?: RecordConversationMessageInput['messageRole'];
-        messageText?: string;
-        source?: RecordConversationMessageInput['source'];
-        eventType?: string;
-        step?: number | string | null;
-        sequenceIndex?: number | null;
-        durationMs?: number | null;
-        userInput?: string;
-        choiceValue?: string;
-        context?: Record<string, unknown>;
-        metadata?: Record<string, unknown>;
-    }>;
-}
-
-interface ReplayRequestBody {
-    participantCode?: string;
-    sessionId?: string;
-    moduleId?: string;
-}
 interface HookVariant {
     key: string;
     systemPrompt: string;
@@ -550,7 +506,7 @@ async function callDeepSeek(env: Env, hook: HookDefinition, variant: HookVariant
 
 async function handleHookRequest(request: Request, env: Env, hookId: string, corsHeaders: HeadersInit): Promise<Response> {
     const hook = hooks[hookId];
-    if (!hook) {
+    if (!hook || !SUPPORTED_HOOKS.some((item) => item.hookId === hookId && item.moduleId === hook.moduleId)) {
         return jsonResponse({ error: `Unknown hookId: ${hookId}`, code: 'UNKNOWN_HOOK' }, 404, corsHeaders);
     }
 
@@ -559,6 +515,12 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
         body = await request.json();
     } catch {
         return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
+    }
+
+    if (!body || typeof body !== 'object' || Array.isArray(body)
+        || typeof body.userInput !== 'string' || typeof body.moduleId !== 'string'
+        || (body.step != null && !(typeof body.step === 'string' || (typeof body.step === 'number' && Number.isFinite(body.step))))) {
+        return jsonResponse({ error: 'Invalid AI hook request fields.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
     }
 
     const userInput = String(body.userInput || '').trim();
@@ -589,15 +551,14 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
             fallbackUsed = false;
         }
     } catch (error) {
-        console.warn('AI hook fallback used', hookId, error instanceof Error ? error.message : error);
+        console.warn('AI hook fallback used', hookId);
     }
 
     if (env.DB && body.sessionId && body.moduleId && body.participantCode) {
         try {
-            const repository = createResearchDataRepository(env.DB);
-            const context = await repository.resolveParticipant(String(body.participantCode), String(body.sessionId));
+            const repository = createResearchService(env);
             await repository.recordAiCallEvent({
-                participantId: context.participantId,
+                participantCode: String(body.participantCode),
                 sessionId: String(body.sessionId),
                 moduleId: String(body.moduleId),
                 hookId,
@@ -611,7 +572,7 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
                 metadata: { runtime: 'cloudflare-worker' }
             });
         } catch (error) {
-            console.warn('AI event persistence failed', error instanceof Error ? error.message : error);
+            console.warn('AI event persistence failed');
         }
     }
 
@@ -631,262 +592,16 @@ async function handleHookRequest(request: Request, env: Env, hookId: string, cor
     }, 200, corsHeaders);
 }
 
-function validateParticipantCode(value: string): { ok: boolean; normalizedValue: string; error?: string } {
-    const normalizedValue = value.trim().toUpperCase();
-    if (!normalizedValue) {
-        return { ok: false, normalizedValue, error: 'Missing required field: participantCode' };
-    }
-    if (normalizedValue.length < 2 || normalizedValue.length > 64) {
-        return { ok: false, normalizedValue, error: 'participantCode must be 2-64 characters long.' };
-    }
-    if (!/^[A-Z0-9_-]+$/.test(normalizedValue)) {
-        return { ok: false, normalizedValue, error: 'participantCode can only contain letters, numbers, underscores, and hyphens.' };
-    }
-    return { ok: true, normalizedValue };
+function createResearchService(env: Env): ResearchService {
+    const codes = (value?: string) => String(value || '').split(',').map((code) => code.trim().toUpperCase()).filter(Boolean);
+    return new ResearchService(createD1Adapter(env.DB), {
+        testerParticipantCodes: codes(env.TESTER_PARTICIPANT_CODES),
+        adminParticipantCodes: codes(env.ADMIN_PARTICIPANT_CODES),
+        adminExportToken: env.ADMIN_EXPORT_TOKEN,
+        exportCredentialId: env.EXPORT_CREDENTIAL_ID
+    });
 }
 
-function parseParticipantCodeList(value: string | undefined): string[] {
-    return String(value || '')
-        .split(',')
-        .map((item) => item.trim().toUpperCase())
-        .filter(Boolean);
-}
-
-function normalizeParticipantName(value: string): string {
-    return value.trim().replace(/\s+/g, ' ').toLowerCase();
-}
-
-function validateParticipantName(value: string): { ok: boolean; normalizedValue: string; displayValue: string; error?: string } {
-    const displayValue = value.trim().replace(/\s+/g, ' ');
-    const normalizedValue = normalizeParticipantName(displayValue);
-    if (!normalizedValue) {
-        return { ok: false, normalizedValue, displayValue, error: 'Missing required field: participantName' };
-    }
-    if (displayValue.length > 80) {
-        return { ok: false, normalizedValue, displayValue, error: 'participantName must be 80 characters or fewer.' };
-    }
-    return { ok: true, normalizedValue, displayValue };
-}
-async function handleParticipantStartRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
-    let body: ParticipantStartRequestBody;
-    try {
-        body = await request.json();
-    } catch {
-        return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    }
-
-    const validation = validateParticipantCode(String(body.participantCode || ''));
-    if (!validation.ok) {
-        return jsonResponse({ error: validation.error, code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    }
-
-    const nameValidation = validateParticipantName(String(body.participantName || ''));
-    if (!nameValidation.ok) {
-        return jsonResponse({ error: nameValidation.error, code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    }
-
-    const participantName = nameValidation.displayValue;
-
-    const input = {
-        participantCode: validation.normalizedValue,
-        participantName,
-        clientSessionId: String(body.clientSessionId || '').trim() || undefined,
-        userAgent: request.headers.get('User-Agent') || '',
-        testerParticipantCodes: parseParticipantCodeList(env.TESTER_PARTICIPANT_CODES),
-        adminParticipantCodes: parseParticipantCodeList(env.ADMIN_PARTICIPANT_CODES),
-        metadata: {
-            ...(body.metadata || {}),
-            participantName,
-            verification: {
-                source: 'code-name-entry'
-            }
-        }
-    };
-    try {
-        const repository = createResearchDataRepository(env.DB);
-        const result = await repository.startParticipantSession(input);
-        return jsonResponse({
-            ...result,
-            participantName,
-            metadata: {
-                runtime: 'cloudflare-worker',
-                storage: result.persisted ? 'd1' : 'memory-noop'
-            }
-        }, 200, corsHeaders);
-    } catch (error) {
-        console.warn('Participant session persistence failed', error instanceof Error ? error.message : error);
-        const persistenceRequired = String(env.REQUIRE_PERSISTENCE || '').toLowerCase() === 'true';
-        if (env.DB || persistenceRequired) {
-            return jsonResponse({ error: 'Research data storage is unavailable.', code: 'STORAGE_UNAVAILABLE' }, 503, corsHeaders);
-        }
-
-        const fallbackRepository = createResearchDataRepository(undefined);
-        const result = await fallbackRepository.startParticipantSession(input);
-        return jsonResponse({
-            ...result,
-            participantName,
-            metadata: {
-                runtime: 'cloudflare-worker',
-                storage: 'memory-noop',
-                warning: 'Persistence is unavailable; returned a non-persisted session.'
-            }
-        }, 200, corsHeaders);
-    }
-}
-
-async function handleModuleRunRequest(
-    request: Request,
-    env: Env,
-    corsHeaders: HeadersInit,
-    complete: boolean,
-    reset = false
-): Promise<Response> {
-    let body: ModuleRunRequestBody;
-    try {
-        body = await request.json();
-    } catch {
-        return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    }
-
-    const codeValidation = validateParticipantCode(String(body.participantCode || ''));
-    if (!codeValidation.ok) {
-        return jsonResponse({ error: codeValidation.error, code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    }
-
-    const sessionId = String(body.sessionId || '').trim();
-    const moduleId = String(body.moduleId || '').trim();
-    if (!sessionId || !moduleId) {
-        return jsonResponse({ error: 'sessionId and moduleId are required.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    }
-
-    const input = {
-        participantCode: codeValidation.normalizedValue,
-        sessionId,
-        moduleId,
-            metadata: {
-                ...(body.metadata || {}),
-                runtime: 'cloudflare-worker'
-            },
-            snapshotHtml: complete ? String(body.snapshotHtml || body.metadata?.snapshotHtml || '') : undefined
-    };
-
-    try {
-        const repository = createResearchDataRepository(env.DB);
-        const result = reset
-            ? await repository.resetModuleRun(input)
-            : complete
-                ? await repository.completeModuleRun(input)
-                : await repository.startModuleRun(input);
-        return jsonResponse({
-            ...result,
-            metadata: {
-                runtime: 'cloudflare-worker',
-                storage: result.persisted ? 'd1' : 'memory-noop'
-            }
-        }, 200, corsHeaders);
-    } catch (error) {
-        if (error instanceof ModuleRunAccessError) {
-            return jsonResponse({
-                error: error.message,
-                code: reset ? 'RESET_FORBIDDEN' : 'MODULE_LOCKED'
-            }, 403, corsHeaders);
-        }
-        if (error instanceof ModuleRunValidationError) {
-            const moduleNotCompleted = reset && error.message === 'Only completed modules can be reset.';
-            return jsonResponse({
-                error: error.message,
-                code: moduleNotCompleted ? 'MODULE_NOT_COMPLETED' : 'INVALID_MODULE_ID'
-            }, moduleNotCompleted ? 409 : 400, corsHeaders);
-        }
-
-        console.warn('Module run persistence failed', error instanceof Error ? error.message : error);
-        const persistenceRequired = String(env.REQUIRE_PERSISTENCE || '').toLowerCase() === 'true';
-        if (env.DB || persistenceRequired) {
-            return jsonResponse({ error: 'Research data storage is unavailable.', code: 'STORAGE_UNAVAILABLE' }, 503, corsHeaders);
-        }
-
-        const fallbackRepository = createResearchDataRepository(undefined);
-        const result = reset
-            ? await fallbackRepository.resetModuleRun(input)
-            : complete
-                ? await fallbackRepository.completeModuleRun(input)
-                : await fallbackRepository.startModuleRun(input);
-        return jsonResponse({
-            ...result,
-            metadata: {
-                runtime: 'cloudflare-worker',
-                storage: 'memory-noop',
-                warning: 'Persistence is unavailable; returned a non-persisted module run.'
-            }
-        }, 200, corsHeaders);
-    }
-}
-
-async function handleEventsRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
-    let body: EventsRequestBody;
-    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders); }
-    const codeValidation = validateParticipantCode(String(body.participantCode || ''));
-    const sessionId = String(body.sessionId || '').trim();
-    const events = Array.isArray(body.events) ? body.events.slice(0, 100) : [];
-    if (!codeValidation.ok || !sessionId || !events.length) return jsonResponse({ error: 'participantCode, sessionId and events are required.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    try {
-        const repository = createResearchDataRepository(env.DB);
-        const context = await repository.resolveParticipant(codeValidation.normalizedValue, sessionId);
-        let accepted = 0;
-        let rejected = 0;
-        for (const event of events) {
-            const moduleId = String(event.moduleId || '').trim();
-            if (!moduleId) { rejected += 1; continue; }
-            if (event.type === 'conversation_message' && event.messageText && event.messageRole && event.source) {
-                await repository.recordConversationMessage({
-                    participantId: context.participantId, sessionId, moduleId,
-                    hookId: String(event.hookId || ''), messageRole: event.messageRole,
-                    messageText: String(event.messageText), source: event.source,
-                    step: event.step, sequenceIndex: event.sequenceIndex, durationMs: event.durationMs,
-                    metadata: event.metadata
-                });
-                accepted += 1;
-            } else if (event.type === 'module_event' && event.eventType) {
-                await repository.recordModuleEvent({
-                    participantId: context.participantId, sessionId, moduleId,
-                    eventType: String(event.eventType), step: event.step,
-                    userInput: event.userInput, choiceValue: event.choiceValue, context: event.context
-                });
-                accepted += 1;
-            } else {
-                rejected += 1;
-            }
-        }
-        return jsonResponse({ accepted, rejected, persisted: Boolean(env.DB) }, 202, corsHeaders);
-    } catch (error) {
-        console.warn('Event persistence failed', error instanceof Error ? error.message : error);
-        return jsonResponse({
-            error: 'Research data storage is unavailable.',
-            code: 'STORAGE_UNAVAILABLE',
-            accepted: 0,
-            rejected: events.length,
-            persisted: false
-        }, 202, corsHeaders);
-    }
-}
-
-async function handleReplayRequest(request: Request, env: Env, corsHeaders: HeadersInit): Promise<Response> {
-    let body: ReplayRequestBody;
-    try { body = await request.json(); } catch { return jsonResponse({ error: 'Invalid JSON body.', code: 'VALIDATION_ERROR' }, 400, corsHeaders); }
-    const codeValidation = validateParticipantCode(String(body.participantCode || ''));
-    const sessionId = String(body.sessionId || '').trim();
-    const moduleId = String(body.moduleId || '').trim();
-    if (!codeValidation.ok || !sessionId || !moduleId) return jsonResponse({ error: 'participantCode, sessionId and moduleId are required.', code: 'VALIDATION_ERROR' }, 400, corsHeaders);
-    try {
-        const repository = createResearchDataRepository(env.DB);
-        const replay = await repository.getConversationReplay({ participantCode: codeValidation.normalizedValue, sessionId, moduleId });
-        return jsonResponse({ moduleId, ...replay, persisted: Boolean(env.DB) }, 200, corsHeaders);
-    } catch (error) {
-        if (error instanceof ModuleRunValidationError) return jsonResponse({ error: error.message, code: 'INVALID_MODULE_ID' }, 400, corsHeaders);
-        console.warn('Conversation replay failed', error instanceof Error ? error.message : error);
-        return jsonResponse({ error: 'Research data storage is unavailable.', code: 'STORAGE_UNAVAILABLE' }, env.DB ? 503 : 200, corsHeaders);
-    }
-}
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         const corsHeaders = buildCorsHeaders(request, env);
@@ -904,29 +619,13 @@ export default {
                 version: 'v1',
                 provider: 'deepseek',
                 runtime: 'cloudflare-workers',
-                hooks: Object.keys(hooks),
+                hooks: SUPPORTED_HOOK_IDS,
                 timestamp: new Date().toISOString()
             }, 200, corsHeaders);
         }
 
-        if (request.method === 'POST' && url.pathname === '/api/v1/participants/start') {
-            return handleParticipantStartRequest(request, env, corsHeaders);
-        }
-        if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/start') {
-            return handleModuleRunRequest(request, env, corsHeaders, false);
-        }
-        if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/complete') {
-            return handleModuleRunRequest(request, env, corsHeaders, true);
-        }
-        if (request.method === 'POST' && url.pathname === '/api/v1/module-runs/reset') {
-            return handleModuleRunRequest(request, env, corsHeaders, false, true);
-        }
-        if (request.method === 'POST' && url.pathname === '/api/v1/events') {
-            return handleEventsRequest(request, env, corsHeaders);
-        }
-        if (request.method === 'POST' && url.pathname === '/api/v1/conversation/replay') {
-            return handleReplayRequest(request, env, corsHeaders);
-        }
+        const researchResponse = await handleResearchRequest(request, createResearchService(env), corsHeaders as Record<string, string>);
+        if (researchResponse) return researchResponse;
         const hookMatch = url.pathname.match(/^\/api\/v1\/ai\/hooks\/([^/]+)$/);
         if (request.method === 'POST' && hookMatch) {
             return handleHookRequest(request, env, decodeURIComponent(hookMatch[1]), corsHeaders);

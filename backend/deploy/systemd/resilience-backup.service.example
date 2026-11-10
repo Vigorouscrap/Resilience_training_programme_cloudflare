@@ -1,0 +1,10 @@
+[Unit]
+Description=Resilience PostgreSQL daily backup
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+UMask=0077
+ExecStart=/bin/bash /opt/resilience-training-programme/backend/deploy/backup-postgres.sh

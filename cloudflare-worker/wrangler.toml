@@ -11,7 +11,10 @@ CORS_ORIGIN = "*"
 TESTER_PARTICIPANT_CODES = "C_TEST"
 ADMIN_PARTICIPANT_CODES = ""
 REQUIRE_PERSISTENCE = "true"
-# D1 持久化是生产研究流程的必要条件；未成功写入时 Worker 返回 503。
+# M3 核心状态始终要求持久化；即使设为 false 也不能假报成功。
+# 普通事件失败返回 202/persisted:false；AI 日志失败不影响回复。
+EXPORT_CREDENTIAL_ID = "cloudflare-primary"
+# ADMIN_EXPORT_TOKEN must be set with wrangler secret put, never in this file.
 [[d1_databases]]
 binding = "DB"
 database_name = "resilience_research"

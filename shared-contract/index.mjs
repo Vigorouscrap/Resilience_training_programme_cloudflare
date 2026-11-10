@@ -52,6 +52,7 @@ export function normalizeParticipantCode(value) {
 
 export function validateParticipantCode(value) {
     const normalizedValue = normalizeParticipantCode(value);
+    if (typeof value !== 'string') return { ok: false, normalizedValue, error: 'participantCode must be a string.' };
     if (!normalizedValue) {
         return { ok: false, normalizedValue, error: 'Missing required field: participantCode' };
     }
@@ -71,6 +72,7 @@ export function normalizeParticipantName(value) {
 export function validateParticipantName(value) {
     const displayValue = String(value || '').trim().replace(/\s+/g, ' ');
     const normalizedValue = normalizeParticipantName(displayValue);
+    if (typeof value !== 'string') return { ok: false, normalizedValue, displayValue, error: 'participantName must be a string.' };
     if (!normalizedValue) {
         return { ok: false, normalizedValue, displayValue, error: 'Missing required field: participantName' };
     }

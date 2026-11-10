@@ -47,3 +47,13 @@ backend/.env.local
   - 后续登录和会话签名使用
 - `CORS_ORIGIN`
   - 当前前端访问来源
+- `TESTER_PARTICIPANT_CODES` / `ADMIN_PARTICIPANT_CODES`
+  - 逗号分隔的服务端角色编号；客户端不能自授角色，默认导出排除这些测试身份。
+- `ADMIN_EXPORT_TOKEN`
+  - 独立的研究导出 Bearer Token，留空禁用导出，不影响训练。两套环境分别配置。
+- `EXPORT_CREDENTIAL_ID`
+  - 非敏感的导出凭证标识，写入审计，不能填写 token 原文。
+- `MIGRATION_DATABASE_URL`
+  - 仅迁移命令使用的 schema owner 连接串；运行服务的 `DATABASE_URL` 使用最小权限账号。不必把 owner 密码保存在服务 `.env`。
+
+服务器 `.env` 更新前保留已有值，不直接用模板覆盖。当前真实研究部署流程见 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。

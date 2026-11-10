@@ -29,7 +29,7 @@ function removeStorage(key) {
 }
 
 function createClientSessionId() {
-    return `web_\${Date.now()}_\${Math.random().toString(36).slice(2, 10)}`;
+    return `web_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function normalizeParticipantCode(value) {
@@ -179,7 +179,9 @@ export async function completeModuleRun(moduleId, metadata = {}) {
         participantCode: session.participantCode,
         sessionId: session.sessionId,
         moduleId,
-        metadata
+        practiceDurationSeconds: metadata.practiceDurationSeconds ?? null,
+        snapshotHtml: metadata.snapshotHtml || '',
+        metadata: Object.fromEntries(Object.entries(metadata).filter(([key]) => !['practiceDurationSeconds', 'snapshotHtml'].includes(key)))
     });
 }
 
@@ -195,8 +197,7 @@ export async function resetModuleRun(moduleId, metadata = {}) {
     });
 }
 
-export async function recordResearchEvents(events) {
-    const session = getParticipantSession();
+export async function recordResearchEvents(events, session = getParticipantSession()) {
     if (!session || !Array.isArray(events) || !events.length) return null;
     return postJson('/api/v1/events', {
         participantCode: session.participantCode,

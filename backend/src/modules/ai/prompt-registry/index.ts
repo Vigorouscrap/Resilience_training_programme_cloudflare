@@ -1,4 +1,5 @@
 import type { HookDefinition, HookPromptVariant } from '../../../shared/types/ai.js';
+import { SUPPORTED_HOOKS } from '../../../../../shared-contract/index.mjs';
 import { module11IntroReplyHook } from './hooks/module-1-1.intro-reply.js';
 import { module13BodySensationReflectionHook } from './hooks/module-1-3.body-sensation-reflection.js';
 import { module13ThoughtReflectionHook } from './hooks/module-1-3.thought-reflection.js';
@@ -24,7 +25,8 @@ const hooks = [
 ] satisfies HookDefinition[];
 
 export function getHookDefinition(hookId: string): HookDefinition {
-    const hook = hooks.find(item => item.hookId === hookId);
+    const definition = SUPPORTED_HOOKS.find(item => item.hookId === hookId);
+    const hook = hooks.find(item => item.hookId === hookId && item.moduleId === definition?.moduleId);
     if (!hook) {
         throw new Error(`Unknown AI hook: ${hookId}`);
     }

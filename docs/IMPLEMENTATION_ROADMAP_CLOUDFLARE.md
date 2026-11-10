@@ -923,7 +923,8 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] M2 映射规则：Cloudflare Pages 固定使用 Worker/D1，EdgeOne Pages 固定使用腾讯云 API/PostgreSQL；生产 URL 参数不能切换后端。
 - [x] M1：EdgeOne 临时/正式 HTTPS 站点、Mainland runtime、图片、三网首页访问及 `www.resilience-training.cloud` 绑定均已完成（2026-11-09）；登录后的音视频及 API 流程移至 M4/M5。
 - [x] M2：负责人已部署 Worker 更新，线上 health/core/ai/research 全部通过，包含 AI 新字段/错误码、事件计数、跨 session 回放和身份隔离。完成范围为契约、测试框架和本轮兼容修正；生产固定后端映射，完整业务验收的未覆盖项见 `docs/M2_DEPLOYMENT_VALIDATION.md`。
-- [ ] M3：为 Fastify 实现参与者、模块 run、reset、事件、回放、导出和 PostgreSQL migrations；两端接入共享规则、补齐两个时长字段及 Worker 剩余契约差异，并扩展故障/边界测试。
+- [x] M3 代码与本地验证：Fastify 研究接口、PostgreSQL migrations、共享研究服务、双时长、事件有界重试、测试数据标记及两端导出完成；并发完成、SQL 回滚、隔离、回放只读、AI fallback 和本地 HTTP 契约通过。详见 `docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
+- [ ] M3 生产验收：腾讯云真实 PostgreSQL/Fastify 部署、最小权限、独立连接并发、备份恢复、日志/磁盘检查；D1 0004 迁移及 Worker/两套前端发布与回归。当前尚未执行生产变更。
 - [ ] M4：恢复 `api.resilience-training.cloud` HTTPS，部署内地静态前端，修正腾讯云 CORS 并收紧 Worker CORS。
 - [ ] M5：完成 42 模块、三网、手机端、异常恢复、数据隔离、导出和备份恢复验收。
 

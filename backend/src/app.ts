@@ -9,12 +9,24 @@ import { ModuleStateService } from './modules/module-state/module-state.service.
 import { SessionRepository } from './modules/sessions/session.repository.js';
 import { SessionService } from './modules/sessions/session.service.js';
 import { listHookDefinitions } from './modules/ai/prompt-registry/index.js';
+import { ResearchService, type ResearchDatabase } from '../../shared-contract/research.mjs';
+import { createPostgresDatabase, createResearchPool } from './research/postgres.js';
+import { registerResearchRoutes } from './research/routes.js';
 
-export async function createApp() {
+export async function createApp(options: { researchDatabase?: ResearchDatabase | null } = {}) {
     const env = loadEnv();
     const runtime = buildRuntimeConfig(env);
     const app = Fastify({
-        logger: env.nodeEnv !== 'test'
+        logger: env.nodeEnv !== 'test',
+        bodyLimit: 4 * 1024 * 1024
+    });
+    const pool = options.researchDatabase === undefined ? createResearchPool(env.databaseUrl) : null;
+    const researchService = new ResearchService(pool ? createPostgresDatabase(pool) : options.researchDatabase || null, env);
+    app.addHook('onClose', async () => { if (pool) await pool.end(); });
+    app.setNotFoundHandler((_request, reply) => reply.code(404).send({ error: 'Not found.', code: 'NOT_FOUND' }));
+    app.setErrorHandler((error, _request, reply) => {
+        const status = (error as { statusCode?: number }).statusCode || 500;
+        reply.code(status).send({ error: status < 500 ? 'Invalid request.' : 'Request failed.', code: status < 500 ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR' });
     });
 
     const sessionRepository = new SessionRepository();
@@ -62,7 +74,8 @@ export async function createApp() {
         }
     });
 
-    await registerAiRoutes(app, aiService);
+    await registerAiRoutes(app, aiService, researchService);
+    await registerResearchRoutes(app, researchService);
 
     return {
         app,

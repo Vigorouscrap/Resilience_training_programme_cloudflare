@@ -1,12 +1,13 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AiService } from './ai.service.js';
 import { validateAiHookRequestBody } from './schemas/ai-reply.schema.js';
+import type { ResearchService } from '../../../../shared-contract/research.mjs';
 
 interface HookRouteParams {
     hookId: string;
 }
 
-export async function registerAiRoutes(app: FastifyInstance, aiService: AiService): Promise<void> {
+export async function registerAiRoutes(app: FastifyInstance, aiService: AiService, researchService: ResearchService): Promise<void> {
     app.post('/api/v1/ai/hooks/:hookId', async (
         request: FastifyRequest<{ Params: HookRouteParams }>,
         reply: FastifyReply
@@ -24,6 +25,16 @@ export async function registerAiRoutes(app: FastifyInstance, aiService: AiServic
                 context: body.context ?? {}
             });
 
+            if (body.participantCode && body.sessionId) {
+                try {
+                    await researchService.recordAiCallEvent({
+                        ...response, participantCode: body.participantCode, sessionId: body.sessionId,
+                        variant: body.variant || '', userInput: body.userInput
+                    });
+                } catch {
+                    app.log.warn('AI research log was not persisted');
+                }
+            }
             reply.code(200).send(response);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown request error.';
