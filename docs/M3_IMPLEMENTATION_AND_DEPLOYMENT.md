@@ -49,6 +49,8 @@ cd ..
 
 PGlite 是单连接引擎；本地并发测试排队连接，不等同于腾讯云 PostgreSQL 的真实多连接竞争。SQLite 模拟也不能代替 Cloudflare D1 线上验收。实际迁移命令、数据库权限、独立连接并发、备份恢复和完整浏览器流程仍要线上验证，不能据此宣称 M3 已上线。
 
+2026-11-10 已在腾讯云旁路目录 `/opt/resilience-training-programme-m3` 使用 Node.js 22.22.3 完成 `npm ci`、Fastify TypeScript build、8 项共享契约测试及完整 `test:research`，全部通过。测试中的 SQLite ExperimentalWarning、AI event persistence failed、Research storage operation failed 和核心 503/普通事件 202 均为测试主动覆盖的实验 API 或故障注入分支，不代表生产服务故障；测试使用临时 PGlite/SQLite/临时 Fastify，没有连接或写入正式 `resilience_programme`。服务器首次安装报告的 3 个 high severity 已通过发布提交 `1caf07f` 移除未使用 Prisma 工具链解决，服务器更新后应重新 `npm ci` 并以 `npm audit --omit=dev` 确认 0 vulnerabilities。
+
 ## 腾讯云部署顺序
 
 已有服务器：上海 Lighthouse，4 核/4 GB/40 GB，公网 IP `1.117.58.64`。无需购买数据库或迁移 D1。2026-11-10 实机检查确认：服务目录为 `/opt/resilience-training-programme/backend`，systemd 单元为 `/etc/systemd/system/resilience-backend.service`，服务以 Linux 用户 `ubuntu` 运行；Node.js 为 `v22.22.3`；系统盘 40 GB、已用 6.9 GB、可用 31 GB（19%）；服务器尚未安装 `psql`/PostgreSQL。保留已有 DeepSeek 等配置，不直接覆盖 `.env`。
@@ -202,4 +204,4 @@ df -h /
 
 不要直接用仓库里的 systemd 示例覆盖现有单元。实际服务当前以 `ubuntu` 运行，而示例使用 `www-data`；M3 先保持现有可运行用户，数据库访问权限通过独立 PostgreSQL 角色 `resilience_app` 控制。是否进一步更换 Linux 服务用户可在上线稳定后单独加固。
 
-M3 代码已于 2026-11-10 固化到 GitHub 分支 `release/m3-mainland-postgres`，首个实现提交为 `3775c70`；`main` 仍保持 M2 版本，避免 EdgeOne 正式环境在腾讯云数据库迁移前自动发布新前端。服务器应从该发布分支更新完整仓库，再按本指南迁移。生产验收完成后才将发布分支合入 `main`，并把 EdgeOne 前端发布与 D1/Worker 更新纳入同一发布窗口。
+M3 代码已于 2026-11-10 固化到 GitHub 分支 `release/m3-mainland-postgres`，首个实现提交为 `3775c70`，当前经依赖清理后的部署提交为 `1caf07f`；`main` 仍保持 M2 版本，避免 EdgeOne 正式环境在腾讯云数据库迁移前自动发布新前端。服务器应从该发布分支更新完整仓库，再按本指南迁移。生产验收完成后才将发布分支合入 `main`，并把 EdgeOne 前端发布与 D1/Worker 更新纳入同一发布窗口。
