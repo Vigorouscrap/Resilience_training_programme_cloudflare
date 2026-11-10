@@ -108,6 +108,8 @@ unset MIGRATION_DATABASE_URL
 
 上述路径对当前服务器应替换为 `/opt/resilience-training-programme-m3/backend`。旧目录的 `.env` 可在服务器内复制到新目录作为基础，但不能提交 Git；复制后将 `DATABASE_URL` 改为 `resilience_app`，迁移连接串只在当前终端临时输入，不写入 systemd 环境文件。正式切换前保留 `/etc/systemd/system/resilience-backend.service` 备份，并记录旧提交 `746a69d`。
 
+2026-11-10 检查确认旧 `.env` 已包含 AI provider、DeepSeek、PORT、SESSION_SECRET、DATABASE_URL 和 CORS 所需变量，可以作为旁路环境基础；但文件权限为 `0644 ubuntu:ubuntu`，其中的 API key 和 session secret 可被其他本地用户读取。复制前将旧文件收紧为 `0600`，新文件使用 `install -m 600` 创建。只输出变量名核验，不输出或上传值；数据库密码通过隐藏输入临时注入并 URL 编码。
+
 迁移 URL 使用 owner 账号。随后管理员执行 `REVOKE ALL ON TABLE research_migrations FROM resilience_app;`，运行账号只保留研究表 SELECT/INSERT/UPDATE/DELETE 权限。迁移再次执行应显示 up to date。
 
 在服务器已有 `.env` 中更新：
