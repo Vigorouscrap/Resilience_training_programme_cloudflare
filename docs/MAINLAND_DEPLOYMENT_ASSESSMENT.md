@@ -257,6 +257,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 实现测试数据标记、受保护的 CSV/JSON 导出和导出审计，本地验证隔离、BOM、中文、引号和换行。
 - [x] 提供数据库 owner/运行账号分离、每日备份 service/timer、恢复演练和部署/回滚操作说明，见 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
 - [x] 核对腾讯云服务路径、systemd 用户、Node 版本和磁盘；安装并检查 PostgreSQL 14.24，创建 `resilience_programme`、owner/app 角色，并验证登录属性、数据库/schema 隔离及默认 DML 权限（2026-11-10）。
+- [x] 在腾讯云正式 PostgreSQL 执行 `0001_research.sql`，验证 9 张表 owner、8 张业务表 app DML 权限，并撤销 app 对 `research_migrations` 的全部权限（2026-11-10）。
 - [ ] 配置数据库最小权限账号、自动备份、恢复演练、日志轮换和服务监控。
 - [ ] 腾讯云真实 PostgreSQL 部署迁移、独立连接并发测试；D1 应用 0004 迁移并部署 Worker，重新发布两套前端后验收。
 - [x] 确认不迁移 D1 数据；两个环境独立保存、独立导出。

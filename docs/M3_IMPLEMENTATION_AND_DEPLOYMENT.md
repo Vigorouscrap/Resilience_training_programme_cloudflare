@@ -112,6 +112,8 @@ unset MIGRATION_DATABASE_URL
 
 同日已验证 `resilience_owner` 通过 TCP/密码连接 `resilience_programme`，旁路 backend 从新 `.env` 加载的 `DATABASE_URL` 也以 `resilience_app` 成功连接同一数据库。迁移密码和运行密码、连接账号及 URL 编码均已实际验证，下一步可执行首次 migration；迁移前仍未切换或重启旧 systemd 服务。
 
+2026-11-10 首次生产迁移已完成：`0001_research.sql` checksum 前缀为 `f5b426e62822`，应用时间为 `2026-11-10 19:50:50 +08:00`。public schema 共 9 张表，owner 均为 `resilience_owner`；`resilience_app` 对 8 张业务表具备 SELECT/INSERT/UPDATE/DELETE，对 `research_migrations` 四项权限全部为 false。迁移记录表权限已收紧，数据库结构和运行账号最小权限验收通过。旧 systemd 服务尚未切换。
+
 迁移 URL 使用 owner 账号。随后管理员执行 `REVOKE ALL ON TABLE research_migrations FROM resilience_app;`，运行账号只保留研究表 SELECT/INSERT/UPDATE/DELETE 权限。迁移再次执行应显示 up to date。
 
 在服务器已有 `.env` 中更新：
@@ -194,7 +196,7 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 开发不缺新的业务规则或域名。要实际完成 M3 上线，需要在腾讯云控制台终端执行上述步骤，或通过已有安全方式授权服务器访问；本会话尚未建立 SSH 连接，不能把“账号权限可用”当作已经登录服务器。
 
-服务器路径、systemd 用户、Node 版本、磁盘容量、PostgreSQL 安装、项目数据库/角色初始化及权限核验已经完成。下一步先把当前 M3 代码固化并同步到 GitHub，再在服务器更新完整仓库（必须包含根目录 `shared-contract/`），以 `resilience_owner` 执行迁移；迁移后收紧 `research_migrations` 权限并验证 `resilience_app` 只能进行运行时 DML。随后记录生产契约测试、备份/恢复和磁盘日志配置，才勾选 M3 完成。M4 继续内地 API HTTPS/CORS，M5 完成登录后的音视频、42 模块、手机与三网验收。
+服务器路径、systemd 用户、Node 版本、磁盘容量、PostgreSQL 安装、项目数据库/角色初始化、首次迁移及最小权限验收已经完成。下一步在备用端口运行旁路 Fastify，连接真实 PostgreSQL 执行 health/AI/full 契约测试；通过后配置备份恢复，再切换 systemd。Cloudflare D1 0004、Worker 和两套前端发布仍需独立发布窗口。M4 继续内地 API HTTPS/CORS，M5 完成登录后的音视频、42 模块、手机与三网验收。
 
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
