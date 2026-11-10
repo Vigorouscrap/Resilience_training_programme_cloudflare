@@ -59,6 +59,8 @@ PGlite 是单连接引擎；本地并发测试排队连接，不等同于腾讯�
 
 2026-11-10 实机确认当前 `/opt/resilience-training-programme` 是旧仓库 `xiaoqisong12-lgtm/Resilience_training_programme.git`，提交 `746a69d`，没有 `shared-contract/`；工作区干净，现有 systemd 直接从该目录运行。M3 发布代码则位于 `Vigorouscrap/Resilience_training_programme_cloudflare.git` 的 `release/m3-mainland-postgres` 分支，两者不是同一 Git 历史。禁止在旧目录内强改 remote、强制 reset 或直接 pull M3。采用旁路目录 `/opt/resilience-training-programme-m3`：先克隆、构建、迁移和本机验收，保留旧目录作为可恢复的代码回退点，最后才修改 systemd WorkingDirectory/EnvironmentFile。
 
+`/opt` 由 root 管理，不能直接以 `ubuntu` 创建旁路目录。先用 `sudo install -d -o ubuntu -g ubuntu -m 755 /opt/resilience-training-programme-m3` 创建空目录，再以 `ubuntu` 执行 clone。部署命令块应使用 `set -e`，避免 clone 或 `cd` 失败后继续在 `/opt` 误运行 npm。2026-11-10 首次 clone 因该权限限制失败，后续 npm 报错均为工作目录错误的连锁结果；旧服务和数据库未被修改。
+
 当前 Node.js 22.22.3 满足要求，无需升级。下一步安装 Ubuntu 仓库提供的 PostgreSQL 服务和客户端：
 
 ```bash
