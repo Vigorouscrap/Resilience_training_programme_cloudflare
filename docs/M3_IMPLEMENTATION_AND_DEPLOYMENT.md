@@ -51,6 +51,8 @@ PGlite 是单连接引擎；本地并发测试排队连接，不等同于腾讯�
 
 2026-11-10 已在腾讯云旁路目录 `/opt/resilience-training-programme-m3` 使用 Node.js 22.22.3 完成 `npm ci`、Fastify TypeScript build、8 项共享契约测试及完整 `test:research`，全部通过。测试中的 SQLite ExperimentalWarning、AI event persistence failed、Research storage operation failed 和核心 503/普通事件 202 均为测试主动覆盖的实验 API 或故障注入分支，不代表生产服务故障；测试使用临时 PGlite/SQLite/临时 Fastify，没有连接或写入正式 `resilience_programme`。服务器首次安装报告的 3 个 high severity 已通过发布提交 `1caf07f` 移除未使用 Prisma 工具链解决，服务器更新后应重新 `npm ci` 并以 `npm audit --omit=dev` 确认 0 vulnerabilities。
 
+2026-11-11 旁路 Fastify 连接腾讯云 PostgreSQL 14.24，在 `127.0.0.1:18787` 完成真实数据库 `full` 契约测试，health/core/AI/events/replay/module access/completion 全部通过。数据库验收为 4 个 test participants、5 sessions、2 module runs、1 event、1 message、1 snapshot、0 AI call logs；测试身份全部带 `metadata.testData=true`。首个 readiness curl 在服务 bind 前即时拒绝连接，轮询随后成功；health uptime 为 1 秒，Fastify log 有 listening 和 200 health，属正常启动竞态。测试后的日志中 AI research log 未持久化是黑盒 AI 请求未携带研究 identity 的预期非阻断情况。
+
 ## 腾讯云部署顺序
 
 已有服务器：上海 Lighthouse，4 核/4 GB/40 GB，公网 IP `1.117.58.64`。无需购买数据库或迁移 D1。2026-11-10 实机检查确认：服务目录为 `/opt/resilience-training-programme/backend`，systemd 单元为 `/etc/systemd/system/resilience-backend.service`，服务以 Linux 用户 `ubuntu` 运行；Node.js 为 `v22.22.3`；系统盘 40 GB、已用 6.9 GB、可用 31 GB（19%）；服务器尚未安装 `psql`/PostgreSQL。保留已有 DeepSeek 等配置，不直接覆盖 `.env`。
@@ -145,6 +147,8 @@ node ../scripts/contract-test.mjs http://127.0.0.1:8787 full
 ### 5. 备份、恢复与服务检查
 
 已提供本机每日备份模板，默认使用 postgres 本地认证，不额外保存备份密码：
+
+备份必须在同机系统盘上设置容量受控的保留策略，且至少定期复制一份到服务器之外。由于数据库增长和全量备份频率未知，先运行一次手动备份及临时库恢复演练；确定保留周期/异地副本方式后再启用每日 timer。不能让每日全量 dump 无限累积到 40 GB 根盘。
 
 ```bash
 sudo install -d -o postgres -g postgres -m 700 /var/backups/resilience
