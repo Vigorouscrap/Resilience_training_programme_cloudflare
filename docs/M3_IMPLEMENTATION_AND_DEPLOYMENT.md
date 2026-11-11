@@ -55,6 +55,8 @@ PGlite 是单连接引擎；本地并发测试排队连接，不等同于腾讯�
 
 2026-11-11 PostgreSQL 本机 custom-format 全量备份已生成；第一次手工列表检查因 `find` 以 ubuntu 身份访问 0700 postgres 目录而失败，且后续无条件 echo 造成误报，未被记作验证通过。随后改由 postgres 用户执行 `find` 和 `pg_restore --list`，最新归档成功读取，输出 `PASS: backup archive is readable`。正在进行独立临时库恢复演练；每日 timer 尚未启用。
 
+2026-11-11 独立恢复演练通过：恢复库 `resilience_restore_check` 成功恢复全部 9 张表；源库与恢复库的 participants/sessions/module_runs/module_events/messages/snapshots/ai_calls 计数均为 4/5/2/1/1/1/0。每日备份 timer 已排期于 2026-11-12 03:01:41 CST 首次运行，systemd journal 最近 6 次手动 backup 均以 `Finished` 成功结束；根盘使用率 20%（7.4 GB/40 GB），备份目录当前 6 份归档。脚本最新版本每次成功验证后仅保留最新 14 份。
+
 ## 腾讯云部署顺序
 
 已有服务器：上海 Lighthouse，4 核/4 GB/40 GB，公网 IP `1.117.58.64`。无需购买数据库或迁移 D1。2026-11-10 实机检查确认：服务目录为 `/opt/resilience-training-programme/backend`，systemd 单元为 `/etc/systemd/system/resilience-backend.service`，服务以 Linux 用户 `ubuntu` 运行；Node.js 为 `v22.22.3`；系统盘 40 GB、已用 6.9 GB、可用 31 GB（19%）；服务器尚未安装 `psql`/PostgreSQL。保留已有 DeepSeek 等配置，不直接覆盖 `.env`。
@@ -204,7 +206,7 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 开发不缺新的业务规则或域名。要实际完成 M3 上线，需要在腾讯云控制台终端执行上述步骤，或通过已有安全方式授权服务器访问；本会话尚未建立 SSH 连接，不能把“账号权限可用”当作已经登录服务器。
 
-服务器路径、systemd 用户、Node 版本、磁盘容量、PostgreSQL 安装、项目数据库/角色初始化、首次迁移及最小权限验收已经完成。下一步在备用端口运行旁路 Fastify，连接真实 PostgreSQL 执行 health/AI/full 契约测试；通过后配置备份恢复，再切换 systemd。Cloudflare D1 0004、Worker 和两套前端发布仍需独立发布窗口。M4 继续内地 API HTTPS/CORS，M5 完成登录后的音视频、42 模块、手机与三网验收。
+服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、旁路 Fastify 真实 PostgreSQL full 测试和本机备份/恢复演练已经完成。切换 Fastify 前必须先完成 `api.resilience-training.cloud` HTTPS，并确认 Nginx 只代理到 loopback；否则正式 EdgeOne 页面会遇到 HTTPS mixed-content/接口失败。HTTPS/CORS 就绪后再切换 systemd 并联调 EdgeOne。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的音视频、42 模块、手机与三网验收。
 
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
