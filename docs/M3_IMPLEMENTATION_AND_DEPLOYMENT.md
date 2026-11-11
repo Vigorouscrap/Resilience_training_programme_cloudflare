@@ -150,7 +150,7 @@ node ../scripts/contract-test.mjs http://127.0.0.1:8787 full
 
 已提供本机每日备份模板，默认使用 postgres 本地认证，不额外保存备份密码：
 
-备份必须在同机系统盘上设置容量受控的保留策略，且至少定期复制一份到服务器之外。由于数据库增长和全量备份频率未知，先运行一次手动备份及临时库恢复演练；确定保留周期/异地副本方式后再启用每日 timer。不能让每日全量 dump 无限累积到 40 GB 根盘。
+备份使用每日 timer；本机只保留最新 14 份经 `pg_restore --list` 验证的归档。只有新归档成功且可读后才清理更旧的、符合项目文件名规则的归档。部署前已完成一次手动备份和临时库恢复演练，源库与恢复库的 participants/sessions/module_runs/module_events/messages/snapshots/ai_calls 计数均为 4/5/2/1/1/1/0，恢复库列出全部 9 张表。至少每周将最新验证归档复制到服务器之外；本机轮转不能防止实例或系统盘整体损坏。
 
 ```bash
 sudo install -d -o postgres -g postgres -m 700 /var/backups/resilience
@@ -162,7 +162,7 @@ sudo systemctl enable --now resilience-backup.timer
 sudo systemctl list-timers resilience-backup.timer
 ```
 
-模板中的 `/opt/...` 路径须与实际代码目录一致，确保 postgres 用户可读取脚本。脚本检查归档目录，保留备份、不自动删除。上线前把至少一份归档复制到服务器之外；可先用负责人电脑，无须为本轮另购 COS。未选择异地位置时只能认为“本机备份已配置”，不能认为完成容灾。
+模板中的 `/opt/...` 路径须与实际代码目录一致，确保 postgres 用户可读取脚本。脚本验证归档可读后保留最近 14 份并清理更旧的项目归档。上线前把至少一份归档复制到服务器之外；可先用负责人电脑，无须为本轮另购 COS。未选择异地位置时只能认为“本机备份已配置”，不能认为完成容灾。
 
 在独立临时库恢复，替换为实际归档路径：
 
