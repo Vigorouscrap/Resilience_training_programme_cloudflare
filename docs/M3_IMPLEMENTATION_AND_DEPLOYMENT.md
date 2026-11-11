@@ -53,6 +53,8 @@ PGlite 是单连接引擎；本地并发测试排队连接，不等同于腾讯�
 
 2026-11-11 旁路 Fastify 连接腾讯云 PostgreSQL 14.24，在 `127.0.0.1:18787` 完成真实数据库 `full` 契约测试，health/core/AI/events/replay/module access/completion 全部通过。数据库验收为 4 个 test participants、5 sessions、2 module runs、1 event、1 message、1 snapshot、0 AI call logs；测试身份全部带 `metadata.testData=true`。首个 readiness curl 在服务 bind 前即时拒绝连接，轮询随后成功；health uptime 为 1 秒，Fastify log 有 listening 和 200 health，属正常启动竞态。测试后的日志中 AI research log 未持久化是黑盒 AI 请求未携带研究 identity 的预期非阻断情况。
 
+2026-11-11 PostgreSQL 本机 custom-format 全量备份已生成；第一次手工列表检查因 `find` 以 ubuntu 身份访问 0700 postgres 目录而失败，且后续无条件 echo 造成误报，未被记作验证通过。随后改由 postgres 用户执行 `find` 和 `pg_restore --list`，最新归档成功读取，输出 `PASS: backup archive is readable`。正在进行独立临时库恢复演练；每日 timer 尚未启用。
+
 ## 腾讯云部署顺序
 
 已有服务器：上海 Lighthouse，4 核/4 GB/40 GB，公网 IP `1.117.58.64`。无需购买数据库或迁移 D1。2026-11-10 实机检查确认：服务目录为 `/opt/resilience-training-programme/backend`，systemd 单元为 `/etc/systemd/system/resilience-backend.service`，服务以 Linux 用户 `ubuntu` 运行；Node.js 为 `v22.22.3`；系统盘 40 GB、已用 6.9 GB、可用 31 GB（19%）；服务器尚未安装 `psql`/PostgreSQL。保留已有 DeepSeek 等配置，不直接覆盖 `.env`。
