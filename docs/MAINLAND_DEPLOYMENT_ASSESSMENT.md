@@ -110,7 +110,6 @@
 
 ### 工程上尚未完成
 
-- 检查 journald 占用/保留策略和 logrotate，补充基本服务监控。
 - 将至少一份已验证的 PostgreSQL 备份复制到服务器外，例如用户电脑或私有 COS。
 - EdgeOne M3 Mainland 产物已发布；headless Edge 已完成登录、AI、模块 1-1 完成、回放与 PostgreSQL 写入，仍需真实手机音视频和完整 42 模块人工联调。
 - Cloudflare D1 应用 `0004_module_durations.sql`，发布 Worker，运行线上 full contract，再重建 Cloudflare Pages。
@@ -252,7 +251,8 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 核对腾讯云服务路径、systemd 用户、Node 版本和磁盘；安装并检查 PostgreSQL 14.24，创建 `resilience_programme`、owner/app 角色，并验证登录属性、数据库/schema 隔离及默认 DML 权限（2026-11-10）。
 - [x] 在腾讯云正式 PostgreSQL 执行 `0001_research.sql`，验证 9 张表 owner、8 张业务表 app DML 权限，并撤销 app 对 `research_migrations` 的全部权限（2026-11-10）。
 - [x] 数据库最小权限账号及角色已验收；手动备份、归档检查和独立临时库恢复通过；每日 timer 已排期、保留最新 14 份（2026-11-11）。
-- [ ] 确认日志轮换和服务监控，至少一份有效备份复制到服务器外。
+- [x] journald 设置 512 MB/30 天上限和 5 GB 保留空间，实际占用降至 360 MB；logrotate timer/dry-run、服务 active、`NRestarts=0` 和根盘 18% 均通过（2026-11-12）。
+- [ ] 至少一份有效 PostgreSQL 备份复制到服务器外。
 - [x] 腾讯云正式 PostgreSQL migration、真实 DB full 契约、API HTTPS 和 systemd M3 切换完成；公网 health 返回 `fastify-node` 与完整 10 个 hook（2026-11-12）。
 - [x] EdgeOne Production 发布 M3 Mainland 产物；线上 5 个关键文件哈希、腾讯云 full contract、CORS/预检和测试数据写入均通过（2026-11-12）。
 - [ ] D1 应用 0004 迁移并部署 Worker，运行 Cloudflare full contract，随后重新发布 Cloudflare 前端并验收。
@@ -292,7 +292,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
 4. M2 已完成：契约已全部确认，新 Worker 部署后的现有黑盒 profile 全部通过，完整证据和剩余差异已记录。
 5. M3 内地后端生产部署完成：PostgreSQL、备份恢复、HTTPS、loopback Fastify、systemd cutover 和真实 DB full 契约均已通过。
-6. 先检查日志轮换并完成一份异地备份；EdgeOne M3 产物已发布，下一步执行完整浏览器联调。
+6. 日志轮换和 EdgeOne M3 浏览器 smoke 已完成；下一步完成一份异地备份及真实手机/42 模块回归。
 7. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages 重建；最后合并 `main`。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。

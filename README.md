@@ -363,7 +363,7 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 ## 下一步建议
 
-1. 检查腾讯云 journald/logrotate 与基础服务监控，并复制至少一份数据库备份到服务器外。
+1. 将至少一份已验证的 PostgreSQL 备份复制到服务器外；journald/logrotate 和基础服务状态已经验收。
 2. 在 EdgeOne 正式页面人工验证登录、AI、模块完成、刷新恢复、回放及登录后的音视频播放；测试身份必须使用测试编号。
 3. 对 42 个模块、手机端、移动/联通/电信及断网/重复提交等异常路径执行发布级回归。
 4. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages M3 前端及 Worker CORS。

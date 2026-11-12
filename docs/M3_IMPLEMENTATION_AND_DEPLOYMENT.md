@@ -176,7 +176,7 @@ sudo -u postgres psql -d resilience_restore_check -c 'SELECT count(*) FROM parti
 
 进一步比对源库与恢复库的身份、模块、消息、快照数量和一条完整回放；检查完保留临时库或由负责人手动清理，不能恢复覆盖生产库。
 
-日志沿用 systemd journal。上线前检查 journal 的 `SystemMaxUse`/`MaxRetentionSec` 和 Nginx 现有 logrotate，防止日志占满 40 GB 磁盘；记录 `df -h`、`systemctl is-active postgresql resilience-backend`、最近备份时间及备份 service 退出状态。本轮不引入额外监控平台。
+日志沿用 systemd journal。2026-11-12 已设置 `SystemMaxUse=512M`、`SystemKeepFree=5G`、`SystemMaxFileSize=64M`、`MaxRetentionSec=30day`；journald 从约 1 GB 收缩至 360 MB。系统 logrotate timer 已启用且 dry-run 正常；M3 服务保持 active、`NRestarts=0`、无 warning，根盘使用率为 18%。本轮不引入额外监控平台。
 
 ## Cloudflare 部署顺序
 
@@ -208,7 +208,7 @@ EdgeOne 发布 M3 时，将生产分支选择为 `release/m3-mainland-postgres`�
 
 开发不缺新的业务规则或域名。2026-11-12，腾讯云 M3 内地后端已经完成正式生产切换；后续不再把旧 `/opt/resilience-training-programme/backend` 视为生产代码目录。
 
-服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、真实 PostgreSQL full 契约测试、本机备份/恢复演练、API HTTPS 和正式 systemd 切换均已完成。当前内地后端由 Nginx 代理至 loopback Fastify，公网 health 已返回新版 runtime 与完整 10 个 hook。M3 内地后端生产部署完成；剩余工作是 journal/logrotate 与监控检查、至少一份服务器外备份，以及 EdgeOne 浏览器完整联调。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的音视频、42 模块、手机与三网验收。
+服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、真实 PostgreSQL full 契约测试、本机备份/恢复演练、API HTTPS、正式 systemd 切换、journal/logrotate 检查和 EdgeOne 浏览器 smoke 均已完成。当前内地后端由 Nginx 代理至 loopback Fastify，公网 health 已返回新版 runtime 与完整 10 个 hook。M3 内地后端生产部署完成；剩余运维工作是至少一份服务器外备份。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的真实音视频、42 模块、手机与三网验收。
 
 2026-11-12 实机检查：`nginx -t` 通过，HTTP `http://api.resilience-training.cloud/health` 返回 200；`api.resilience-training.cloud` A 记录正确解析到 `1.117.58.64`。Nginx 当前只监听 80，HTTPS 连接 5 秒超时；Certbot 已安装但 `certbot certificates` 显示无证书。旧 Node 进程仍监听 `0.0.0.0:8787`，而 Nginx 已代理至 `127.0.0.1:8787`。M3 切换后通过 `HOST=127.0.0.1` 收紧监听；在证书和 443 配置完成前不切换正式 EdgeOne API。
 
