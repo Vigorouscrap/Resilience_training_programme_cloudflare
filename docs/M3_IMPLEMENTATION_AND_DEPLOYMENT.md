@@ -210,6 +210,8 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 2026-11-12 实机检查：`nginx -t` 通过，HTTP `http://api.resilience-training.cloud/health` 返回 200；`api.resilience-training.cloud` A 记录正确解析到 `1.117.58.64`。Nginx 当前只监听 80，HTTPS 连接 5 秒超时；Certbot 已安装但 `certbot certificates` 显示无证书。旧 Node 进程仍监听 `0.0.0.0:8787`，而 Nginx 已代理至 `127.0.0.1:8787`。M3 切换后通过 `HOST=127.0.0.1` 收紧监听；在证书和 443 配置完成前不切换正式 EdgeOne API。
 
+同日确认 Certbot nginx 插件已安装，但 `nginx -t` 报 `1.117.58.64` 和 `api.resilience-training.cloud` 的 conflicting server name；配置虽可加载，其中一个重复 server block 会被忽略。证书签发前必须定位并消除重复的已启用配置，避免 Certbot 修改错误的 server block；在此之前不运行 `certbot --nginx`。
+
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
 ```bash
