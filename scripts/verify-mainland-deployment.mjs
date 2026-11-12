@@ -10,7 +10,9 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const siteUrl = String(process.env.MAINLAND_SITE_URL || process.argv[2] || 'https://www.resilience-training.cloud').replace(/\/+$/, '');
 const apiUrl = String(process.env.MAINLAND_API_URL || process.argv[3] || 'https://api.resilience-training.cloud').replace(/\/+$/, '');
 const deploymentFiles = [
+    'index.html',
     'runtime-config.js',
+    'images/favicon.svg',
     'js/main.js',
     'js/dialogue/DialogueManager.js',
     'js/services/participantSession.js',
