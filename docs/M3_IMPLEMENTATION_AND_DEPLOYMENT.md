@@ -200,6 +200,8 @@ npm run test:contract -- https://resilience-ai-worker.1362758164.workers.dev ful
 
 Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`），EdgeOne Pages 重建 `npm run build:mainland`（产物 `dist/mainland`），以发布双时长和事件重试接线。只更新 Worker 不会更新浏览器里的前端代码。
 
+EdgeOne 发布 M3 时，将生产分支选择为 `release/m3-mainland-postgres`，构建命令保持 `npm run build:mainland`，输出目录保持 `dist/mainland`。部署完成后在本地 release 分支运行 `npm run verify:mainland`；该命令只读比较线上与本分支的 `runtime-config.js`、`main.js`、`DialogueManager.js`、`participantSession.js`、`researchEventQueue.js`，并验证腾讯云 health、10 个 hook、CORS 和 OPTIONS 预检。全部 PASS 后再进行浏览器登录和课程写入验收。
+
 不回滚数据库迁移，不删除已有 D1 表。若 Worker 发布失败，可回退旧 Worker：新增列兼容旧实现。PostgreSQL 上线前保存代码版本、环境变量副本及数据库备份；已产生正式研究数据后不能随意回滚到缺少研究接口的旧 Fastify。
 
 ## 当前生产状态与剩余门槛
