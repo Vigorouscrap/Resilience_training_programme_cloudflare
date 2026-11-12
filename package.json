@@ -14,6 +14,7 @@
     "verify:mainland": "node scripts/verify-mainland-deployment.mjs",
     "smoke:mainland:browser": "node scripts/smoke-mainland-browser.mjs",
     "smoke:mainland:modules": "node scripts/smoke-mainland-modules.mjs",
+    "smoke:mainland:deep": "node scripts/smoke-mainland-deep.mjs",
     "test:contract:unit": "node --test shared-contract/*.test.mjs",
     "test:contract:fastify-local": "npm --prefix backend run build && node scripts/contract-test-fastify-local.mjs",
     "test:contract": "node scripts/contract-test.mjs",

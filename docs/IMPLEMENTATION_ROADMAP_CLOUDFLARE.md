@@ -932,7 +932,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] M3 内地生产验收：腾讯云真实 PostgreSQL/Fastify、最小权限、full contract、备份恢复、首份异地备份、API HTTPS、日志策略和 EdgeOne M3 Production 均通过。
 - [ ] M3 Cloudflare 发布：D1 0004、Worker full contract、Cloudflare M3 前端发布与回归。
 - [ ] M4：内地 API HTTPS、EdgeOne M3 前端和腾讯云 CORS 已完成；剩余 Worker CORS 收紧及人工浏览器完整流程。
-- [ ] M5：42/42 模块入口与初始渲染已通过；继续完成各模块深层交互/完成路径、三网业务流程、手机端、异常恢复、数据隔离、导出和备份恢复验收。
+- [ ] M5：42/42 模块入口与初始渲染已通过，1-5/2-4/4-4/6-6 代表性深层流程已覆盖音频、倒计时、输入、测验、AI、复习树和完成保存；继续完成其余模块深层交互/完成路径、三网业务流程、手机端、异常恢复、数据隔离、导出和备份恢复验收。
 
 当前线上核对（更新至 2026-11-12，Asia/Shanghai）：
 
@@ -947,6 +947,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] EdgeOne MP3/MP4/MOV MIME 和 Range 206 抽查通过。
 - [x] EdgeOne Production headless Edge smoke 通过：`C_TEST` 登录、AI、1-1 完成保存及回放正常，无控制台错误或失败请求。
 - [x] EdgeOne Production 42 模块入口 smoke 通过：1-1 至 6-7 的 `module-runs/start` 全部返回 200，页面进入 practice 且标题/聊天内容可见，无控制台错误、失败请求或同源/API 4xx/5xx；该项不替代模块完整交互与完成路径验收。
+- [x] EdgeOne Production 代表性深层 smoke 通过：1-5、2-4、4-4、6-6 完整执行并保存完成状态，覆盖音频资源、倒计时、按钮、单/多轮输入、测验、DeepSeek AI 和复习树；脚本使用 `C_TEST` 并在每个场景后重置模块，避免长期污染生产测试进度。
 - [x] 确认 EdgeOne Pages 不需要重写前端：构建脚本从 `src/` 生成 `dist/mainland/`，固定大陆 API 地址且不改写 Cloudflare 源配置。
 - [x] 确认现有 Lighthouse 容量满足约 100 人；PostgreSQL 与 Fastify 同机部署，5432 不对公网开放。
 - [x] 将已验证的 PostgreSQL 备份复制到 Windows 服务器外目录，SHA-256 一致，并移除传输临时密钥。
