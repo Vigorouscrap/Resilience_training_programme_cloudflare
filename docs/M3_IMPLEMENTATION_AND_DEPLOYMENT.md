@@ -1,6 +1,6 @@
 # M3 实现与部署
 
-日期：2026-11-09。状态：代码和本地验证完成，生产迁移与部署待执行。M3 不标记为生产验收完成。
+初稿日期：2026-11-09；生产状态更新：2026-11-12。腾讯云 M3 Fastify + PostgreSQL 已完成正式切换与线上验收；Cloudflare 迁移和双前端发布仍按独立发布窗口推进。
 
 ## 本轮结果
 
@@ -202,11 +202,11 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 不回滚数据库迁移，不删除已有 D1 表。若 Worker 发布失败，可回退旧 Worker：新增列兼容旧实现。PostgreSQL 上线前保存代码版本、环境变量副本及数据库备份；已产生正式研究数据后不能随意回滚到缺少研究接口的旧 Fastify。
 
-## 下一步所需信息与门槛
+## 当前生产状态与剩余门槛
 
-开发不缺新的业务规则或域名。要实际完成 M3 上线，需要在腾讯云控制台终端执行上述步骤，或通过已有安全方式授权服务器访问；本会话尚未建立 SSH 连接，不能把“账号权限可用”当作已经登录服务器。
+开发不缺新的业务规则或域名。2026-11-12，腾讯云 M3 内地后端已经完成正式生产切换；后续不再把旧 `/opt/resilience-training-programme/backend` 视为生产代码目录。
 
-服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、旁路 Fastify 真实 PostgreSQL full 测试和本机备份/恢复演练已经完成。切换 Fastify 前必须先完成 `api.resilience-training.cloud` HTTPS，并确认 Nginx 只代理到 loopback；否则正式 EdgeOne 页面会遇到 HTTPS mixed-content/接口失败。HTTPS/CORS 就绪后再切换 systemd 并联调 EdgeOne。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的音视频、42 模块、手机与三网验收。
+服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、真实 PostgreSQL full 契约测试、本机备份/恢复演练、API HTTPS 和正式 systemd 切换均已完成。当前内地后端由 Nginx 代理至 loopback Fastify，公网 health 已返回新版 runtime 与完整 10 个 hook。M3 内地后端生产部署完成；剩余工作是 journal/logrotate 与监控检查、至少一份服务器外备份，以及 EdgeOne 浏览器完整联调。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的音视频、42 模块、手机与三网验收。
 
 2026-11-12 实机检查：`nginx -t` 通过，HTTP `http://api.resilience-training.cloud/health` 返回 200；`api.resilience-training.cloud` A 记录正确解析到 `1.117.58.64`。Nginx 当前只监听 80，HTTPS 连接 5 秒超时；Certbot 已安装但 `certbot certificates` 显示无证书。旧 Node 进程仍监听 `0.0.0.0:8787`，而 Nginx 已代理至 `127.0.0.1:8787`。M3 切换后通过 `HOST=127.0.0.1` 收紧监听；在证书和 443 配置完成前不切换正式 EdgeOne API。
 
@@ -218,7 +218,9 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 进一步检查确认 Nginx 已监听 `0.0.0.0:443`，Certbot server block、证书路径和 80→443 重定向正确；使用 `--resolve ...:127.0.0.1` 的本机 HTTPS health 返回 200，本机 HTTP 返回 301。UFW 未启用，iptables 没有针对 443 的 DROP/REJECT，现有拒绝项仅针对若干来源 IP 的 SSH 22。由此将公网 443 超时定位到腾讯云 Lighthouse 实例防火墙尚未放行 TCP 443；需在控制台添加允许规则后再进行外部 HTTPS 验收。
 
-腾讯云 Lighthouse 防火墙放行 TCP 443 后，公网浏览器访问 `https://api.resilience-training.cloud/health` 已返回 `ok:true`、生产环境和 DeepSeek provider 的健康 JSON，证明 DNS、证书、443、Nginx 和旧 Fastify 公网链路已贯通。浏览器显示 JSON 正文而非数字 200 属正常；HTTP 状态码可用 curl `-w` 查看。下一步切换 systemd 到旁路 M3 目录，并验证只监听 loopback。
+腾讯云 Lighthouse 防火墙放行 TCP 443 后，公网浏览器访问 `https://api.resilience-training.cloud/health` 已返回 `ok:true`、生产环境和 DeepSeek provider 的健康 JSON，证明 DNS、证书、443、Nginx 和 Fastify 公网链路已贯通。浏览器显示 JSON 正文而非数字 200 属正常；HTTP 状态码可用 curl `-w` 查看。
+
+2026-11-12 15:40 CST，带自动回滚的 cutover 脚本返回 `M3 CUTOVER PASS`。`resilience-backend.service` 已通过 `/etc/systemd/system/resilience-backend.service.d/m3.conf` 正式指向 `/opt/resilience-training-programme-m3/backend`，Node 进程只监听 `127.0.0.1:8787`。本机和公网 HTTPS health 均返回 `runtime: fastify-node`、`nodeEnv: production` 和完整 10 个 hook；真实 PostgreSQL full 契约覆盖参与者、模块、events、replay、AI、隔离及错误响应并通过，未触发回滚。日志中的 `AI research log was not persisted` 来自不带 participant/session 的 AI 契约用例，AI 响应仍为 200，属于预期非阻断行为；`/favicon.ico`、`/sellers.json` 和 `/` 的 404 为附加请求或扫描，不是后端故障。
 
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 

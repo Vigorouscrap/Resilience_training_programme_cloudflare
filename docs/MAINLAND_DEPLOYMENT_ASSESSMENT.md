@@ -56,48 +56,46 @@
 
 ## 当前在线状态
 
-2026-11-06 12:44（中国时间）只进行了无写入的健康检查：
+下表汇总 2026-11-06 的初始检查与 2026-11-12 的最新生产状态：
 
 | 地址 | 结果 | 说明 |
 |---|---|---|
 | `https://resilience-training-programme-cloudflare.pages.dev/` | HTTP 200 | Cloudflare 前端在线 |
 | `https://resilience-ai-worker.1362758164.workers.dev/health` | HTTP 200 | Worker 在线，返回 10 个 hook；CORS 当前为 `*` |
 | `https://resilience-training-programme-two.vercel.app/` | HTTP 200 | 旧 Vercel 前端仍在线 |
-| `http://1.117.58.64/health` | HTTP 200 | 腾讯云 Nginx/Fastify 在线 |
-| `http://api.resilience-training.cloud/health` | HTTP 200 | 域名仍解析到腾讯云并可通过 HTTP 访问 |
-| `https://api.resilience-training.cloud/health` | 15 秒超时 | HTTPS 尚未形成可用入口 |
-| `http://resilience-training.cloud/`、`http://www.resilience-training.cloud/` | HTTP 200 | 仅为 Nginx 默认欢迎页，不是训练前端 |
-| 根域名和 `www` 的 HTTPS | 10 秒超时 | 内地正式前端尚未部署 |
+| `http://api.resilience-training.cloud/health` | HTTP 301 | Nginx 已将 HTTP 跳转至 HTTPS |
+| `https://api.resilience-training.cloud/health` | HTTP 200 | M3 Fastify 正式在线，返回 `fastify-node` 与 10 个 hook |
+| `https://www.resilience-training.cloud/` | HTTP 200 | EdgeOne 正式前端域名与 HTTPS 已可用 |
 
-腾讯云健康接口显示生产进程已连续运行约 140 天。该检查只能证明进程和 HTTP 路由存活，不能代替当前 DeepSeek 真调用、数据库持久化或完整课程回归。
+2026-11-12 15:40 CST，systemd 已正式切换到 `/opt/resilience-training-programme-m3/backend`；服务只监听 `127.0.0.1:8787`，由 Nginx 提供公网 HTTPS。真实 PostgreSQL full 契约和公网新版 health 均通过。该结果证明内地后端生产链路已切换，但仍不能代替 EdgeOne 页面上的完整课程、音视频和移动网络回归。
 
-腾讯云响应中的 `Access-Control-Allow-Origin` 仍为 `https://your-frontend.example.com`，说明生产 CORS 尚未换成真实前端域名。Cloudflare Worker 的 CORS 则仍为 `*`，也需要在发布前收紧。
+腾讯云生产 `CORS_ORIGIN` 已配置为 `https://www.resilience-training.cloud`。Cloudflare Worker 的 CORS 仍为 `*`，需要在 Cloudflare 发布窗口收紧。
 
 ## 接口能力对比
 
-| API | 旧 Fastify 后端 | Cloudflare Worker | 内地正式线要求 |
+| API | 腾讯云 M3 Fastify | Cloudflare Worker | 当前状态 |
 |---|---:|---:|---|
-| `GET /health` | 已实现且在线 | 已实现且在线 | 保留，并加入数据库状态/版本标识但不泄露密钥 |
-| `POST /api/v1/ai/hooks/:hookId` | 已实现 10 个 hook | 已实现 10 个 hook | 保持响应契约一致 |
-| `POST /api/v1/participants/start` | 缺失 | 已实现 | 移植到 Fastify + PostgreSQL |
-| `POST /api/v1/module-runs/start` | 缺失 | 已实现 | 移植并保证幂等与连续解锁 |
-| `POST /api/v1/module-runs/complete` | 缺失 | 已实现 | 移植并按 Asia/Shanghai 计算次日解锁 |
-| `POST /api/v1/module-runs/reset` | 缺失 | 当前工作区已实现 | 仅 tester/admin 可用 |
-| `POST /api/v1/events` | 缺失 | 已实现 | 移植批量写入、去重和失败重试 |
-| `POST /api/v1/conversation/replay` | 缺失 | 已实现 | 移植参与者隔离和只读回放 |
-| 受保护的 CSV/JSON 导出 | 缺失 | 尚未实现 | 两条部署线都需要同一字段定义和鉴权规则 |
+| `GET /health` | 已实现并生产在线 | 已实现并在线 | 两端返回各自 runtime/provider 信息 |
+| `POST /api/v1/ai/hooks/:hookId` | 已实现 10 个 hook | 已实现 10 个 hook | 共享 hook 清单与错误契约 |
+| `POST /api/v1/participants/start` | 已实现 | 已实现 | 生产 PostgreSQL full 契约通过 |
+| `POST /api/v1/module-runs/start` | 已实现 | 已实现 | 幂等与连续解锁契约通过 |
+| `POST /api/v1/module-runs/complete` | 已实现 | 已实现 | Asia/Shanghai 次日解锁契约通过 |
+| `POST /api/v1/module-runs/reset` | 已实现 | 已实现 | 仅 tester/admin 可用 |
+| `POST /api/v1/events` | 已实现 | 已实现 | 批量写入、去重和重试契约通过 |
+| `POST /api/v1/conversation/replay` | 已实现 | 已实现 | 参与者隔离和只读回放契约通过 |
+| 受保护的 CSV/JSON 导出 | 已实现 | 已实现于待发布代码 | 未配置 token 时禁用，不影响训练 |
 
-当前原 Fastify 后端不能直接作为 Cloudflare 完整版的内地后端。它只能承载早期 AI 演示链路，必须先补齐接口和真实数据库。
+旧 Fastify 只能承载早期 AI 演示链路；它已由 M3 共享研究服务和 PostgreSQL adapter 替换。旧目录保留用于回滚历史，不再作为开发或生产基线。
 
 ## 已经提供或已经落实的信息
 
 - 腾讯云 Lighthouse：中国大陆上海地域，Ubuntu 22.04 LTS。
 - 公网 IP：`1.117.58.64`。
 - 域名：`resilience-training.cloud`。
-- API DNS：`api.resilience-training.cloud -> 1.117.58.64`，当前仍可通过 HTTP 访问。
-- 服务器已经安装 Node.js、Git、Nginx，并用 systemd 托管 Fastify。2026-11-10 实机确认 Node.js 为 `v22.22.3`，服务目录为 `/opt/resilience-training-programme/backend`，服务用户为 `ubuntu`。
+- API DNS：`api.resilience-training.cloud -> 1.117.58.64`，HTTP 跳转 HTTPS，公网 HTTPS health 正常。
+- 服务器已经安装 Node.js、Git、Nginx，并用 systemd 托管 Fastify。Node.js 为 `v22.22.3`，正式服务目录为 `/opt/resilience-training-programme-m3/backend`，服务用户为 `ubuntu`。
 - 同日确认该服务目录来自旧仓库 `xiaoqisong12-lgtm/Resilience_training_programme.git`（提交 `746a69d`），工作区干净但没有 `shared-contract/`；M3 必须从 Cloudflare 主线发布分支旁路部署，不能在旧仓库内直接拉取或强制合并。
-- Nginx 已将 80 端口反向代理到 `127.0.0.1:8787`。
+- Nginx 已将 80 跳转 443，并将 HTTPS API 反向代理到 `127.0.0.1:8787`；证书自动续期 dry-run 通过。
 - 服务器曾验证 DeepSeek 真调用成功；当前健康接口仍报告 provider 为 DeepSeek。
 - 原项目本地 `.env.local` 中存在已配置的 DeepSeek 和 session 项，但数据库和 CORS 仍是本地/占位配置；文件已被 Git 忽略。本文件不记录任何密钥值。
 - Cloudflare Pages、Worker、DeepSeek Secret 和 D1 已创建并部署；D1 binding 的数据库名为 `resilience_research`。
@@ -112,16 +110,11 @@
 
 ### 工程上尚未完成
 
-- Cloudflare 当前 16 个文件的改动尚未提交和打标签。
-- 腾讯云 API 没有 HTTPS，生产 CORS 仍是示例域名。
-- 腾讯云 Fastify 只实现健康检查和 AI hook，没有 Cloudflare 版的参与者与研究数据 API。
-- 2026-11-10 已确认 PostgreSQL 14.24 在 5432 在线、开机启用且仅监听 localhost；初始无旧项目库。`resilience_programme`、`resilience_owner`、`resilience_app` 已创建并设置 schema/default DML 权限，生产迁移、备份和恢复尚未执行。系统盘可用 31 GB（使用率 19%）。
-- EdgeOne Pages 项目仍需账号持有人在控制台导入 GitHub 仓库并创建；本仓库已备好 Mainland 构建命令和独立输出目录。
-- Worker 与 Fastify 的 AI hook、数据模型和错误响应没有共享契约测试，存在长期漂移风险。
-- 导出接口尚未实现。
-- Cloudflare 生产 CORS 仍为 `*`。
-- 生产 Worker 设置了 `REQUIRE_PERSISTENCE=true`，参与者或模块持久化失败会返回 503；这与 Roadmap 中“写入失败不阻塞课程、异步重试”的既定规则冲突，需要先确定最终失败策略并补测试。
-- Cloudflare 根 README 的进度说明主要停在 2026-06-22，而 Roadmap 和工作区包含 2026-08-31 的实现记录，发布文档尚未同步。
+- 检查 journald 占用/保留策略和 logrotate，补充基本服务监控。
+- 将至少一份已验证的 PostgreSQL 备份复制到服务器外，例如用户电脑或私有 COS。
+- EdgeOne 当前生产前端需发布 M3 Mainland 产物，并完成登录、AI、模块完成、回放、音视频和 PostgreSQL 写入的浏览器联调。
+- Cloudflare D1 应用 `0004_module_durations.sql`，发布 Worker，运行线上 full contract，再重建 Cloudflare Pages。
+- Cloudflare Worker 生产 CORS 仍为 `*`，需在发布窗口收紧。
 - 42 个模块、手机端、断网重试、重复提交、跨标签页和回放尚未完成发布级回归。
 
 ## EdgeOne Pages 选择说明
@@ -247,12 +240,12 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 建立可配置 base URL 的同一套黑盒测试；Worker health/core/ai/research 线上通过，Fastify health/AI 本地通过，缺失研究接口保留到 M3。
 - [x] 负责人已部署新版 Worker，事件计数、跨 session 回放、身份隔离及 AI 新字段/错误码通过线上回归（2026-11-09）。
 
-完成标准：已完成 M2 契约、测试框架与本轮部署验收。每个发布产物自动锁定唯一后端；完整业务契约仍随 M3–M5 实现和验证，不能把 M2 通过视为两套后端均已可正式使用。证据和未覆盖项见 `M2_DEPLOYMENT_VALIDATION.md`。
+完成标准：已完成 M2 契约、测试框架与本轮部署验收。每个发布产物自动锁定唯一后端；腾讯云 M3 后端现已通过生产验收，但 Cloudflare 发布和 M4–M5 浏览器回归仍需完成。证据和未覆盖项见 `M2_DEPLOYMENT_VALIDATION.md`。
 
 ### M3：腾讯云 Fastify + PostgreSQL 补齐
 
 - [x] 把参与者开始/恢复、模块 start/complete/reset、events、replay 接口移植到 Fastify，本地 HTTP 契约通过。
-- [x] 将 D1/SQLite schema 转为 PostgreSQL migrations，并建立事务、唯一约束和幂等规则；迁移 SQL 经 PGlite 验证，生产迁移命令待实机执行。
+- [x] 将 D1/SQLite schema 转为 PostgreSQL migrations，并建立事务、唯一约束和幂等规则；迁移 SQL 经 PGlite 和腾讯云正式 PostgreSQL 验证。
 - [x] 两端接入共享研究服务并扩充研究 schema，保存前端练习时长和服务器经过时长；修正 Worker 快照大小/重复完成幂等、回放完成检查、事件校验和鉴权错误分类。
 - [x] 实现测试数据标记、受保护的 CSV/JSON 导出和导出审计，本地验证隔离、BOM、中文、引号和换行。
 - [x] 提供数据库 owner/运行账号分离、每日备份 service/timer、恢复演练和部署/回滚操作说明，见 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
@@ -260,17 +253,18 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 在腾讯云正式 PostgreSQL 执行 `0001_research.sql`，验证 9 张表 owner、8 张业务表 app DML 权限，并撤销 app 对 `research_migrations` 的全部权限（2026-11-10）。
 - [x] 数据库最小权限账号及角色已验收；手动备份、归档检查和独立临时库恢复通过；每日 timer 已排期、保留最新 14 份（2026-11-11）。
 - [ ] 确认日志轮换和服务监控，至少一份有效备份复制到服务器外。
-- [ ] 腾讯云真实 PostgreSQL 部署迁移、独立连接并发测试；D1 应用 0004 迁移并部署 Worker，重新发布两套前端后验收。
+- [x] 腾讯云正式 PostgreSQL migration、真实 DB full 契约、API HTTPS 和 systemd M3 切换完成；公网 health 返回 `fastify-node` 与完整 10 个 hook（2026-11-12）。
+- [ ] D1 应用 0004 迁移并部署 Worker，运行 Cloudflare full contract，随后重新发布两套前端并验收。
 - [x] 确认不迁移 D1 数据；两个环境独立保存、独立导出。
 
-完成标准：腾讯云环境通过与 Worker 相同的契约和数据隔离测试。当前为“代码和本地验证完成，生产实施待执行”，未完成 M3 线上验收；本轮未修改腾讯云或 Cloudflare 生产服务。
+完成标准：腾讯云环境通过与 Worker 相同的契约和数据隔离测试。内地后端 M3 生产部署与线上验收已完成；Cloudflare 线上迁移和双前端发布属于后续独立发布窗口。
 
 ### M4：恢复正式 HTTPS 与内地前端
 
-- [ ] 为 `api.resilience-training.cloud` 配置有效证书和自动续期（域名实名认证及 ICP 备案手续已完成）。
-- [x] 2026-11-12 核对现状：Nginx 语法正常、HTTP health 200、当前仅监听 80，尚无有效 443 SSL server；旧 Fastify 仍监听 `0.0.0.0:8787`，M3 切换时改为 loopback。
-- [ ] 将 Nginx 配置为 80 跳转 443，只代理到本机 `127.0.0.1:8787`。
-- [ ] 将腾讯云 `CORS_ORIGIN` 改为真实内地前端和明确的测试来源。
+- [x] 为 `api.resilience-training.cloud` 配置有效证书和自动续期；证书有效期至 2027-02-10，renew dry-run 通过。
+- [x] 2026-11-12 完成 HTTPS 修复过程：从仅监听 80 和旧 Fastify 公网监听，推进到有效 443 SSL server、HTTP→HTTPS 和 M3 Fastify loopback 监听。
+- [x] 将 Nginx 配置为 80 跳转 443，只代理到本机 `127.0.0.1:8787`。
+- [x] 将腾讯云 `CORS_ORIGIN` 固定为 `https://www.resilience-training.cloud`。
 - [x] Mainland 产物已部署到 EdgeOne Pages，`www.resilience-training.cloud` 已绑定且 HTTPS 可用（M1）；API 联调仍待下列验收。
 - [x] 为内地部署生成指向腾讯云 API 的独立运行时配置，不复制第二份前端源码。
 - [ ] 收紧 Worker CORS，移除 `*`。
@@ -294,7 +288,8 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 2. EdgeOne Pages 临时 HTTPS 站点、Mainland runtime、图片和三网首页访问已通过。
 3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
 4. M2 已完成：契约已全部确认，新 Worker 部署后的现有黑盒 profile 全部通过，完整证据和剩余差异已记录。
-5. M3 代码和本地验证完成；按 `M3_IMPLEMENTATION_AND_DEPLOYMENT.md` 在腾讯云部署 PostgreSQL/Fastify，并先迁移 D1 再部署 Worker。生产迁移和备份恢复尚未执行。
-6. 执行 M4/M5 的 HTTPS/CORS、音视频、完整登录流与发布验收，再开放内地正式参与者入口。
+5. M3 内地后端生产部署完成：PostgreSQL、备份恢复、HTTPS、loopback Fastify、systemd cutover 和真实 DB full 契约均已通过。
+6. 先检查日志轮换并完成一份异地备份，再发布 EdgeOne M3 产物并执行完整浏览器联调。
+7. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages 重建；最后合并 `main`。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。
