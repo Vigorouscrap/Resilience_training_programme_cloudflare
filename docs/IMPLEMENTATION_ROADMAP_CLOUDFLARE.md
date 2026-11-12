@@ -51,6 +51,8 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 - 2026-11-09：项目负责人确认 M2 契约全部 5 项规则。新增 `shared-contract/` 平台无关契约包、JSON Schema、解锁/身份单元测试和可配置 base URL 的黑盒测试运行器；同步对齐 Worker/Fastify 已有 health 与 AI hook 的明确字段、错误码和 step 类型差异。尚未进入 M3 数据库与业务接口实现。
 - 2026-11-09：M2 本地验证通过：共享契约单元测试 9 项通过、Worker TypeScript 检查通过、Fastify 构建与本地 health/AI/M3 边界契约通过，现有线上 Worker health/core 回归通过。新 Worker 版本部署被非交互环境缺少 `CLOUDFLARE_API_TOKEN` 阻塞；凭证不得写入 Git 或聊天，待账号持有人在本机完成 Wrangler 授权后部署并运行线上 AI/回放契约。
 - 2026-11-09：负责人已部署新版 Worker。扩展黑盒运行器 research profile，线上 health/core/ai/research 全部通过，覆盖事件计数、跨 session 消息/快照回放和身份隔离，M2 契约与本轮部署验收完成。完整业务契约尚有 M3–M5 待办（时长、导出、共享规则接入、Worker 边界行为等），证据与限制见 `docs/M2_DEPLOYMENT_VALIDATION.md`，本次未启动 M3。
+- 2026-11-12：腾讯云 M3 Fastify + PostgreSQL 完成正式 systemd cutover；API HTTPS、loopback 监听、真实 PostgreSQL full contract、每日备份与恢复演练通过。EdgeOne Production 随后发布 `release/m3-mainland-postgres`，线上 5 个关键静态文件与 release 构建哈希一致，`www` 固定连接腾讯云 API。
+- 2026-11-12：EdgeOne/腾讯云自动生产验收通过：health 返回 `fastify-node` 与完整 10 个 hook，CORS/OPTIONS 正确；full contract 覆盖登录、模块、AI、events、跨 session 回放和隔离，测试记录均标记 `testData=true`。MP3、MP4、MOV 的 MIME 与 Range 206 抽查通过；登录后的真实手机播放和 42 模块仍待人工回归。
 
 ### 测试编号登记（2026-08-28）
 
@@ -924,23 +926,25 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] M1：EdgeOne 临时/正式 HTTPS 站点、Mainland runtime、图片、三网首页访问及 `www.resilience-training.cloud` 绑定均已完成（2026-11-09）；登录后的音视频及 API 流程移至 M4/M5。
 - [x] M2：负责人已部署 Worker 更新，线上 health/core/ai/research 全部通过，包含 AI 新字段/错误码、事件计数、跨 session 回放和身份隔离。完成范围为契约、测试框架和本轮兼容修正；生产固定后端映射，完整业务验收的未覆盖项见 `docs/M2_DEPLOYMENT_VALIDATION.md`。
 - [x] M3 代码与本地验证：Fastify 研究接口、PostgreSQL migrations、共享研究服务、双时长、事件有界重试、测试数据标记及两端导出完成；并发完成、SQL 回滚、隔离、回放只读、AI fallback 和本地 HTTP 契约通过。详见 `docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
-- [ ] M3 生产验收：腾讯云真实 PostgreSQL/Fastify 部署、最小权限、独立连接并发、备份恢复、日志/磁盘检查；D1 0004 迁移及 Worker/两套前端发布与回归。当前尚未执行生产变更。
-- [ ] M4：恢复 `api.resilience-training.cloud` HTTPS，部署内地静态前端，修正腾讯云 CORS 并收紧 Worker CORS。
+- [x] M3 内地生产验收：腾讯云真实 PostgreSQL/Fastify、最小权限、full contract、备份恢复、API HTTPS 和 EdgeOne M3 Production 均通过；日志策略和异地备份仍为运维待办。
+- [ ] M3 Cloudflare 发布：D1 0004、Worker full contract、Cloudflare M3 前端发布与回归。
+- [ ] M4：内地 API HTTPS、EdgeOne M3 前端和腾讯云 CORS 已完成；剩余 Worker CORS 收紧及人工浏览器完整流程。
 - [ ] M5：完成 42 模块、三网、手机端、异常恢复、数据隔离、导出和备份恢复验收。
 
-当前线上核对（2026-11-06 12:44，Asia/Shanghai）：
+当前线上核对（更新至 2026-11-12，Asia/Shanghai）：
 
 - [x] Cloudflare Pages 返回 HTTP 200。
 - [x] Cloudflare Worker `/health` 返回 HTTP 200。
 - [x] 腾讯云 `http://1.117.58.64/health` 返回 HTTP 200。
-- [x] 腾讯云 `http://api.resilience-training.cloud/health` 返回 HTTP 200。
-- [ ] 腾讯云 `https://api.resilience-training.cloud/health` 可用；本次检查 15 秒超时。
-- [ ] 腾讯云生产 CORS 使用真实前端域名；本次响应仍为 `https://your-frontend.example.com`。
-- [ ] 腾讯云 Fastify 与当前 Worker API 能力对等。
-- [ ] 统一持久化失败策略；当前生产 `REQUIRE_PERSISTENCE=true` 返回 503，与既定“失败不阻塞课程”规则不一致。
-- [ ] 根域名或 `www` 部署真实内地前端；当前 HTTP 仅显示 Nginx 默认欢迎页，HTTPS 超时。
+- [x] 腾讯云 `http://api.resilience-training.cloud/health` 跳转 HTTPS。
+- [x] 腾讯云 `https://api.resilience-training.cloud/health` 返回 HTTP 200、`fastify-node` 与完整 10 个 hook。
+- [x] 腾讯云生产 CORS 固定允许 `https://www.resilience-training.cloud`，OPTIONS 预检返回 204。
+- [x] 腾讯云 Fastify 生产 full contract 通过，与共享业务契约对齐。
+- [x] EdgeOne `www` 已部署 M3 Mainland Production，运行时固定连接腾讯云 API。
+- [x] EdgeOne MP3/MP4/MOV MIME 和 Range 206 抽查通过。
 - [x] 确认 EdgeOne Pages 不需要重写前端：构建脚本从 `src/` 生成 `dist/mainland/`，固定大陆 API 地址且不改写 Cloudflare 源配置。
-- [x] 确认现有 Lighthouse 容量满足约 100 人；PostgreSQL 与 Fastify 同机部署，5432 不对公网开放，备份复制到服务器外部。
+- [x] 确认现有 Lighthouse 容量满足约 100 人；PostgreSQL 与 Fastify 同机部署，5432 不对公网开放。
+- [ ] 将至少一份已验证的 PostgreSQL 备份复制到服务器外部。
 - [x] 确认 Cloudflare D1 与中国大陆 PostgreSQL 数据独立保存，不做迁移或同步。
 - [x] 生产部署忽略 query string/sessionStorage API 覆盖；仅 localhost 保留临时后端调试能力。
 

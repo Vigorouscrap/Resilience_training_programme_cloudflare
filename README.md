@@ -1,10 +1,10 @@
 # 心理弹性训练程序 - Cloudflare 实验仓库
 
-## 当前主线状态（2026-11-09）
+## 当前主线状态（2026-11-12）
 
 本仓库现为唯一开发基线：一套课程源码，两套固定部署适配。Cloudflare Pages → Worker/D1；EdgeOne Pages → 腾讯云 Fastify/PostgreSQL。旧 `Resilience_training_programme` 仓库保留早期部署历史。下文早期实验记录仅供追溯，当前进度以本段及路线图阶段 10 为准。
 
-M3 代码与本地验证已完成，生产数据库迁移、服务发布与备份恢复验收尚未执行。Fastify 和 Worker 共用 `shared-contract/research.mjs`，已支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。无数据库时核心接口返回 503，普通事件返回 202/persisted:false，AI 仍可 fallback。
+腾讯云 M3 Fastify + PostgreSQL 已完成生产切换；EdgeOne Production 已发布同一 release 分支的 Mainland 前端，`www.resilience-training.cloud` 固定连接 `api.resilience-training.cloud`。线上静态文件校验、Fastify full contract、HTTPS/CORS/预检和代表性 MP3/MP4/MOV Range 请求均通过。Fastify 和 Worker 共用 `shared-contract/research.mjs`，支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。Cloudflare D1 0004、Worker/M3 前端发布仍需独立窗口。
 
 - [M3 实现、测试与部署步骤](docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md)
 - [当前部署路线与待办](docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md)
@@ -363,10 +363,8 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 ## 下一步建议
 
-1. M0 已完成并推送 GitHub。
-2. EdgeOne Pages 已使用 `npm run build:mainland` / `dist/mainland` 部署临时 HTTPS 站点（2026-11-08）。
-3. M1 已完成：Mainland runtime、图片、移动/联通/电信三网首页访问、`www.resilience-training.cloud` CNAME 与 HTTPS 均已通过。登录后的音视频移至内地后端完成后的 M4/M5 验收。
-4. 固化 Worker/Fastify 共享 API 契约。
-5. 在 Lighthouse 安装仅监听本机的 PostgreSQL，为 Fastify 补齐参与者、进度、事件、回放和导出接口。
-6. 为 `api.resilience-training.cloud` 配置 HTTPS，将腾讯云 CORS 收紧到 `https://www.resilience-training.cloud`。
-7. 完成 42 个模块、手机端、三网、异常恢复、数据隔离和备份恢复验收。
+1. 检查腾讯云 journald/logrotate 与基础服务监控，并复制至少一份数据库备份到服务器外。
+2. 在 EdgeOne 正式页面人工验证登录、AI、模块完成、刷新恢复、回放及登录后的音视频播放；测试身份必须使用测试编号。
+3. 对 42 个模块、手机端、移动/联通/电信及断网/重复提交等异常路径执行发布级回归。
+4. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages M3 前端及 Worker CORS。
+5. 两条路线全部验收后再将 `release/m3-mainland-postgres` 合入 `main`。

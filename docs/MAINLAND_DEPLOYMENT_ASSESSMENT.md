@@ -112,7 +112,7 @@
 
 - 检查 journald 占用/保留策略和 logrotate，补充基本服务监控。
 - 将至少一份已验证的 PostgreSQL 备份复制到服务器外，例如用户电脑或私有 COS。
-- EdgeOne 当前生产前端需发布 M3 Mainland 产物，并完成登录、AI、模块完成、回放、音视频和 PostgreSQL 写入的浏览器联调。
+- EdgeOne M3 Mainland 产物已发布；仍需完成登录、AI、模块完成、回放、音视频和 PostgreSQL 写入的人工浏览器联调。
 - Cloudflare D1 应用 `0004_module_durations.sql`，发布 Worker，运行线上 full contract，再重建 Cloudflare Pages。
 - Cloudflare Worker 生产 CORS 仍为 `*`，需在发布窗口收紧。
 - 42 个模块、手机端、断网重试、重复提交、跨标签页和回放尚未完成发布级回归。
@@ -254,7 +254,8 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 数据库最小权限账号及角色已验收；手动备份、归档检查和独立临时库恢复通过；每日 timer 已排期、保留最新 14 份（2026-11-11）。
 - [ ] 确认日志轮换和服务监控，至少一份有效备份复制到服务器外。
 - [x] 腾讯云正式 PostgreSQL migration、真实 DB full 契约、API HTTPS 和 systemd M3 切换完成；公网 health 返回 `fastify-node` 与完整 10 个 hook（2026-11-12）。
-- [ ] D1 应用 0004 迁移并部署 Worker，运行 Cloudflare full contract，随后重新发布两套前端并验收。
+- [x] EdgeOne Production 发布 M3 Mainland 产物；线上 5 个关键文件哈希、腾讯云 full contract、CORS/预检和测试数据写入均通过（2026-11-12）。
+- [ ] D1 应用 0004 迁移并部署 Worker，运行 Cloudflare full contract，随后重新发布 Cloudflare 前端并验收。
 - [x] 确认不迁移 D1 数据；两个环境独立保存、独立导出。
 
 完成标准：腾讯云环境通过与 Worker 相同的契约和数据隔离测试。内地后端 M3 生产部署与线上验收已完成；Cloudflare 线上迁移和双前端发布属于后续独立发布窗口。
@@ -265,8 +266,9 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 2026-11-12 完成 HTTPS 修复过程：从仅监听 80 和旧 Fastify 公网监听，推进到有效 443 SSL server、HTTP→HTTPS 和 M3 Fastify loopback 监听。
 - [x] 将 Nginx 配置为 80 跳转 443，只代理到本机 `127.0.0.1:8787`。
 - [x] 将腾讯云 `CORS_ORIGIN` 固定为 `https://www.resilience-training.cloud`。
-- [x] Mainland 产物已部署到 EdgeOne Pages，`www.resilience-training.cloud` 已绑定且 HTTPS 可用（M1）；API 联调仍待下列验收。
+- [x] M3 Mainland 产物已部署到 EdgeOne Production；`www.resilience-training.cloud` 的运行时配置、4 个关键业务脚本、API health、10 个 hook、CORS 和预检均通过自动验收（2026-11-12）。
 - [x] 为内地部署生成指向腾讯云 API 的独立运行时配置，不复制第二份前端源码。
+- [x] 抽查 MP3、MP4、MOV：MIME 类型正确，支持 `Accept-Ranges: bytes`，分段请求返回 HTTP 206；真实手机页面播放仍在 M5 人工验收。
 - [ ] 收紧 Worker CORS，移除 `*`。
 
 完成标准：内地前端全程 HTTPS，不依赖 Cloudflare 或 Vercel 资源即可完成训练。
@@ -289,7 +291,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
 4. M2 已完成：契约已全部确认，新 Worker 部署后的现有黑盒 profile 全部通过，完整证据和剩余差异已记录。
 5. M3 内地后端生产部署完成：PostgreSQL、备份恢复、HTTPS、loopback Fastify、systemd cutover 和真实 DB full 契约均已通过。
-6. 先检查日志轮换并完成一份异地备份，再发布 EdgeOne M3 产物并执行完整浏览器联调。
+6. 先检查日志轮换并完成一份异地备份；EdgeOne M3 产物已发布，下一步执行完整浏览器联调。
 7. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages 重建；最后合并 `main`。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。
