@@ -212,6 +212,8 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 同日确认 Certbot nginx 插件已安装，但 `nginx -t` 报 `1.117.58.64` 和 `api.resilience-training.cloud` 的 conflicting server name；配置虽可加载，其中一个重复 server block 会被忽略。证书签发前必须定位并消除重复的已启用配置，避免 Certbot 修改错误的 server block；在此之前不运行 `certbot --nginx`。
 
+重复项已定位为 `/etc/nginx/sites-enabled/resilience-backend.before-certbot-20261112`：这是回滚备份的普通文件，但 Nginx 会加载 `sites-enabled` 下所有匹配文件，因此它与正式 symlink 同时生效。回滚副本必须移动到 `/etc/nginx/backups/` 等非 include 目录；不要把 `.bak`、`.before-*` 或配置副本留在 `sites-enabled`。移动后先执行 `nginx -t`、确认无 conflicting warning并 reload，再运行 Certbot。
+
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
 ```bash
