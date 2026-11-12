@@ -216,6 +216,8 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 2026-11-12 Certbot 已签发 `api.resilience-training.cloud` RSA 证书，有效期至 2027-02-10，`certbot renew --dry-run` 成功；但公网 HTTPS health 仍在 5 秒内连接超时并返回 HTTP code 000。证书签发和自动续期可用不代表 443 已形成入口；需继续区分 Nginx 是否本机监听/提供 TLS，以及腾讯云安全组或主机防火墙是否放行 TCP 443。未取得 HTTPS 200 前不切换正式 EdgeOne API。
 
+进一步检查确认 Nginx 已监听 `0.0.0.0:443`，Certbot server block、证书路径和 80→443 重定向正确；使用 `--resolve ...:127.0.0.1` 的本机 HTTPS health 返回 200，本机 HTTP 返回 301。UFW 未启用，iptables 没有针对 443 的 DROP/REJECT，现有拒绝项仅针对若干来源 IP 的 SSH 22。由此将公网 443 超时定位到腾讯云 Lighthouse 实例防火墙尚未放行 TCP 443；需在控制台添加允许规则后再进行外部 HTTPS 验收。
+
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
 ```bash
