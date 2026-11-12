@@ -4,13 +4,13 @@
 
 本仓库现为唯一开发基线：一套课程源码，两套固定部署适配。Cloudflare Pages → Worker/D1；EdgeOne Pages → 腾讯云 Fastify/PostgreSQL。旧 `Resilience_training_programme` 仓库保留早期部署历史。下文早期实验记录仅供追溯，当前进度以本段及路线图阶段 10 为准。
 
-腾讯云 M3 Fastify + PostgreSQL 已完成生产切换；EdgeOne Production 已发布同一 release 分支的 Mainland 前端，`www.resilience-training.cloud` 固定连接 `api.resilience-training.cloud`。线上静态文件校验、Fastify full contract、HTTPS/CORS/预检和代表性 MP3/MP4/MOV Range 请求均通过；隔离的 headless Edge 使用 `C_TEST` 完成真实登录、模块 1-1 AI、完成保存及刷新后回放，无失败请求或控制台错误。Fastify 和 Worker 共用 `shared-contract/research.mjs`，支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。Cloudflare D1 0004、Worker/M3 前端发布仍需独立窗口。
+腾讯云 M3 Fastify + PostgreSQL 已完成生产切换；EdgeOne Production 已发布同一 release 分支的 Mainland 前端，`www.resilience-training.cloud` 固定连接 `api.resilience-training.cloud`。线上静态文件哈希、Fastify full contract、HTTPS/CORS/预检和代表性 MP3/MP4/MOV Range 请求均通过；隔离的 headless Edge 使用 `C_TEST` 完成真实登录、模块 1-1 AI、完成保存及刷新后回放，并逐一验证 42/42 模块入口、`module-runs/start` 200 和初始页面可见内容，无失败请求或控制台错误。该 42 模块结果属于入口与初始渲染层验收，不代表每个模块的完整交互、媒体播放和完成路径已经全部通过。Fastify 和 Worker 共用 `shared-contract/research.mjs`，支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。Cloudflare D1 0004、Worker/M3 前端发布仍需独立窗口。
 
 - [M3 实现、测试与部署步骤](docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md)
 - [当前部署路线与待办](docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md)
 - [已确认的共享契约](docs/M2_SHARED_API_CONTRACT.md)
 
-本地验证：`npm run test:research`、`npm run test:contract:unit`、`npm run test:contract:fastify-local`、`npm --prefix cloudflare-worker run check`。EdgeOne 发布后运行 `npm run verify:mainland` 和 Windows 本机 Edge 的 `npm run smoke:mainland:browser`。先在 `backend/` 和 `cloudflare-worker/` 安装依赖。生产静态构建分别使用 `npm run build:cloudflare` / `npm run build:mainland`；原始 `src/` 不作为内地发布产物。
+本地验证：`npm run test:research`、`npm run test:contract:unit`、`npm run test:contract:fastify-local`、`npm --prefix cloudflare-worker run check`。EdgeOne 发布后运行 `npm run verify:mainland`、Windows 本机 Edge 的 `npm run smoke:mainland:browser`，以及 42 模块入口回归 `npm run smoke:mainland:modules`。先在 `backend/` 和 `cloudflare-worker/` 安装依赖。生产静态构建分别使用 `npm run build:cloudflare` / `npm run build:mainland`；原始 `src/` 不作为内地发布产物。
 
 本仓库是 `Resilience_training_programme` 的 Cloudflare 实验线，用来验证：
 
@@ -363,8 +363,8 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 ## 下一步建议
 
-1. 在 EdgeOne 正式页面使用真实手机验证登录后的音视频播放；桌面浏览器登录、AI、模块完成、刷新恢复和回放已通过。
+1. 在 EdgeOne 正式页面使用真实手机验证登录后的音视频实际播放；桌面浏览器登录、AI、模块 1-1 完成、刷新恢复、回放以及 42/42 模块入口与初始渲染已通过。
 2. 定期确认每日 PostgreSQL 备份，并按研究数据变化周期更新服务器外备份。
-3. 对 42 个模块、手机端、移动/联通/电信及断网/重复提交等异常路径执行发布级回归。
+3. 对 42 个模块的深层交互和完成路径，以及移动/联通/电信登录、AI、完成和断网/重复提交等异常路径执行发布级回归。
 4. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages M3 前端及 Worker CORS。
 5. 两条路线全部验收后再将 `release/m3-mainland-postgres` 合入 `main`。

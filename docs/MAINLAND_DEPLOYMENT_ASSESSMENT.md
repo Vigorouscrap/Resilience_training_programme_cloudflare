@@ -67,7 +67,7 @@
 | `https://api.resilience-training.cloud/health` | HTTP 200 | M3 Fastify 正式在线，返回 `fastify-node` 与 10 个 hook |
 | `https://www.resilience-training.cloud/` | HTTP 200 | EdgeOne 正式前端域名与 HTTPS 已可用 |
 
-2026-11-12 15:40 CST，systemd 已正式切换到 `/opt/resilience-training-programme-m3/backend`；服务只监听 `127.0.0.1:8787`，由 Nginx 提供公网 HTTPS。真实 PostgreSQL full 契约和公网新版 health 均通过。该结果证明内地后端生产链路已切换，但仍不能代替 EdgeOne 页面上的完整课程、音视频和移动网络回归。
+2026-11-12 15:40 CST，systemd 已正式切换到 `/opt/resilience-training-programme-m3/backend`；服务只监听 `127.0.0.1:8787`，由 Nginx 提供公网 HTTPS。真实 PostgreSQL full 契约和公网新版 health 均通过。EdgeOne 随后通过线上静态文件哈希校验、真实登录/AI/完成/回放 smoke，以及 42/42 模块入口和初始渲染回归；每个模块的 `module-runs/start` 均返回 200，未出现控制台错误、失败请求或同源/API 4xx/5xx。42 模块结果只覆盖入口与初始渲染，仍不能代替完整交互、实际音视频播放和移动网络回归。
 
 腾讯云生产 `CORS_ORIGIN` 已配置为 `https://www.resilience-training.cloud`。Cloudflare Worker 的 CORS 仍为 `*`，需要在 Cloudflare 发布窗口收紧。
 
@@ -269,6 +269,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] 为内地部署生成指向腾讯云 API 的独立运行时配置，不复制第二份前端源码。
 - [x] 抽查 MP3、MP4、MOV：MIME 类型正确，支持 `Accept-Ranges: bytes`，分段请求返回 HTTP 206；真实手机页面播放仍在 M5 人工验收。
 - [x] 使用隔离 headless Edge 和测试账号 `C_TEST` 完成真实页面 smoke：登录、数据库连接、1-1 DeepSeek AI、完成状态保存、刷新后只读回放全部通过；观察到对应 API/CORS 请求，无失败请求和控制台错误（2026-11-12）。
+- [x] 使用隔离 headless Edge 逐一打开 1-1 至 6-7：42/42 模块的 `module-runs/start` 均返回 200、页面进入 practice、标题和聊天区可见，无失败请求、控制台错误或同源/API 4xx/5xx（2026-11-12）。该项为入口与初始渲染层验收，不等同于 42 个模块完整交互和完成路径验收。
 - [ ] 收紧 Worker CORS，移除 `*`。
 
 完成标准：内地前端全程 HTTPS，不依赖 Cloudflare 或 Vercel 资源即可完成训练。
@@ -276,7 +277,8 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 ### M5：发布验收与双路线运维
 
 - [ ] 在中国移动、联通、电信和至少一台手机上测试静态媒体实际播放、登录、AI、完成、次日解锁、回放和导出；三网首页与桌面 headless Edge 登录/AI/完成/回放已通过。
-- [ ] 对 42 个模块做基础回归，覆盖音频、视频、倒计时、输入和特殊卡片。
+- [x] 对 42 个模块完成生产入口与初始渲染回归：42/42 的 start API、practice 页面、模块标题和聊天区均通过。
+- [ ] 对 42 个模块继续执行深层交互和完成路径回归，覆盖音频、视频、倒计时、输入、特殊卡片和统一完成状态。
 - [ ] 验证断网、超时、重复点击、刷新、跨设备、跨标签页和数据库暂时不可用。
 - [ ] 对比两个后端的契约测试结果，并记录允许的基础设施差异。
 - [ ] 建立上线、回滚、备份恢复、密钥轮换、故障联系和数据导出操作手册。
@@ -291,7 +293,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 3. M1 已完成：`www.resilience-training.cloud` 的 CNAME、HTTPS、Mainland runtime、图片和三网首页访问均已通过。
 4. M2 已完成：契约已全部确认，新 Worker 部署后的现有黑盒 profile 全部通过，完整证据和剩余差异已记录。
 5. M3 内地后端生产部署完成：PostgreSQL、备份恢复、HTTPS、loopback Fastify、systemd cutover 和真实 DB full 契约均已通过。
-6. 日志轮换、EdgeOne M3 浏览器 smoke 和首份异地备份已完成；下一步进行真实手机音视频和 42 模块回归。
+6. 日志轮换、EdgeOne M3 浏览器 smoke、42/42 模块入口回归和首份异地备份已完成；下一步进行真实手机音视频、42 模块深层交互/完成路径和三网业务流程回归。
 7. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages 重建；最后合并 `main`。
 
 本方案不建议立刻删除或合并旧仓库。旧仓库用于保存腾讯云早期部署历史；完成 M0 后，以 Cloudflare 仓库作为主线，并在项目说明中明确这一点即可。
