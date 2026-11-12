@@ -214,6 +214,8 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 重复项已定位为 `/etc/nginx/sites-enabled/resilience-backend.before-certbot-20261112`：这是回滚备份的普通文件，但 Nginx 会加载 `sites-enabled` 下所有匹配文件，因此它与正式 symlink 同时生效。回滚副本必须移动到 `/etc/nginx/backups/` 等非 include 目录；不要把 `.bak`、`.before-*` 或配置副本留在 `sites-enabled`。移动后先执行 `nginx -t`、确认无 conflicting warning并 reload，再运行 Certbot。
 
+2026-11-12 Certbot 已签发 `api.resilience-training.cloud` RSA 证书，有效期至 2027-02-10，`certbot renew --dry-run` 成功；但公网 HTTPS health 仍在 5 秒内连接超时并返回 HTTP code 000。证书签发和自动续期可用不代表 443 已形成入口；需继续区分 Nginx 是否本机监听/提供 TLS，以及腾讯云安全组或主机防火墙是否放行 TCP 443。未取得 HTTPS 200 前不切换正式 EdgeOne API。
+
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
 ```bash
