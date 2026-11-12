@@ -363,8 +363,8 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 
 ## 下一步建议
 
-1. 将至少一份已验证的 PostgreSQL 备份复制到服务器外；journald/logrotate 和基础服务状态已经验收。
-2. 在 EdgeOne 正式页面人工验证登录、AI、模块完成、刷新恢复、回放及登录后的音视频播放；测试身份必须使用测试编号。
+1. 在 EdgeOne 正式页面使用真实手机验证登录后的音视频播放；桌面浏览器登录、AI、模块完成、刷新恢复和回放已通过。
+2. 定期确认每日 PostgreSQL 备份，并按研究数据变化周期更新服务器外备份。
 3. 对 42 个模块、手机端、移动/联通/电信及断网/重复提交等异常路径执行发布级回归。
 4. 单独安排 Cloudflare 发布窗口：D1 0004、Worker full contract、Cloudflare Pages M3 前端及 Worker CORS。
 5. 两条路线全部验收后再将 `release/m3-mainland-postgres` 合入 `main`。

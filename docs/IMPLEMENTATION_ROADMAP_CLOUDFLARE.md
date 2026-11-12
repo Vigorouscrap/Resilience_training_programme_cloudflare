@@ -55,6 +55,7 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 - 2026-11-12：EdgeOne/腾讯云自动生产验收通过：health 返回 `fastify-node` 与完整 10 个 hook，CORS/OPTIONS 正确；full contract 覆盖登录、模块、AI、events、跨 session 回放和隔离，测试记录均标记 `testData=true`。MP3、MP4、MOV 的 MIME 与 Range 206 抽查通过；登录后的真实手机播放和 42 模块仍待人工回归。
 - 2026-11-12：新增无第三方依赖的 `smoke:mainland:browser`，以隔离 headless Edge 和 `C_TEST` 对 EdgeOne Production 执行真实页面登录、PostgreSQL 连接、模块 1-1 DeepSeek AI、完成保存和刷新后回放；全部通过且无控制台错误或失败请求。脚本只重置测试账号的 1-1，不操作普通参与者数据。
 - 2026-11-12：完成服务器日志运维验收。journald 设置 512 MB 容量、30 天保留、5 GB 磁盘保留和 64 MB 单文件上限，实际占用由约 1 GB 降至 360 MB；logrotate timer/dry-run 正常，M3 服务 active、`NRestarts=0`、无 warning，根盘使用率 18%。
+- 2026-11-12：完成首份服务器外 PostgreSQL 备份。`resilience-20261112T093425Z.dump` 下载至 Windows `E:\ResilienceOffsiteBackups`，大小 37,536 bytes；服务器与本机 SHA-256 均为 `f39331bc4e2a9eeea98e608571a7332b655689a654ba845c07df6494108158f6`。传输目录和一次性服务器公钥/本机私钥已删除，服务器正式备份保留策略不变。
 
 ### 测试编号登记（2026-08-28）
 
@@ -928,7 +929,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] M1：EdgeOne 临时/正式 HTTPS 站点、Mainland runtime、图片、三网首页访问及 `www.resilience-training.cloud` 绑定均已完成（2026-11-09）；登录后的音视频及 API 流程移至 M4/M5。
 - [x] M2：负责人已部署 Worker 更新，线上 health/core/ai/research 全部通过，包含 AI 新字段/错误码、事件计数、跨 session 回放和身份隔离。完成范围为契约、测试框架和本轮兼容修正；生产固定后端映射，完整业务验收的未覆盖项见 `docs/M2_DEPLOYMENT_VALIDATION.md`。
 - [x] M3 代码与本地验证：Fastify 研究接口、PostgreSQL migrations、共享研究服务、双时长、事件有界重试、测试数据标记及两端导出完成；并发完成、SQL 回滚、隔离、回放只读、AI fallback 和本地 HTTP 契约通过。详见 `docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md`。
-- [x] M3 内地生产验收：腾讯云真实 PostgreSQL/Fastify、最小权限、full contract、备份恢复、API HTTPS、日志策略和 EdgeOne M3 Production 均通过；仅异地备份仍为运维待办。
+- [x] M3 内地生产验收：腾讯云真实 PostgreSQL/Fastify、最小权限、full contract、备份恢复、首份异地备份、API HTTPS、日志策略和 EdgeOne M3 Production 均通过。
 - [ ] M3 Cloudflare 发布：D1 0004、Worker full contract、Cloudflare M3 前端发布与回归。
 - [ ] M4：内地 API HTTPS、EdgeOne M3 前端和腾讯云 CORS 已完成；剩余 Worker CORS 收紧及人工浏览器完整流程。
 - [ ] M5：完成 42 模块、三网、手机端、异常恢复、数据隔离、导出和备份恢复验收。
@@ -947,7 +948,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] EdgeOne Production headless Edge smoke 通过：`C_TEST` 登录、AI、1-1 完成保存及回放正常，无控制台错误或失败请求。
 - [x] 确认 EdgeOne Pages 不需要重写前端：构建脚本从 `src/` 生成 `dist/mainland/`，固定大陆 API 地址且不改写 Cloudflare 源配置。
 - [x] 确认现有 Lighthouse 容量满足约 100 人；PostgreSQL 与 Fastify 同机部署，5432 不对公网开放。
-- [ ] 将至少一份已验证的 PostgreSQL 备份复制到服务器外部。
+- [x] 将已验证的 PostgreSQL 备份复制到 Windows 服务器外目录，SHA-256 一致，并移除传输临时密钥。
 - [x] 确认 Cloudflare D1 与中国大陆 PostgreSQL 数据独立保存，不做迁移或同步。
 - [x] 生产部署忽略 query string/sessionStorage API 覆盖；仅 localhost 保留临时后端调试能力。
 

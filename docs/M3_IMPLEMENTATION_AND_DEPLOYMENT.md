@@ -208,7 +208,9 @@ EdgeOne 发布 M3 时，将生产分支选择为 `release/m3-mainland-postgres`�
 
 开发不缺新的业务规则或域名。2026-11-12，腾讯云 M3 内地后端已经完成正式生产切换；后续不再把旧 `/opt/resilience-training-programme/backend` 视为生产代码目录。
 
-服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、真实 PostgreSQL full 契约测试、本机备份/恢复演练、API HTTPS、正式 systemd 切换、journal/logrotate 检查和 EdgeOne 浏览器 smoke 均已完成。当前内地后端由 Nginx 代理至 loopback Fastify，公网 health 已返回新版 runtime 与完整 10 个 hook。M3 内地后端生产部署完成；剩余运维工作是至少一份服务器外备份。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的真实音视频、42 模块、手机与三网验收。
+服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、真实 PostgreSQL full 契约测试、本机备份/恢复演练、API HTTPS、正式 systemd 切换、journal/logrotate 检查、EdgeOne 浏览器 smoke 和首份服务器外备份均已完成。当前内地后端由 Nginx 代理至 loopback Fastify，公网 health 已返回新版 runtime 与完整 10 个 hook。M3 内地后端生产部署完成。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的真实音视频、42 模块、手机与三网验收。
+
+2026-11-12 已将 `resilience-20261112T093425Z.dump` 下载到 Windows `E:\ResilienceOffsiteBackups`。文件大小 37,536 bytes，服务器与本机 SHA-256 均为 `f39331bc4e2a9eeea98e608571a7332b655689a654ba845c07df6494108158f6`；本机同时保存 `.sha256` 文件。下载后已删除服务器 `/home/ubuntu/resilience-offsite-transfer` 临时副本、一次性 authorized key 和本机临时私钥；`/var/backups/resilience` 正式备份目录不受影响。
 
 2026-11-12 实机检查：`nginx -t` 通过，HTTP `http://api.resilience-training.cloud/health` 返回 200；`api.resilience-training.cloud` A 记录正确解析到 `1.117.58.64`。Nginx 当前只监听 80，HTTPS 连接 5 秒超时；Certbot 已安装但 `certbot certificates` 显示无证书。旧 Node 进程仍监听 `0.0.0.0:8787`，而 Nginx 已代理至 `127.0.0.1:8787`。M3 切换后通过 `HOST=127.0.0.1` 收紧监听；在证书和 443 配置完成前不切换正式 EdgeOne API。
 
