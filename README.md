@@ -4,13 +4,13 @@
 
 本仓库现为唯一开发基线：一套课程源码，两套固定部署适配。Cloudflare Pages → Worker/D1；EdgeOne Pages → 腾讯云 Fastify/PostgreSQL。旧 `Resilience_training_programme` 仓库保留早期部署历史。下文早期实验记录仅供追溯，当前进度以本段及路线图阶段 10 为准。
 
-腾讯云 M3 Fastify + PostgreSQL 已完成生产切换；EdgeOne Production 已发布同一 release 分支的 Mainland 前端，`www.resilience-training.cloud` 固定连接 `api.resilience-training.cloud`。线上静态文件校验、Fastify full contract、HTTPS/CORS/预检和代表性 MP3/MP4/MOV Range 请求均通过。Fastify 和 Worker 共用 `shared-contract/research.mjs`，支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。Cloudflare D1 0004、Worker/M3 前端发布仍需独立窗口。
+腾讯云 M3 Fastify + PostgreSQL 已完成生产切换；EdgeOne Production 已发布同一 release 分支的 Mainland 前端，`www.resilience-training.cloud` 固定连接 `api.resilience-training.cloud`。线上静态文件校验、Fastify full contract、HTTPS/CORS/预检和代表性 MP3/MP4/MOV Range 请求均通过；隔离的 headless Edge 使用 `C_TEST` 完成真实登录、模块 1-1 AI、完成保存及刷新后回放，无失败请求或控制台错误。Fastify 和 Worker 共用 `shared-contract/research.mjs`，支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。Cloudflare D1 0004、Worker/M3 前端发布仍需独立窗口。
 
 - [M3 实现、测试与部署步骤](docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md)
 - [当前部署路线与待办](docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md)
 - [已确认的共享契约](docs/M2_SHARED_API_CONTRACT.md)
 
-本地验证：`npm run test:research`、`npm run test:contract:unit`、`npm run test:contract:fastify-local`、`npm --prefix cloudflare-worker run check`。先在 `backend/` 和 `cloudflare-worker/` 安装依赖。生产静态构建分别使用 `npm run build:cloudflare` / `npm run build:mainland`；原始 `src/` 不作为内地发布产物。
+本地验证：`npm run test:research`、`npm run test:contract:unit`、`npm run test:contract:fastify-local`、`npm --prefix cloudflare-worker run check`。EdgeOne 发布后运行 `npm run verify:mainland` 和 Windows 本机 Edge 的 `npm run smoke:mainland:browser`。先在 `backend/` 和 `cloudflare-worker/` 安装依赖。生产静态构建分别使用 `npm run build:cloudflare` / `npm run build:mainland`；原始 `src/` 不作为内地发布产物。
 
 本仓库是 `Resilience_training_programme` 的 Cloudflare 实验线，用来验证：
 

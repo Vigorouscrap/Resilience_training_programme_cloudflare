@@ -12,6 +12,7 @@
     "build:cloudflare": "node scripts/prepare-runtime-config.mjs cloudflare",
     "build:mainland": "node scripts/prepare-runtime-config.mjs mainland",
     "verify:mainland": "node scripts/verify-mainland-deployment.mjs",
+    "smoke:mainland:browser": "node scripts/smoke-mainland-browser.mjs",
     "test:contract:unit": "node --test shared-contract/*.test.mjs",
     "test:contract:fastify-local": "npm --prefix backend run build && node scripts/contract-test-fastify-local.mjs",
     "test:contract": "node scripts/contract-test.mjs",

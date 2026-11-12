@@ -53,6 +53,7 @@ E:\2025 HKU\Lab\ResilienceProject\Resilience_training_programme_cloudflare_exper
 - 2026-11-09：负责人已部署新版 Worker。扩展黑盒运行器 research profile，线上 health/core/ai/research 全部通过，覆盖事件计数、跨 session 消息/快照回放和身份隔离，M2 契约与本轮部署验收完成。完整业务契约尚有 M3–M5 待办（时长、导出、共享规则接入、Worker 边界行为等），证据与限制见 `docs/M2_DEPLOYMENT_VALIDATION.md`，本次未启动 M3。
 - 2026-11-12：腾讯云 M3 Fastify + PostgreSQL 完成正式 systemd cutover；API HTTPS、loopback 监听、真实 PostgreSQL full contract、每日备份与恢复演练通过。EdgeOne Production 随后发布 `release/m3-mainland-postgres`，线上 5 个关键静态文件与 release 构建哈希一致，`www` 固定连接腾讯云 API。
 - 2026-11-12：EdgeOne/腾讯云自动生产验收通过：health 返回 `fastify-node` 与完整 10 个 hook，CORS/OPTIONS 正确；full contract 覆盖登录、模块、AI、events、跨 session 回放和隔离，测试记录均标记 `testData=true`。MP3、MP4、MOV 的 MIME 与 Range 206 抽查通过；登录后的真实手机播放和 42 模块仍待人工回归。
+- 2026-11-12：新增无第三方依赖的 `smoke:mainland:browser`，以隔离 headless Edge 和 `C_TEST` 对 EdgeOne Production 执行真实页面登录、PostgreSQL 连接、模块 1-1 DeepSeek AI、完成保存和刷新后回放；全部通过且无控制台错误或失败请求。脚本只重置测试账号的 1-1，不操作普通参与者数据。
 
 ### 测试编号登记（2026-08-28）
 
@@ -942,6 +943,7 @@ npm.cmd run smoke:hooks -- https://resilience-ai-worker.1362758164.workers.dev
 - [x] 腾讯云 Fastify 生产 full contract 通过，与共享业务契约对齐。
 - [x] EdgeOne `www` 已部署 M3 Mainland Production，运行时固定连接腾讯云 API。
 - [x] EdgeOne MP3/MP4/MOV MIME 和 Range 206 抽查通过。
+- [x] EdgeOne Production headless Edge smoke 通过：`C_TEST` 登录、AI、1-1 完成保存及回放正常，无控制台错误或失败请求。
 - [x] 确认 EdgeOne Pages 不需要重写前端：构建脚本从 `src/` 生成 `dist/mainland/`，固定大陆 API 地址且不改写 Cloudflare 源配置。
 - [x] 确认现有 Lighthouse 容量满足约 100 人；PostgreSQL 与 Fastify 同机部署，5432 不对公网开放。
 - [ ] 将至少一份已验证的 PostgreSQL 备份复制到服务器外部。

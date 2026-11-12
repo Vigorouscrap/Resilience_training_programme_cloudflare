@@ -112,7 +112,7 @@
 
 - 检查 journald 占用/保留策略和 logrotate，补充基本服务监控。
 - 将至少一份已验证的 PostgreSQL 备份复制到服务器外，例如用户电脑或私有 COS。
-- EdgeOne M3 Mainland 产物已发布；仍需完成登录、AI、模块完成、回放、音视频和 PostgreSQL 写入的人工浏览器联调。
+- EdgeOne M3 Mainland 产物已发布；headless Edge 已完成登录、AI、模块 1-1 完成、回放与 PostgreSQL 写入，仍需真实手机音视频和完整 42 模块人工联调。
 - Cloudflare D1 应用 `0004_module_durations.sql`，发布 Worker，运行线上 full contract，再重建 Cloudflare Pages。
 - Cloudflare Worker 生产 CORS 仍为 `*`，需在发布窗口收紧。
 - 42 个模块、手机端、断网重试、重复提交、跨标签页和回放尚未完成发布级回归。
@@ -269,13 +269,14 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 - [x] M3 Mainland 产物已部署到 EdgeOne Production；`www.resilience-training.cloud` 的运行时配置、4 个关键业务脚本、API health、10 个 hook、CORS 和预检均通过自动验收（2026-11-12）。
 - [x] 为内地部署生成指向腾讯云 API 的独立运行时配置，不复制第二份前端源码。
 - [x] 抽查 MP3、MP4、MOV：MIME 类型正确，支持 `Accept-Ranges: bytes`，分段请求返回 HTTP 206；真实手机页面播放仍在 M5 人工验收。
+- [x] 使用隔离 headless Edge 和测试账号 `C_TEST` 完成真实页面 smoke：登录、数据库连接、1-1 DeepSeek AI、完成状态保存、刷新后只读回放全部通过；观察到对应 API/CORS 请求，无失败请求和控制台错误（2026-11-12）。
 - [ ] 收紧 Worker CORS，移除 `*`。
 
 完成标准：内地前端全程 HTTPS，不依赖 Cloudflare 或 Vercel 资源即可完成训练。
 
 ### M5：发布验收与双路线运维
 
-- [ ] 在中国移动、联通、电信和至少一台手机上测试首页、静态媒体、登录、AI、完成、次日解锁、回放和导出。
+- [ ] 在中国移动、联通、电信和至少一台手机上测试静态媒体实际播放、登录、AI、完成、次日解锁、回放和导出；三网首页与桌面 headless Edge 登录/AI/完成/回放已通过。
 - [ ] 对 42 个模块做基础回归，覆盖音频、视频、倒计时、输入和特殊卡片。
 - [ ] 验证断网、超时、重复点击、刷新、跨设备、跨标签页和数据库暂时不可用。
 - [ ] 对比两个后端的契约测试结果，并记录允许的基础设施差异。
