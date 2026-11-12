@@ -218,6 +218,8 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 进一步检查确认 Nginx 已监听 `0.0.0.0:443`，Certbot server block、证书路径和 80→443 重定向正确；使用 `--resolve ...:127.0.0.1` 的本机 HTTPS health 返回 200，本机 HTTP 返回 301。UFW 未启用，iptables 没有针对 443 的 DROP/REJECT，现有拒绝项仅针对若干来源 IP 的 SSH 22。由此将公网 443 超时定位到腾讯云 Lighthouse 实例防火墙尚未放行 TCP 443；需在控制台添加允许规则后再进行外部 HTTPS 验收。
 
+腾讯云 Lighthouse 防火墙放行 TCP 443 后，公网浏览器访问 `https://api.resilience-training.cloud/health` 已返回 `ok:true`、生产环境和 DeepSeek provider 的健康 JSON，证明 DNS、证书、443、Nginx 和旧 Fastify 公网链路已贯通。浏览器显示 JSON 正文而非数字 200 属正常；HTTP 状态码可用 curl `-w` 查看。下一步切换 systemd 到旁路 M3 目录，并验证只监听 loopback。
+
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
 ```bash
