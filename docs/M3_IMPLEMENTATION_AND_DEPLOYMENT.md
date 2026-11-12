@@ -208,6 +208,8 @@ Cloudflare Pages 重建 `npm run build:cloudflare`（产物 `dist/cloudflare`）
 
 服务器路径、systemd 用户、Node 版本、PostgreSQL 安装、数据库迁移、最小权限、旁路 Fastify 真实 PostgreSQL full 测试和本机备份/恢复演练已经完成。切换 Fastify 前必须先完成 `api.resilience-training.cloud` HTTPS，并确认 Nginx 只代理到 loopback；否则正式 EdgeOne 页面会遇到 HTTPS mixed-content/接口失败。HTTPS/CORS 就绪后再切换 systemd 并联调 EdgeOne。Cloudflare D1 0004、Worker 和 Cloudflare Pages 更新仍需独立发布窗口；M5 完成登录后的音视频、42 模块、手机与三网验收。
 
+2026-11-12 实机检查：`nginx -t` 通过，HTTP `http://api.resilience-training.cloud/health` 返回 200；Nginx 当前只监听 80，未发现启用的 443 SSL server，HTTPS 尚未完成。旧 Node 进程仍监听 `0.0.0.0:8787`，而 Nginx 已代理至 `127.0.0.1:8787`。M3 切换后通过 `HOST=127.0.0.1` 收紧监听；在证书和 443 配置完成前不切换正式 EdgeOne API。
+
 2026-11-10 已完成以下只读检查；不需要重复执行，除非服务器配置发生变化：
 
 ```bash

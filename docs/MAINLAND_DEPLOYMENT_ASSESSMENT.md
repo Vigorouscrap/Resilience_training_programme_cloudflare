@@ -268,6 +268,7 @@ M0 验证记录（2026-11-06）：Worker TypeScript 检查通过；全部前端 
 ### M4：恢复正式 HTTPS 与内地前端
 
 - [ ] 为 `api.resilience-training.cloud` 配置有效证书和自动续期（域名实名认证及 ICP 备案手续已完成）。
+- [x] 2026-11-12 核对现状：Nginx 语法正常、HTTP health 200、当前仅监听 80，尚无有效 443 SSL server；旧 Fastify 仍监听 `0.0.0.0:8787`，M3 切换时改为 loopback。
 - [ ] 将 Nginx 配置为 80 跳转 443，只代理到本机 `127.0.0.1:8787`。
 - [ ] 将腾讯云 `CORS_ORIGIN` 改为真实内地前端和明确的测试来源。
 - [x] Mainland 产物已部署到 EdgeOne Pages，`www.resilience-training.cloud` 已绑定且 HTTPS 可用（M1）；API 联调仍待下列验收。
