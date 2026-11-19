@@ -436,7 +436,8 @@ test('managed audio lifecycle in a real browser (no production API calls)', { ti
                 assert.equal(await client.evaluate("document.querySelector('#overviewGrid').children.length === 5 && document.querySelector('#overviewGrid').textContent.includes('50.0%')"), true);
                 await client.evaluate("document.querySelector('#participantRows [data-participant=\\\"p-2\\\"]').click()");
                 await poll(() => client.evaluate("document.querySelector('#drawerTitle').textContent.includes('R002')"));
-                assert.equal(await client.evaluate("document.querySelector('#drawerContent').textContent.includes('训练历时 5分0秒')"), true);
+                assert.equal(await client.evaluate("document.querySelector('thead').textContent.includes('最近练习时长') && document.querySelector('#participantRows').textContent.includes('4分0秒')"), true);
+                assert.equal(await client.evaluate("document.querySelector('#drawerContent').textContent.includes('练习时长 4分0秒') && !document.querySelector('#drawerContent').textContent.includes('训练历时')"), true);
                 assert.equal(await client.evaluate("document.querySelector('#drawerContent').textContent.includes('此视图不展示输入内容')"), true);
                 const dashboardShot = await client.send('Page.captureScreenshot', { format: 'png' });
                 fs.writeFileSync(path.join(screenshotDir, `dashboard-${width}.png`), Buffer.from(dashboardShot.data, 'base64'));

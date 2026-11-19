@@ -59,7 +59,7 @@ function renderOverview(data) {
     overview = data;
     const cards = [
         { label: '已入组', value: data.participants.enrolled, detail: `进行中 ${data.participants.active} 人`, filter: 'enrolled' },
-        { label: '今日完成率', value: `${(data.today.completionRate * 100).toFixed(1)}%`, detail: `${data.today.completed} / ${data.today.eligible} 人`, filter: 'today' },
+        { label: '今日完成率', value: `${(data.today.completionRate * 100).toFixed(1)}%`, detail: `今日完成 ${data.today.completed} / 应训练 ${data.today.eligible} 人`, filter: 'today' },
         { label: '完成 6-7', value: `${data.participants.graduated}`, detail: `结业率 ${(data.participants.graduationRate * 100).toFixed(1)}%`, filter: 'graduated' },
         { label: '连续两日未完成', value: data.alerts.participantCount, detail: '点击查看需要跟进的参与者', filter: 'alert' },
         { label: '已暂停', value: data.participants.paused, detail: `已退出 ${data.participants.withdrawn} 人`, filter: 'paused' }
@@ -92,7 +92,7 @@ function renderParticipants(data) {
             <td><span class="status status-${escapeHtml(item.status)}">${statusLabel(item.status)}</span></td>
             <td>${formatDate(item.enrolledAt)}</td><td>${item.completedDays}/42${item.graduated ? ' · 已结业' : ''}</td>
             <td>${item.lastModuleId ? `${escapeHtml(item.lastModuleId)} · ${formatDate(item.lastCompletedAt)}` : '—'}</td>
-            <td>${formatDuration(item.lastElapsedDurationSeconds)}</td>
+            <td>${formatDuration(item.lastPracticeDurationSeconds)}</td>
             <td>${item.alert ? `<span class="alert-mark">连续 ${item.missedExpectedDays} 日</span>` : '—'}</td>
         </tr>`).join('');
         rows.querySelectorAll('[data-participant]').forEach((row) => {
@@ -172,8 +172,8 @@ async function openParticipant(id) {
         <div class="section-heading"><h3>训练记录</h3><span>${data.moduleRuns.length} 条</span></div>
         <div class="run-list">${data.moduleRuns.length ? data.moduleRuns.map((run) => `<article class="run-row">
             <div><strong>第 ${run.dayIndex} 天 · ${escapeHtml(run.moduleId)}</strong><span class="status status-${run.status === 'completed' ? 'active' : 'paused'}">${run.status === 'completed' ? '已完成' : '进行中'}</span></div>
-            <p>${formatDate(run.startedAt, true)}${run.completedAt ? ` 至 ${formatDate(run.completedAt, true)}` : ''}</p>
-            <small>训练历时 ${formatDuration(run.elapsedDurationSeconds)} · 练习计时 ${formatDuration(run.practiceDurationSeconds)}</small>
+            <p>${run.completedAt ? `完成于 ${formatDate(run.completedAt, true)}` : '尚未完成'}</p>
+            <small>练习时长 ${formatDuration(run.practiceDurationSeconds)}</small>
         </article>`).join('') : '<p class="empty-state">尚无训练记录</p>'}</div>
         <p class="readonly-note">此视图不展示输入内容，也不能修改练习记录。</p>`;
         $('#drawerContent').querySelectorAll('[data-status]').forEach((button) => button.addEventListener('click', async () => {

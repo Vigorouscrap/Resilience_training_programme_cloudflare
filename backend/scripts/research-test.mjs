@@ -263,7 +263,7 @@ try {
         await liveDb.all(`UPDATE module_runs SET completed_at = now()
             WHERE participant_id = (SELECT id FROM participants WHERE participant_code = 'DASH_01') AND module_id = '1-1'`);
         const newlyEnrolledToday = (await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders })).json();
-        assert.deepEqual(newlyEnrolledToday.today, { eligible: 0, completed: 0, completionRate: 0 });
+        assert.deepEqual(newlyEnrolledToday.today, { eligible: 1, completed: 1, completionRate: 1 });
         assert.equal(newlyEnrolledToday.alerts.participantCount, 0);
         const recentSort = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?sort=recent', headers: adminHeaders });
         assert.equal(recentSort.json().items[0].participantCode, 'DASH_01');

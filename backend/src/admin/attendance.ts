@@ -27,7 +27,7 @@ export function attendance(input: {
     const enrolled = input.enrolledAt ? shanghaiDate(input.enrolledAt) : null;
     const lastCompleted = input.lastCompletedAt ? shanghaiDate(input.lastCompletedAt) : null;
     const graduated = input.graduatedAt ? shanghaiDate(input.graduatedAt) : null;
-    const eligibleToday = input.status === 'active' && Boolean(enrolled && enrolled < today)
+    const eligibleToday = input.status === 'active' && Boolean(enrolled && enrolled <= today)
         && (!graduated || graduated >= today);
     let missedExpectedDays = 0;
     if (input.status === 'active' && enrolled && lastCompleted && !graduated) {

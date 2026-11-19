@@ -679,7 +679,10 @@ function initApp() {
 
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
+            practiceTimer.pause();
             stopSpeech();
+        } else {
+            practiceTimer.resume();
         }
     });
 

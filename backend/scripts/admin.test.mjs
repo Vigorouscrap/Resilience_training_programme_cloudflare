@@ -27,8 +27,10 @@ test('completion yesterday or today clears reminders even for late low-index tra
     }
 });
 
-test('new enrollment and no enrollment are excluded from daily rate and alerts', () => {
-    assert.equal(check({ enrolledAt: now, lastCompletedAt: now }).eligibleToday, false);
+test('today enrollment counts as today completion; no enrollment is excluded', () => {
+    const todayEnrollment = check({ enrolledAt: now, lastCompletedAt: now });
+    assert.equal(todayEnrollment.eligibleToday, true);
+    assert.equal(todayEnrollment.completedToday, true);
     const result = check({ enrolledAt: null, lastCompletedAt: null });
     assert.equal(result.eligibleToday, false);
     assert.equal(result.alert, false);
