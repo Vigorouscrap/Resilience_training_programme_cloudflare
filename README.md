@@ -1,15 +1,18 @@
 # 心理弹性训练程序 - Cloudflare 实验仓库
 
-## 当前主线状态（2026-11-13）
+## 当前主线状态（2026-11-19）
 
-本仓库现为唯一开发基线：一套课程源码，两套固定部署适配。Cloudflare Pages → Worker/D1；EdgeOne Pages → 腾讯云 Fastify/PostgreSQL。旧 `Resilience_training_programme` 仓库保留早期部署历史。下文早期实验记录仅供追溯，当前进度以本段及路线图阶段 10 为准。
+本仓库现为唯一开发基线：一套课程源码，两套固定部署适配。Cloudflare Pages → Worker/D1；EdgeOne Pages → 腾讯云 Fastify/PostgreSQL。旧 `Resilience_training_programme` 仓库保留早期部署历史。下文早期实验记录仅供追溯，当前部署进度以阶段 10 为准，研究管理后台进度见阶段 11/M6。
 
 腾讯云 M3 Fastify + PostgreSQL 已完成生产切换；EdgeOne Production 已发布同一 release 分支的 Mainland 前端，`www.resilience-training.cloud` 固定连接 `api.resilience-training.cloud`。线上静态文件哈希、Fastify full contract、HTTPS/CORS/预检和代表性 MP3/MP4/MOV Range 请求均通过；隔离的 headless Edge 使用 `C_TEST` 完成真实登录、模块 1-1 AI、完成保存及刷新后回放，并逐一验证 42/42 模块入口、`module-runs/start` 200 和初始页面可见内容，无失败请求或控制台错误。M5 代表性深层回归进一步完整执行并自动重置 1-5、2-4、4-4、6-6，覆盖音频请求、倒计时、输入、按钮、测验、DeepSeek AI、复习树和完成保存；恢复性 smoke 也已验证普通事件断网重试、刷新、跨标签页和并发 start 不会生成重复 run。该结果仍不代表 42 个模块的全部深层交互或真实手机媒体播放已经完成。Fastify 和 Worker 共用 `shared-contract/research.mjs`，支持身份、进度、双时长、事件、跨会话回放及受保护 CSV/JSON 导出。Cloudflare D1 0004、Worker/M3 前端发布仍需独立窗口。
+
+M6 研究管理后台已开始本地实现：新增独立工作人员登录、PostgreSQL 管理查询、总览/列表/进度详情、暂停与退出状态，以及桌面/手机页面；尚未迁移生产数据库、设置工作人员凭证或发布 EdgeOne。
 
 - [M3 实现、测试与部署步骤](docs/M3_IMPLEMENTATION_AND_DEPLOYMENT.md)
 - [当前部署路线与待办](docs/MAINLAND_DEPLOYMENT_ASSESSMENT.md)
 - [已确认的共享契约](docs/M2_SHARED_API_CONTRACT.md)
 - [M5 手机与三网人工验收清单](docs/M5_MANUAL_ACCEPTANCE_CHECKLIST.md)
+- [研究管理后台方案与 M6 待办](docs/ADMIN_DASHBOARD_PLAN.md)
 
 本地验证：`npm run test:research`、`npm run test:contract:unit`、`npm run test:contract:fastify-local`、`npm --prefix cloudflare-worker run check`。EdgeOne 发布后运行 `npm run verify:mainland`、Windows 本机 Edge 的 `npm run smoke:mainland:browser`、42 模块入口回归 `npm run smoke:mainland:modules`、代表性深层交互回归 `npm run smoke:mainland:deep`，以及刷新/断网重试/跨标签页回归 `npm run smoke:mainland:recovery`。生产浏览器 smoke 只使用 `C_TEST`。先在 `backend/` 和 `cloudflare-worker/` 安装依赖。生产静态构建分别使用 `npm run build:cloudflare` / `npm run build:mainland`；原始 `src/` 不作为内地发布产物。
 
@@ -363,6 +366,8 @@ curl -X POST https://your-worker.your-account.workers.dev/api/v1/ai/hooks/module
 ---
 
 ## 下一步建议
+
+管理看板首版上线优先遵循 [M6 发布清单](docs/M6_ADMIN_DASHBOARD_DEPLOYMENT.md)：先在腾讯云应用 0002 迁移并配置独立工作人员账号，通过后再发布 EdgeOne `/admin/`。候选分支为 `release/m6-admin-dashboard`，现有生产分支暂不变。
 
 1. 在 EdgeOne 正式页面使用真实手机验证登录后的音视频实际播放；桌面浏览器登录、AI、模块 1-1 完成、刷新恢复、回放以及 42/42 模块入口与初始渲染已通过。
 2. 定期确认每日 PostgreSQL 备份，并按研究数据变化周期更新服务器外备份。

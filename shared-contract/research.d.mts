@@ -10,6 +10,7 @@ export class ContractError extends Error { status: number; code: string; constru
 export class ResearchService {
     constructor(db: ResearchDatabase | null, config?: ResearchConfig);
     config: ResearchConfig;
+    getResearchDatabase(): ResearchDatabase | null;
     startParticipantSession(body: any): Promise<any>;
     resolveParticipant(code: string, sessionId: string): Promise<any>;
     moduleRun(body: any, action: string): Promise<any>;

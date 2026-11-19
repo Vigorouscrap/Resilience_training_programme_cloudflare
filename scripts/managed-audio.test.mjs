@@ -91,8 +91,43 @@ class CdpClient {
 
 test('managed audio lifecycle in a real browser (no production API calls)', { timeout: 120000 }, async (t) => {
     assert.ok(fs.existsSync(browserPath), 'Set EDGE_PATH to a Chromium/Edge executable');
+    let mockStaffSession = false;
     const server = http.createServer(async (request, response) => {
         const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+        const json = (status, value, headers = {}) => {
+            response.writeHead(status, { 'Content-Type': 'application/json', ...headers });
+            response.end(JSON.stringify(value));
+        };
+        if (pathname === '/runtime-config.js') {
+            response.setHeader('Content-Type', 'text/javascript');
+            response.end(`window.__RESILIENCE_RUNTIME__={deploymentId:'mainland',apiBaseUrl:'http://127.0.0.1:${server.address()?.port || 0}'};`);
+            return;
+        }
+        if (pathname.startsWith('/api/v1/admin/')) {
+            if (pathname.endsWith('/login') && request.method === 'POST') {
+                mockStaffSession = true;
+                json(200, { authenticated: true, username: 'research-staff' }, { 'Set-Cookie': 'resilience_staff=test; Path=/api/v1/admin; HttpOnly; SameSite=Strict' });
+            } else if (pathname.endsWith('/logout')) {
+                mockStaffSession = false;
+                json(200, { authenticated: false }, { 'Set-Cookie': 'resilience_staff=; Path=/api/v1/admin; HttpOnly; SameSite=Strict; Max-Age=0' });
+            } else if (pathname.endsWith('/session')) {
+                json(mockStaffSession ? 200 : 401, mockStaffSession ? { authenticated: true, username: 'research-staff' } : { error: 'Unauthorized' });
+            } else if (!mockStaffSession) {
+                json(401, { error: 'Unauthorized' });
+            } else if (pathname.endsWith('/overview')) {
+                json(200, { date: '2026-11-19', updatedAt: new Date().toISOString(), participants: { enrolled: 2, active: 2, paused: 0, withdrawn: 0, graduated: 1, graduationRate: 0.5 }, today: { eligible: 2, completed: 1, completionRate: 0.5 }, alerts: { consecutiveMissedDays: 2, participantCount: 1 } });
+            } else if (pathname.endsWith('/participants') && request.method === 'GET') {
+                json(200, { page: 1, pageSize: 25, total: 2, items: [
+                    { participantId: 'p-1', participantCode: 'R001', participantName: '测试一', status: 'active', enrolledAt: '2026-11-01T02:00:00.000Z', completedDays: 8, lastCompletedAt: '2026-11-19T02:00:00.000Z', lastModuleId: '2-1', lastElapsedDurationSeconds: 420, lastPracticeDurationSeconds: 360, graduated: false, completedToday: true, missedExpectedDays: 0, alert: false },
+                    { participantId: 'p-2', participantCode: 'R002', participantName: '测试二', status: 'active', enrolledAt: '2026-11-02T02:00:00.000Z', completedDays: 4, lastCompletedAt: '2026-11-16T02:00:00.000Z', lastModuleId: '1-4', lastElapsedDurationSeconds: 300, lastPracticeDurationSeconds: 240, graduated: false, completedToday: false, missedExpectedDays: 2, alert: true }
+                ] });
+            } else if (pathname.includes('/participants/')) {
+                json(200, { participant: { participantId: 'p-2', participantCode: 'R002', participantName: '测试二', status: 'active', createdAt: '2026-11-02T02:00:00.000Z', lastSeenAt: '2026-11-16T02:00:00.000Z' }, moduleRuns: [{ moduleId: '1-4', dayIndex: 4, status: 'completed', startedAt: '2026-11-16T02:00:00.000Z', completedAt: '2026-11-16T02:05:00.000Z', elapsedDurationSeconds: 300, practiceDurationSeconds: 240 }] });
+            } else {
+                json(200, { status: 'paused', changed: true });
+            }
+            return;
+        }
         if (pathname === '/') {
             response.setHeader('Content-Type', 'text/html; charset=utf-8');
             response.end('<!doctype html><html><meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -103,7 +138,8 @@ test('managed audio lifecycle in a real browser (no production API calls)', { ti
             response.writeHead(204).end();
             return;
         }
-        const filename = path.resolve(sourceRoot, '.' + pathname);
+        const assetPath = pathname === '/admin/' ? '/admin/index.html' : pathname;
+        const filename = path.resolve(sourceRoot, '.' + assetPath);
         if (!filename.startsWith(sourceRoot + path.sep)) {
             response.writeHead(403).end();
             return;
@@ -382,6 +418,34 @@ test('managed audio lifecycle in a real browser (no production API calls)', { ti
                 })()`), true);
                 const homeShot = await client.send('Page.captureScreenshot', { format: 'png' });
                 fs.writeFileSync(path.join(screenshotDir, `home-${width}.png`), Buffer.from(homeShot.data, 'base64'));
+            }
+        });
+        await t.test('staff dashboard login, overview, participant drilldown and mobile drawer', async () => {
+            const screenshotDir = path.join(projectRoot, '.cache', 'admin-test');
+            fs.mkdirSync(screenshotDir, { recursive: true });
+            for (const width of [1280, 390]) {
+                await client.send('Emulation.setDeviceMetricsOverride', {
+                    width, height: 900, deviceScaleFactor: 1, mobile: width < 500
+                });
+                await client.send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/admin/` });
+                await poll(() => client.evaluate("!document.querySelector('#loginView').hidden"));
+                await client.evaluate(`document.querySelector('#username').value = 'research-staff';
+                    document.querySelector('#password').value = 'test-password';
+                    document.querySelector('#loginForm').requestSubmit()`);
+                await poll(() => client.evaluate("!document.querySelector('#dashboardView').hidden && document.querySelectorAll('#participantRows tr[data-participant]').length === 2"));
+                assert.equal(await client.evaluate("document.querySelector('#overviewGrid').children.length === 5 && document.querySelector('#overviewGrid').textContent.includes('50.0%')"), true);
+                await client.evaluate("document.querySelector('#participantRows [data-participant=\\\"p-2\\\"]').click()");
+                await poll(() => client.evaluate("document.querySelector('#drawerTitle').textContent.includes('R002')"));
+                assert.equal(await client.evaluate("document.querySelector('#drawerContent').textContent.includes('训练历时 5分0秒')"), true);
+                assert.equal(await client.evaluate("document.querySelector('#drawerContent').textContent.includes('此视图不展示输入内容')"), true);
+                const dashboardShot = await client.send('Page.captureScreenshot', { format: 'png' });
+                fs.writeFileSync(path.join(screenshotDir, `dashboard-${width}.png`), Buffer.from(dashboardShot.data, 'base64'));
+                assert.equal(await client.evaluate(`(() => {
+                    const panel = document.querySelector('#participantDrawer').getBoundingClientRect();
+                    return panel.width > 0 && panel.left >= 0 && panel.right <= innerWidth;
+                })()`), true);
+                await client.evaluate("document.querySelector('#logoutButton').click()");
+                await poll(() => client.evaluate("document.querySelector('#dashboardView').hidden && !document.querySelector('#loginView').hidden"));
             }
         });
         assert.deepEqual(browserErrors, []);

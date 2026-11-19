@@ -18,6 +18,7 @@
     "smoke:mainland:recovery": "node scripts/smoke-mainland-recovery.mjs",
     "test:contract:unit": "node --test shared-contract/*.test.mjs",
     "test:media": "node --test scripts/managed-audio.test.mjs",
+    "test:admin": "npm --prefix backend run build && node --test backend/scripts/admin.test.mjs",
     "test:contract:fastify-local": "npm --prefix backend run build && node scripts/contract-test-fastify-local.mjs",
     "test:contract": "node scripts/contract-test.mjs",
     "test:research": "npm --prefix backend run build && node backend/scripts/research-test.mjs"

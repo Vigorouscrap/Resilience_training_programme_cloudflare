@@ -38,6 +38,8 @@ export interface AppEnv {
     adminParticipantCodes: string[];
     adminExportToken: string;
     exportCredentialId: string;
+    staffAdminUsername: string;
+    staffAdminPasswordHash: string;
 }
 
 function requireEnv(name: (typeof REQUIRED_ENV_KEYS)[number]): string {
@@ -81,6 +83,8 @@ export function loadEnv(): AppEnv {
         testerParticipantCodes: String(process.env.TESTER_PARTICIPANT_CODES || '').split(',').map((value) => value.trim().toUpperCase()).filter(Boolean),
         adminParticipantCodes: String(process.env.ADMIN_PARTICIPANT_CODES || '').split(',').map((value) => value.trim().toUpperCase()).filter(Boolean),
         adminExportToken: String(process.env.ADMIN_EXPORT_TOKEN || '').trim(),
-        exportCredentialId: String(process.env.EXPORT_CREDENTIAL_ID || 'primary').trim()
+        exportCredentialId: String(process.env.EXPORT_CREDENTIAL_ID || 'primary').trim(),
+        staffAdminUsername: String(process.env.STAFF_ADMIN_USERNAME || '').trim(),
+        staffAdminPasswordHash: String(process.env.STAFF_ADMIN_PASSWORD_HASH || '').trim()
     };
 }

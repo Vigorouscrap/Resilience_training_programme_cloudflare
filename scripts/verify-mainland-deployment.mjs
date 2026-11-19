@@ -11,7 +11,10 @@ const siteUrl = String(process.env.MAINLAND_SITE_URL || process.argv[2] || 'http
 const apiUrl = String(process.env.MAINLAND_API_URL || process.argv[3] || 'https://api.resilience-training.cloud').replace(/\/+$/, '');
 const deploymentFiles = [
     'index.html',
+    'admin/index.html',
     'runtime-config.js',
+    'css/admin.css',
+    'js/admin.js',
     'images/favicon.svg',
     'js/main.js',
     'js/ui.js',
@@ -111,6 +114,17 @@ async function verifyApi() {
     assert.equal(preflight.status, 204);
     assert.equal(preflight.headers.get('access-control-allow-origin'), origin);
     console.log('PASS API preflight');
+
+    for (const endpoint of ['session', 'overview', 'participants']) {
+        const response = await fetch(`${apiUrl}/api/v1/admin/${endpoint}`, {
+            headers: { Origin: origin }, signal: AbortSignal.timeout(15000)
+        });
+        assert.equal(response.status, 401, `Anonymous admin ${endpoint} must be rejected`);
+        assert.equal(response.headers.get('cache-control'), 'no-store');
+        assert.equal(response.headers.get('access-control-allow-origin'), origin);
+        assert.equal(response.headers.get('access-control-allow-credentials'), 'true');
+    }
+    console.log('PASS anonymous staff API denial, no-store and credential CORS');
 }
 
 buildMainlandSite();

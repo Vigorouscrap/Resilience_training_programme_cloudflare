@@ -12,6 +12,7 @@ import { listHookDefinitions } from './modules/ai/prompt-registry/index.js';
 import { ResearchService, type ResearchDatabase } from '../../shared-contract/research.mjs';
 import { createPostgresDatabase, createResearchPool } from './research/postgres.js';
 import { registerResearchRoutes } from './research/routes.js';
+import { registerAdminRoutes } from './admin/admin.routes.js';
 
 export async function createApp(options: { researchDatabase?: ResearchDatabase | null } = {}) {
     const env = loadEnv();
@@ -68,6 +69,7 @@ export async function createApp(options: { researchDatabase?: ResearchDatabase |
         reply.header('Access-Control-Allow-Origin', responseOrigin);
         reply.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
         reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        if (matchedOrigin) reply.header('Access-Control-Allow-Credentials', 'true');
 
         if (request.method === 'OPTIONS') {
             return reply.code(204).send();
@@ -76,6 +78,7 @@ export async function createApp(options: { researchDatabase?: ResearchDatabase |
 
     await registerAiRoutes(app, aiService, researchService);
     await registerResearchRoutes(app, researchService);
+    await registerAdminRoutes(app, researchService, env);
 
     return {
         app,

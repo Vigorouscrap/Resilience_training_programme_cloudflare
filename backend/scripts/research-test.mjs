@@ -18,9 +18,13 @@ Object.assign(process.env, {
     DATABASE_URL: 'postgresql://unused:unused@127.0.0.1:1/unused', SESSION_SECRET: 'test',
     ADMIN_EXPORT_TOKEN: 'test-export-token', TESTER_PARTICIPANT_CODES: 'M3_TESTER', EXPORT_CREDENTIAL_ID: 'test-credential'
 });
+const { createPasswordHash } = await import('../dist/admin/auth.js');
+process.env.STAFF_ADMIN_USERNAME = 'research-staff';
+process.env.STAFF_ADMIN_PASSWORD_HASH = createPasswordHash('research-staff-test-password');
 
 const pg = new PGlite();
 await pg.exec(await readFile(new URL('../migrations/0001_research.sql', import.meta.url), 'utf8'));
+await pg.exec(await readFile(new URL('../migrations/0002_admin_dashboard.sql', import.meta.url), 'utf8'));
 // PGlite runs PostgreSQL SQL in-process. Queue connections to respect its single
 // connection model while exercising the production adapter's transactions.
 let pending = Promise.resolve();
@@ -205,6 +209,98 @@ try {
     const liveDb = adapters[0][1];
     const { app: connected } = await createApp({ researchDatabase: liveDb });
     try {
+        const origin = 'http://localhost:8000';
+        assert.equal((await connected.inject({ method: 'GET', url: '/api/v1/admin/overview' })).statusCode, 401);
+        assert.equal((await connected.inject({ method: 'POST', url: '/api/v1/admin/login', headers: { origin }, payload: { username: 'wrong', password: 'wrong' } })).statusCode, 401);
+        assert.equal((await connected.inject({ method: 'POST', url: '/api/v1/admin/login', headers: { origin: 'https://attacker.example' }, payload: { username: 'research-staff', password: 'research-staff-test-password' } })).statusCode, 403);
+
+        const dashboardParticipant = await connected.inject({ method: 'POST', url: '/api/v1/participants/start', payload: {
+            participantCode: 'DASH_01', participantName: 'Dashboard Participant'
+        } });
+        assert.equal(dashboardParticipant.statusCode, 200, dashboardParticipant.body);
+        await liveDb.batch(Array.from({ length: 101 }, (_, index) => ({
+            sql: `INSERT INTO participants (id, participant_code, display_label, participant_name, participant_name_normalized, role, unlock_start_at, status, created_at, last_seen_at, metadata_json)
+                VALUES (?, ?, ?, ?, ?, 'participant', now(), 'active', now(), now(), '{}'::jsonb)`,
+            params: [`dashboard-list-${index}`, `LIST_${String(index).padStart(3, '0')}`, `LIST_${String(index).padStart(3, '0')}`, `List participant ${index}`, `list participant ${index}`]
+        })));
+        const dashboardAuth = { participantCode: 'DASH_01', sessionId: dashboardParticipant.json().sessionId };
+        await connected.inject({ method: 'POST', url: '/api/v1/module-runs/start', payload: { ...dashboardAuth, moduleId: '1-1' } });
+        await connected.inject({ method: 'POST', url: '/api/v1/module-runs/complete', payload: { ...dashboardAuth, moduleId: '1-1', practiceDurationSeconds: 90 } });
+        await liveDb.all(`UPDATE module_runs SET completed_at = now() - interval '5 days', started_at = now() - interval '5 days'
+            WHERE participant_id = (SELECT id FROM participants WHERE participant_code = 'DASH_01') AND module_id = '1-1'`);
+
+        const staffLogin = await connected.inject({ method: 'POST', url: '/api/v1/admin/login', headers: { origin }, payload: {
+            username: 'research-staff', password: 'research-staff-test-password'
+        } });
+        assert.equal(staffLogin.statusCode, 200, staffLogin.body);
+        assert.match(staffLogin.headers['set-cookie'], /HttpOnly/);
+        assert.match(staffLogin.headers['set-cookie'], /SameSite=Strict/);
+        const staffCookie = staffLogin.headers['set-cookie'].split(';')[0];
+        const adminHeaders = { cookie: staffCookie };
+        assert.equal((await connected.inject({ method: 'GET', url: '/api/v1/admin/session', headers: adminHeaders })).json().authenticated, true);
+        const overview = await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders });
+        assert.equal(overview.statusCode, 200, overview.body);
+        assert.equal(overview.json().participants.enrolled, 1);
+        assert.equal(overview.json().alerts.participantCount, 1);
+        assert.deepEqual(overview.json().today, { eligible: 1, completed: 0, completionRate: 0 });
+        const enrolledList = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?completion=enrolled', headers: adminHeaders });
+        assert.equal(enrolledList.json().total, 1);
+        assert.equal(enrolledList.json().items[0].participantCode, 'DASH_01');
+        const firstPage = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?page=1&pageSize=25', headers: adminHeaders });
+        assert.ok(firstPage.json().total >= 102, `expected at least 102 participants, received ${firstPage.json().total}`);
+        assert.equal(firstPage.json().items.length, 25);
+        const secondPage = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?page=2&pageSize=25', headers: adminHeaders });
+        assert.equal(secondPage.json().items.length, 25);
+        const codeSort = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?sort=code&pageSize=25', headers: adminHeaders });
+        assert.equal(codeSort.json().items[0].participantCode, 'DASH_01');
+        const alertList = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?alert=true', headers: adminHeaders });
+        assert.equal(alertList.json().total, 1);
+        assert.equal(alertList.json().items[0].participantCode, 'DASH_01');
+        const detail = await connected.inject({ method: 'GET', url: `/api/v1/admin/participants/${dashboardParticipant.json().participantId}`, headers: adminHeaders });
+        assert.equal(detail.statusCode, 200, detail.body);
+        assert.equal(detail.json().moduleRuns.length, 1);
+        assert.equal(JSON.stringify(detail.json()).includes('messageText'), false);
+        await liveDb.all(`UPDATE module_runs SET completed_at = now()
+            WHERE participant_id = (SELECT id FROM participants WHERE participant_code = 'DASH_01') AND module_id = '1-1'`);
+        const newlyEnrolledToday = (await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders })).json();
+        assert.deepEqual(newlyEnrolledToday.today, { eligible: 0, completed: 0, completionRate: 0 });
+        assert.equal(newlyEnrolledToday.alerts.participantCount, 0);
+        const recentSort = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?sort=recent', headers: adminHeaders });
+        assert.equal(recentSort.json().items[0].participantCode, 'DASH_01');
+        assert.equal(recentSort.json().items[0].missedExpectedDays, 0);
+        await liveDb.all(`UPDATE module_runs SET completed_at = now() - interval '5 days'
+            WHERE participant_id = (SELECT id FROM participants WHERE participant_code = 'DASH_01') AND module_id = '1-1'`);
+        await liveDb.all(`INSERT INTO module_runs (id, participant_id, session_id, module_id, day_index, status, started_at, completed_at)
+            SELECT 'dashboard-today-run', participant_id, session_id, '1-2', 2, 'completed', now(), now()
+            FROM module_runs WHERE participant_id = (SELECT id FROM participants WHERE participant_code = 'DASH_01') AND module_id = '1-1'`);
+        const completedToday = (await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders })).json();
+        assert.deepEqual(completedToday.today, { eligible: 1, completed: 1, completionRate: 1 });
+        assert.equal(completedToday.alerts.participantCount, 0);
+        const todayList = await connected.inject({ method: 'GET', url: '/api/v1/admin/participants?completion=today', headers: adminHeaders });
+        assert.equal(todayList.json().total, 1);
+        assert.equal(todayList.json().items[0].lastModuleId, '1-2');
+        await liveDb.all("UPDATE module_runs SET module_id = '6-7', day_index = 42 WHERE id = 'dashboard-today-run'");
+        const graduationToday = (await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders })).json();
+        assert.equal(graduationToday.participants.graduated, 1);
+        assert.deepEqual(graduationToday.today, { eligible: 1, completed: 1, completionRate: 1 });
+        await liveDb.all("DELETE FROM module_runs WHERE id = 'dashboard-today-run'");
+        const paused = await connected.inject({ method: 'POST', url: `/api/v1/admin/participants/${dashboardParticipant.json().participantId}/status`, headers: { ...adminHeaders, origin }, payload: { status: 'paused' } });
+        assert.deepEqual(paused.json(), { status: 'paused', changed: true });
+        assert.equal((await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders })).json().alerts.participantCount, 0);
+        const auditRows = await liveDb.all("SELECT action FROM admin_audit_logs WHERE staff_username = 'research-staff' ORDER BY created_at");
+        assert.ok(auditRows.some((row) => row.action === 'view_participant_progress'));
+        assert.ok(auditRows.some((row) => row.action === 'change_participant_status'));
+        const logout = await connected.inject({ method: 'POST', url: '/api/v1/admin/logout', headers: { ...adminHeaders, origin }, payload: {} });
+        assert.equal(logout.statusCode, 200);
+        assert.match(logout.headers['set-cookie'], /Max-Age=0/);
+        assert.equal((await connected.inject({ method: 'GET', url: '/api/v1/admin/overview', headers: adminHeaders })).statusCode, 401);
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+            assert.equal((await connected.inject({ method: 'POST', url: '/api/v1/admin/login', headers: { origin }, payload: { username: 'research-staff', password: 'incorrect-password' } })).statusCode, 401);
+        }
+        assert.equal((await connected.inject({ method: 'POST', url: '/api/v1/admin/login', headers: { origin }, payload: { username: 'research-staff', password: 'research-staff-test-password' } })).statusCode, 401);
+        assert.ok((await liveDb.all("SELECT id FROM admin_audit_logs WHERE action = 'login_failed'")).length >= 8);
+        console.log('PASS staff admin: isolated login, secure cookie, origin enforcement, test-data exclusion, alert drilldown, read-only detail, status audit and logout');
+
         const login = await connected.inject({ method: 'POST', url: '/api/v1/participants/start', payload: { participantCode: 'M3_BRIDGE', participantName: 'bridge', metadata: { testData: true } } });
         assert.equal(login.statusCode, 200, login.body);
         const auth = { participantCode: login.json().participantCode, sessionId: login.json().sessionId, moduleId: '1-1' };

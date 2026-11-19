@@ -124,6 +124,16 @@ unset MIGRATION_DATABASE_URL
 
 迁移 URL 使用 owner 账号。随后管理员执行 `REVOKE ALL ON TABLE research_migrations FROM resilience_app;`，运行账号只保留研究表 SELECT/INSERT/UPDATE/DELETE 权限。迁移再次执行应显示 up to date。
 
+M6 管理后台首版发布时，发布完整仓库后在 `backend/` 重新构建，并用现有迁移 owner 交互式执行 `npm run db:migrate`，将新增 `0002_admin_dashboard.sql` 应用到 PostgreSQL。该迁移增加工作人员会话、参与者状态历史和管理审计表；owner 的默认权限应自动向 `resilience_app` 授予新表 DML。部署后确认：
+
+```bash
+sudo -u postgres psql -d resilience_programme -c '\dt public.admin_*'
+sudo -u postgres psql -d resilience_programme -c "\\dt public.participant_status_history"
+sudo -u postgres psql -d resilience_programme -c "SELECT table_name, has_table_privilege('resilience_app', format('public.%I', table_name), 'SELECT') AS can_select, has_table_privilege('resilience_app', format('public.%I', table_name), 'INSERT') AS can_insert FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('admin_sessions','admin_audit_logs','participant_status_history') ORDER BY table_name;"
+```
+
+工作人员账号必须独立于 `C_TEST`。在服务器上构建后运行 `npm run admin:hash-password`，在 SSH 交互终端输入不少于 16 位的强密码两次；只把生成的 scrypt 哈希写入权限为 `0600` 的 `/opt/resilience-training-programme-m3/backend/.env`，配置 `STAFF_ADMIN_USERNAME=research-team` 与 `STAFF_ADMIN_PASSWORD_HASH=...`。明文密码只通过研究团队认可的独立渠道交给同事，不发到聊天或 GitHub。随后重启 Fastify 并验证 `/api/v1/admin/login`、`/session`、退出撤销和来源限制，再发布 Mainland 静态站。Cloudflare Worker/D1 不包含该后台，不在 Cloudflare 发布时配置或复用这组凭证。
+
 在服务器已有 `.env` 中更新：
 
 ```text

@@ -59,6 +59,7 @@ function eventValid(event) {
 // atomic batch and conditional statements, since D1 has no interactive transaction.
 export class ResearchService {
     constructor(db, config = {}) { this.db = db; this.config = config; }
+    getResearchDatabase() { return this.db; }
     storage() { if (!this.db) throw new ContractError(503, 'STORAGE_UNAVAILABLE', 'Research data storage is unavailable.'); return this.db; }
     async first(sql, params) { return (await this.storage().all(sql, params))[0] ?? null; }
     async access(participant) {

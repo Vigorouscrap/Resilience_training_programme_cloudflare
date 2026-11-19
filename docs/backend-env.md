@@ -55,6 +55,8 @@ backend/.env.local
   - 独立的研究导出 Bearer Token，留空禁用导出，不影响训练。两套环境分别配置。
 - `EXPORT_CREDENTIAL_ID`
   - 非敏感的导出凭证标识，写入审计，不能填写 token 原文。
+- `STAFF_ADMIN_USERNAME` / `STAFF_ADMIN_PASSWORD_HASH`
+  - 独立工作人员后台账号；不使用 `C_TEST`。密码至少 16 位，通过 `cd backend && npm run build && npm run admin:hash-password` 在交互终端生成 scrypt 哈希。仅将哈希和用户名配置在服务器环境，不要把明文密码或哈希提交到 Git。后台只有在应用 `0002_admin_dashboard.sql` 并配置上述变量后才可登录。
 - `MIGRATION_DATABASE_URL`
   - 仅迁移命令使用的 schema owner 连接串；运行服务的 `DATABASE_URL` 使用最小权限账号。不必把 owner 密码保存在服务 `.env`。
 
