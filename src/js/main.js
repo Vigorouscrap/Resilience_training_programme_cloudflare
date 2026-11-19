@@ -185,7 +185,7 @@ function initApp() {
     const participantResetBtn = document.getElementById('participantResetBtn');
     const participantSessionStatus = document.getElementById('participantSessionStatus');
     const participantFormNote = document.getElementById('participantFormNote');
-    const icpRecordLink = document.querySelector('.footer-note .icp-record');
+    const icpRecordLink = participantFormNote.querySelector('.icp-record');
 
     // 初始化各个模块
     const practiceTimer = new PracticeTimer(timerDisplay);

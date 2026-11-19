@@ -359,8 +359,14 @@ test('managed audio lifecycle in a real browser (no production API calls)', { ti
                     text: link.textContent, href: link.href, target: link.target
                 }))`), Array(2).fill({ text: '\u7ca4ICP\u59072026085109\u53f7', href: 'https://beian.miit.gov.cn/', target: '_blank' }));
                 assert.equal(await client.evaluate(`(() => {
-                    const rect = document.querySelector('#participantFormNote .icp-record').getBoundingClientRect();
-                    return rect.width > 0 && rect.left >= 0 && rect.right <= innerWidth;
+                    const link = document.querySelector('#participantFormNote .icp-record');
+                    const rect = link.getBoundingClientRect();
+                    const style = getComputedStyle(link);
+                    const parentRect = link.parentElement.getBoundingClientRect();
+                    const centerDelta = Math.abs((rect.left + rect.right) / 2 - (parentRect.left + parentRect.right) / 2);
+                    return rect.width > 0 && rect.left >= 0 && rect.right <= innerWidth
+                        && centerDelta < 1 && parseFloat(style.fontSize) < 14
+                        && style.fontWeight === '400';
                 })()`), true);
                 const loginShot = await client.send('Page.captureScreenshot', { format: 'png' });
                 fs.writeFileSync(path.join(screenshotDir, `login-${width}.png`), Buffer.from(loginShot.data, 'base64'));
