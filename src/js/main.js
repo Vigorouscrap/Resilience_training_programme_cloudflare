@@ -185,6 +185,7 @@ function initApp() {
     const participantResetBtn = document.getElementById('participantResetBtn');
     const participantSessionStatus = document.getElementById('participantSessionStatus');
     const participantFormNote = document.getElementById('participantFormNote');
+    const icpRecordLink = document.querySelector('.footer-note .icp-record');
 
     // 初始化各个模块
     const practiceTimer = new PracticeTimer(timerDisplay);
@@ -239,7 +240,7 @@ function initApp() {
             participantNameInput.value = participantSession?.participantName || '';
             participantConsentInput.checked = false;
         }
-        participantFormNote.textContent = options.formMessage || '未完成确认前，练习模块不会开放，也不会保存研究数据。';
+        participantFormNote.replaceChildren(options.formMessage || icpRecordLink.cloneNode(true));
         participantFormNote.classList.toggle('warning', Boolean(options.warning));
         participantCodeInput.disabled = false;
         participantNameInput.disabled = false;

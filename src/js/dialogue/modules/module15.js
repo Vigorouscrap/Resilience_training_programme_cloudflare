@@ -34,10 +34,11 @@ export const module15Handlers = {
             appendAiMessage(this.chatMessages, '首先，请为自己找一个舒适的坐姿，放松肩膀。然后轻轻闭上眼睛或者看着前方，让自己的身体先放松下来，不用紧张，跟着我的指令做就好。', true);
             this.step = 4;
         } else if (this.step === 4) {
-            appendAiMessageWithTimer(this.chatMessages, '现在，请你在心里，或者轻声跟着我说【我现在特别想喝牛奶】，让我们一起重复5次，每说一次，都试着感受自己心里或身体的变化。', 17000, () => {
-                this.onContinue_Module15();
-            }, { hideCountdown: true });
-            playManagedAudio(this.chatMessages, module15MilkExperienceAudioPath, { mimeType: 'audio/mpeg' });
+            appendAiMessage(this.chatMessages, '现在，请你在心里，或者轻声跟着我说【我现在特别想喝牛奶】，让我们一起重复5次，每说一次，都试着感受自己心里或身体的变化。', false);
+            playManagedAudio(this.chatMessages, module15MilkExperienceAudioPath, {
+                mimeType: 'audio/mpeg',
+                onEnded: () => this.onContinue_Module15()
+            });
             this.step = 5;
         } else if (this.step === 5) {
             this.startSentenceRepetition();

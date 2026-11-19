@@ -14,6 +14,8 @@ const deploymentFiles = [
     'runtime-config.js',
     'images/favicon.svg',
     'js/main.js',
+    'js/ui.js',
+    'js/dialogue/modules/module15.js',
     'js/dialogue/DialogueManager.js',
     'js/services/participantSession.js',
     'js/services/researchEventQueue.js'

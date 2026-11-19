@@ -5,6 +5,7 @@
 
 const revealStateKey = Symbol('dialogueRevealState');
 const waitStateKey = Symbol('dialogueWaitState');
+const managedMediaStops = new WeakMap();
 const longAudioWakeLockPathHints = [
     'audio/冥想呼吸.mp3',
     'audio/module42&47/火车站台冥想.mp3'
@@ -572,6 +573,7 @@ export function stopManagedMedia(root = document, options = {}) {
     const shouldReset = options.reset !== false;
 
     root.querySelectorAll('audio, video').forEach((mediaElement) => {
+        managedMediaStops.get(mediaElement)?.();
         try {
             mediaElement.pause();
         } catch (error) {
@@ -617,7 +619,13 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
         const synth = globalThis.speechSynthesis;
         const pathPreferredWakeLock = shouldPreferWakeLockByPath(audioSrc);
         let wakeLockSentinel = null;
-        let wakeLockVisibilityHandler = null;
+        let wakeLockRequestPending = false;
+        let playbackRequested = false;
+        let playbackPending = false;
+        let resumeRequired = false;
+        let playAttempt = 0;
+        const isCurrentAudio = () => !finished && audioElement.isConnected
+            && (!sessionId || isChatSessionActive(root, sessionId));
 
         const cleanup = () => {
             if (audioElement?.parentNode) {
@@ -626,11 +634,6 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
         };
 
         const releaseWakeLock = async () => {
-            if (wakeLockVisibilityHandler) {
-                globalThis.document?.removeEventListener?.('visibilitychange', wakeLockVisibilityHandler);
-                wakeLockVisibilityHandler = null;
-            }
-
             const activeSentinel = wakeLockSentinel;
             wakeLockSentinel = null;
             if (!activeSentinel) return;
@@ -643,12 +646,19 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
         };
 
         const ensureWakeLock = async () => {
-            if (finished) return;
+            if (!isCurrentAudio() || audioElement.paused || document.visibilityState !== 'visible') return;
             if (!isLongManagedAudio(audioSrc, audioElement)) return;
             if (wakeLockSentinel && wakeLockSentinel.released !== true) return;
+            if (wakeLockRequestPending) return;
 
+            wakeLockRequestPending = true;
             const nextSentinel = await requestScreenWakeLock();
+            wakeLockRequestPending = false;
             if (!nextSentinel) return;
+            if (!isCurrentAudio() || audioElement.paused || document.visibilityState !== 'visible') {
+                await nextSentinel.release().catch(() => {});
+                return;
+            }
 
             wakeLockSentinel = nextSentinel;
             nextSentinel.addEventListener?.('release', () => {
@@ -657,13 +667,6 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
                 }
             });
         };
-
-        wakeLockVisibilityHandler = () => {
-            if (globalThis.document?.visibilityState !== 'visible') return;
-            if (finished || !audioElement || audioElement.paused) return;
-            ensureWakeLock();
-        };
-        globalThis.document?.addEventListener?.('visibilitychange', wakeLockVisibilityHandler);
 
         const controller = registerManagedWait(root, {
             type: 'audio',
@@ -699,23 +702,73 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
         const skipControlHost = document.createElement('div');
         skipControlHost.className = 'countdown-wrapper after-card';
         attachSkipControl(skipControlHost, controller, '跳过音频');
+        const resumeButton = createSkipButton('继续播放音频');
+        resumeButton.classList.add('audio-resume-btn');
 
-        const finalize = () => {
+        const showResumeControl = () => {
+            if (!isCurrentAudio()) return;
+            resumeRequired = true;
+            if (!resumeButton.parentNode) skipControlHost.appendChild(resumeButton);
+            if (!skipControlHost.parentNode) root.appendChild(skipControlHost);
+            if (document.visibilityState === 'visible') scrollChat(root);
+        };
+
+        const pauseForBackground = () => {
+            if (!isCurrentAudio()) return;
+            const needsResume = !audioElement.paused || playbackPending || !playbackRequested;
+            // Invalidate pending play promises: pause() can reject them with AbortError.
+            playAttempt += 1;
+            playbackPending = false;
+            audioElement.pause();
+            releaseWakeLock();
+            if (needsResume) showResumeControl();
+        };
+        const visibilityHandler = () => {
+            if (!isCurrentAudio()) {
+                finalize(false);
+                return;
+            }
+            if (document.visibilityState !== 'visible') pauseForBackground();
+        };
+        document.addEventListener('visibilitychange', visibilityHandler);
+
+        const finalize = (advance = true) => {
             if (finished) return;
             finished = true;
+            playAttempt += 1;
+            document.removeEventListener('visibilitychange', visibilityHandler);
+            managedMediaStops.delete(audioElement);
+            audioElement.pause();
             clearManagedWait(root, controller);
             if (skipControlHost.parentNode) {
                 skipControlHost.parentNode.removeChild(skipControlHost);
             }
             releaseWakeLock();
             cleanup();
-            if (!onEnded) return;
+            if (!advance || !onEnded) return;
             if (sessionId && !isChatSessionActive(root, sessionId)) return;
             onEnded();
         };
 
-        audioElement.addEventListener('ended', finalize, { once: true });
-        audioElement.addEventListener('error', finalize, { once: true });
+        managedMediaStops.set(audioElement, () => finalize(false));
+        audioElement.addEventListener('ended', () => finalize(), { once: true });
+        audioElement.addEventListener('error', () => finalize(), { once: true });
+        audioElement.addEventListener('play', () => {
+            if (!isCurrentAudio()) return;
+            if (document.visibilityState !== 'visible') {
+                pauseForBackground();
+                return;
+            }
+            resumeRequired = false;
+            resumeButton.remove();
+            if (!skipControlHost.childElementCount) skipControlHost.remove();
+            ensureWakeLock();
+        });
+        audioElement.addEventListener('pause', () => {
+            if (!audioElement.paused) return;
+            releaseWakeLock();
+            if (!audioElement.ended) showResumeControl();
+        });
         audioElement.addEventListener('loadedmetadata', () => {
             ensureWakeLock();
         }, { once: true });
@@ -725,8 +778,15 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
             root.appendChild(skipControlHost);
             scrollChat(root);
         }
+        // Hidden documents may defer animation frames until the user returns.
+        if (document.visibilityState !== 'visible') pauseForBackground();
 
         const startPlayback = () => {
+            if (!isCurrentAudio()) {
+                finalize(false);
+                return;
+            }
+            if (playbackPending) return;
             if (shouldSkipWaits()) {
                 setTimeout(() => {
                     controller?.skip();
@@ -734,17 +794,37 @@ export function playManagedAudio(root = document, audioSrc, options = {}) {
                 return;
             }
 
-            const playResult = audioElement.play();
-            if (playResult && typeof playResult.catch === 'function') {
-                playResult.catch(() => {
-                    finalize();
-                });
+            playbackRequested = true;
+            if (document.visibilityState !== 'visible' || resumeRequired) {
+                showResumeControl();
+                return;
             }
-
-            if (pathPreferredWakeLock) {
-                ensureWakeLock();
+            playbackPending = true;
+            const attempt = ++playAttempt;
+            try {
+                Promise.resolve(audioElement.play()).then(() => {
+                    if (finished || attempt !== playAttempt) return;
+                    playbackPending = false;
+                    if (document.visibilityState !== 'visible') pauseForBackground();
+                    else if (pathPreferredWakeLock) ensureWakeLock();
+                }).catch((error) => {
+                    if (finished || attempt !== playAttempt) return;
+                    playbackPending = false;
+                    if (error?.name === 'NotAllowedError' || error?.name === 'AbortError') {
+                        showResumeControl();
+                    } else {
+                        finalize();
+                    }
+                });
+            } catch (error) {
+                playbackPending = false;
+                showResumeControl();
             }
         };
+        resumeButton.addEventListener('click', () => {
+            resumeRequired = false;
+            startPlayback();
+        });
 
         requestAnimationFrame(() => {
             requestAnimationFrame(startPlayback);
